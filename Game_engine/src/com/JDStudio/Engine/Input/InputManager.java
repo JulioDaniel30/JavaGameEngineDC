@@ -5,40 +5,42 @@ package com.JDStudio.Engine.Input;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
-/**
-* Gerencia todo o input do teclado de forma centralizada.
-* Permite que qualquer objeto do jogo consulte o estado de uma tecla
-* a qualquer momento.
-* * @author Seu Nome
-* @version 1.0
-*/
 public class InputManager implements KeyListener {
 
- // Array para guardar o estado de todas as teclas (256 para cobrir os códigos ASCII e VK)
  private boolean[] keys = new boolean[256];
+ private boolean[] prevKeys = new boolean[256]; // <-- ADICIONE: Array para o estado anterior
 
- // Instância única (Singleton pattern) para acesso global
  public static InputManager instance = new InputManager();
- 
- // Construtor privado para garantir que apenas uma instância exista
  private InputManager() {}
-
+ 
  /**
-  * Verifica se uma tecla específica está pressionada no momento.
-  * * @param keyCode O código da tecla a ser verificada (ex: KeyEvent.VK_W).
-  * @return true se a tecla estiver pressionada, false caso contrário.
+  * Este método deve ser chamado uma vez por frame, no início do tick principal.
+  * Ele atualiza o estado anterior das teclas.
   */
+ public void update() { // <-- ADICIONE ESTE MÉTODO
+     // Copia o estado atual das teclas para o estado anterior
+     System.arraycopy(keys, 0, prevKeys, 0, keys.length);
+ }
+
  public static boolean isKeyPressed(int keyCode) {
-     // Validação para evitar erros de array index out of bounds
      if (keyCode >= 0 && keyCode < instance.keys.length) {
          return instance.keys[keyCode];
      }
      return false;
  }
  
- @Override
- public void keyTyped(KeyEvent e) {
-     // Não utilizado no momento
+ /**
+  * Verifica se uma tecla acabou de ser pressionada neste frame.
+  * Ótimo para ações de toque único, como pular ou ativar/desativar algo.
+  * @param keyCode O código da tecla a ser verificada.
+  * @return true se a tecla foi pressionada neste frame, false caso contrário.
+  */
+ public static boolean isKeyJustPressed(int keyCode) { // <-- ADICIONE ESTE MÉTODO
+     if (keyCode >= 0 && keyCode < instance.keys.length) {
+         // A tecla está pressionada agora E não estava pressionada no frame anterior?
+         return instance.keys[keyCode] && !instance.prevKeys[keyCode];
+     }
+     return false;
  }
 
  @Override
@@ -55,5 +57,10 @@ public class InputManager implements KeyListener {
      if (keyCode >= 0 && keyCode < keys.length) {
          keys[keyCode] = false;
      }
+ }
+
+ @Override
+ public void keyTyped(KeyEvent e) {
+     // Não utilizado
  }
 }

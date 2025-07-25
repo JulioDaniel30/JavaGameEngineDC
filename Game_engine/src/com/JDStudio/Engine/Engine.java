@@ -32,6 +32,7 @@ public class Engine extends Canvas implements Runnable {
 
     private BufferedImage image;
     private static GameState currentGameState;
+    public static boolean isDebug = false;
 
     public Engine() {
         this.setPreferredSize(new Dimension(WIDTH * SCALE, HEIGHT * SCALE));
@@ -72,6 +73,7 @@ public class Engine extends Canvas implements Runnable {
     private void tick() {
         if (currentGameState != null) {
             currentGameState.tick();
+           
         }
     }
 
@@ -104,6 +106,7 @@ public class Engine extends Canvas implements Runnable {
         int frames = 0;
         double timer = System.currentTimeMillis();
         requestFocus();
+        requestFocusInWindow();
 
         while (isRunning) {
             long now = System.nanoTime();

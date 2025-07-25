@@ -5,5 +5,6 @@ import com.JDStudio.Engine.World.Tile;
 public class WallTile extends Tile {
     public WallTile(int x, int y, BufferedImage sprite) {
         super(x, y, sprite);
+        this.isSolid = true;
     }
 }
