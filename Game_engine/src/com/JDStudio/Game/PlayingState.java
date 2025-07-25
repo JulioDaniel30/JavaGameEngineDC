@@ -73,33 +73,5 @@ public class PlayingState extends GameState {
         }
     }
 
-    @Override
-    public void keyPressed(int keyCode) {
-        if (keyCode == KeyEvent.VK_RIGHT || keyCode == KeyEvent.VK_D) {
-            player.right = true;
-        } else if (keyCode == KeyEvent.VK_LEFT || keyCode == KeyEvent.VK_A) {
-            player.left = true;
-        }
-
-        if (keyCode == KeyEvent.VK_UP || keyCode == KeyEvent.VK_W) {
-            player.up = true;
-        } else if (keyCode == KeyEvent.VK_DOWN || keyCode == KeyEvent.VK_S) {
-            player.down = true;
-        }
-    }
-
-    @Override
-    public void keyReleased(int keyCode) {
-        if (keyCode == KeyEvent.VK_RIGHT || keyCode == KeyEvent.VK_D) {
-            player.right = false;
-        } else if (keyCode == KeyEvent.VK_LEFT || keyCode == KeyEvent.VK_A) {
-            player.left = false;
-        }
-
-        if (keyCode == KeyEvent.VK_UP || keyCode == KeyEvent.VK_W) {
-            player.up = false;
-        } else if (keyCode == KeyEvent.VK_DOWN || keyCode == KeyEvent.VK_S) {
-            player.down = false;
-        }
-    }
+    
 }

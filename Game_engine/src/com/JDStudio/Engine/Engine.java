@@ -12,13 +12,14 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.JFrame;
 
+import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.annotations.Info;
 
 @Info(
     autor = "Julio",
     versao = "1.1"
 )
-public class Engine extends Canvas implements Runnable, KeyListener {
+public class Engine extends Canvas implements Runnable {
 
     private static final long serialVersionUID = 1L;
 
@@ -35,7 +36,7 @@ public class Engine extends Canvas implements Runnable, KeyListener {
     public Engine() {
         this.setPreferredSize(new Dimension(WIDTH * SCALE, HEIGHT * SCALE));
         initFrame();
-        addKeyListener(this);
+        addKeyListener(InputManager.instance);
         image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
     }
 
@@ -124,22 +125,5 @@ public class Engine extends Canvas implements Runnable, KeyListener {
         stop();
     }
 
-    @Override
-    public void keyPressed(KeyEvent e) {
-        if (currentGameState != null) {
-            currentGameState.keyPressed(e.getKeyCode());
-        }
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-        if (currentGameState != null) {
-            currentGameState.keyReleased(e.getKeyCode());
-        }
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-        // Not used
-    }
+  
 }
