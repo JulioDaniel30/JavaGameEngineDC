@@ -83,7 +83,14 @@ public class PlayingState extends GameState {
                 GameObject obj2 = gameObjects.get(j);
                 if (GameObject.isColliding(obj1, obj2)) {
                     // Lógica de colisão (Player-Enemy, etc.)
+                	if ((obj1 instanceof Player && obj2 instanceof Enemy) || 
+                            (obj1 instanceof Enemy && obj2 instanceof Player)) {
+                            
+                            // Use o novo método utilitário!
+                            Player player = GameObject.getInstanceOf(Player.class, obj1, obj2);
+                            Enemy enemy = GameObject.getInstanceOf(Enemy.class, obj1, obj2);
                 	
+                	}
                 }
             }
         }

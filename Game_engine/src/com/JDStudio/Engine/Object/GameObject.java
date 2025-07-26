@@ -8,28 +8,52 @@ import java.util.Objects;
 import com.JDStudio.Engine.Engine;
 import com.JDStudio.Engine.Graphics.Sprite;
 import com.JDStudio.Engine.World.Camera;
+import com.JDStudio.Game.Enemy;
+import com.JDStudio.Game.Player;
 
 /**
- * Representa a classe base para todos os objetos renderizáveis e atualizáveis no jogo.
+ * Verifica se dois GameObjects estão colidindo, respeitando suas máscaras de colisão.
  * <p>
- * Cada entidade, como jogadores, inimigos ou itens, deve estender esta classe para
- * ser gerenciada pelo motor do jogo. Ela fornece funcionalidades essenciais como
-* posição, dimensões, renderização e detecção de colisão.
+ * Este método utiliza a técnica de <strong>AABB (Axis-Aligned Bounding Box)</strong>.
+ * Ele cria um {@link java.awt.Rectangle} para a máscara de colisão de cada objeto
+ * e então usa o método {@code intersects()} para determinar se há uma sobreposição.
  *
- * <p><b>Exemplo de como criar uma nova entidade:</b>
- * {@snippet :
- * class Rocket extends GameObject {
- * public Rocket(double x, double y) {
- * super(x, y, 16, 16, null); // Chama o construtor pai
- * }
+ * <p><b>Etapa 1: Detectando a Colisão</b>
+ * <p>O primeiro passo é usar este método dentro de um loop para detectar se uma
+ * colisão entre quaisquer dois objetos ocorreu.
  *
- * @Override
- * public void tick() {
- * // Lógica de movimento do foguete
- * this.y -= 5;
+ * <pre>{@code
+ * // Exemplo dentro do método tick() do seu GameState
+ * if (GameObject.isColliding(obj1, obj2)) {
+ * // Colisão detectada! Prossiga para a próxima etapa.
+ * // ...
  * }
+ * }</pre>
+ *
+ * <p><b>Etapa 2: Identificando os Objetos e Executando a Ação</b>
+ * <p>Após detectar a colisão, use {@code instanceof} para determinar o tipo de
+ * interação e execute a lógica específica para aquela colisão.
+ *
+ * <pre>{@code
+ * // Continuação do código dentro do if(isColliding(...))
+ *
+ * // A interação é entre um Player e um Enemy?
+ * if ((obj1 instanceof Player && obj2 instanceof Enemy) ||
+ * (obj1 instanceof Enemy && obj2 instanceof Player)) {
+ *
+ * // Sim. Obtenha as instâncias para usar seus métodos.
+ * Player player = GameObject.getInstanceOf(Player.class, obj1, obj2);
+ * Enemy enemy = GameObject.getInstanceOf(Enemy.class, obj1, obj2);
+ *
+ * // Execute a lógica de dano.
+ * player.takeDamage(10);
  * }
- *}
+ * }</pre>
+ *
+ * @param obj1 O primeiro objeto a ser verificado na colisão.
+ * @param obj2 O segundo objeto a ser verificado na colisão.
+ * @return {@code true} se as máscaras de colisão dos objetos se sobrepõem,
+ * {@code false} caso contrário.
  * @author JDStudio
  * @since 1.0
  */
