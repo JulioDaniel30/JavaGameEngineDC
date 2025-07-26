@@ -1,5 +1,5 @@
 // Arquivo: Spritesheet.java
-package com.JDStudio.Engine.Graphics;
+package com.JDStudio.Engine.Graphics.Sprite;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;

@@ -9,11 +9,13 @@ import java.awt.event.KeyEvent;
 import com.JDStudio.Engine.Engine;
 import com.JDStudio.Engine.GameState;
 import com.JDStudio.Engine.Graphics.AssetManager;
-import com.JDStudio.Engine.Graphics.Spritesheet;
+import com.JDStudio.Engine.Graphics.Sprite.Sprite;
+import com.JDStudio.Engine.Graphics.Sprite.Spritesheet;
 import com.JDStudio.Engine.Graphics.UI.UIManager;
 import com.JDStudio.Engine.Graphics.UI.UIText;
 import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.Object.GameObject;
+import com.JDStudio.Engine.Sound.Sound;
 import com.JDStudio.Engine.World.Camera;
 
 public class PlayingState extends GameState {
@@ -37,6 +39,8 @@ public class PlayingState extends GameState {
         this.addGameObject(player); // Agora este método funciona, pois está na classe pai
         
         setupUI(); // Configura a UI
+        Sound.loop("/music.wav");
+        
     }
 
     private void loadAssets() {
@@ -50,6 +54,26 @@ public class PlayingState extends GameState {
         assets.registerSprite("weapon", worldSheet.getSprite(7 * 16, 0, 16, 16));
         assets.registerSprite("lifepack", worldSheet.getSprite(6 * 16, 0, 16, 16));
         assets.registerSprite("bullet", worldSheet.getSprite(6 * 16, 16, 16, 16));
+        
+        
+        Sprite player_idle_frame1 = worldSheet.getSprite(32, 0, 16, 16);
+        assets.registerSprite("player_idle", player_idle_frame1);
+        
+        Sprite player_walk_right_frame1 = worldSheet.getSprite(48, 0, 16, 16);
+        Sprite player_walk_right_frame2 = worldSheet.getSprite(64, 0, 16, 16);
+        Sprite player_walk_right_frame3 = worldSheet.getSprite(80, 0, 16, 16);
+        assets.registerSprite("player_walk_right_1", player_walk_right_frame1);
+        assets.registerSprite("player_walk_right_2", player_walk_right_frame2);
+        assets.registerSprite("player_walk_right_3", player_walk_right_frame3);
+        
+        Sprite player_walk_left_frame1 = worldSheet.getSprite(48, 16, 16, 16);
+        Sprite player_walk_left_frame2 = worldSheet.getSprite(64, 16, 16, 16);
+        Sprite player_walk_left_frame3 = worldSheet.getSprite(80, 16, 16, 16);
+        assets.registerSprite("player_walk_left_1", player_walk_left_frame1);
+        assets.registerSprite("player_walk_left_2", player_walk_left_frame2);
+        assets.registerSprite("player_walk_left_3", player_walk_left_frame3);
+        
+        
     }
 
     // 2. O método setupUI agora está preenchido e funcional
@@ -91,11 +115,25 @@ public class PlayingState extends GameState {
                             Player player = GameObject.getInstanceOf(Player.class, obj1, obj2);
                             Lifepack lifepack = GameObject.getInstanceOf(Lifepack.class, obj1, obj2);
                             gameObjects.remove(lifepack);
+                            
                             break;
                 	
                 	}
                 }
             }
+        }
+        
+        if (InputManager.isKeyJustPressed(KeyEvent.VK_PLUS) || InputManager.isKeyJustPressed(KeyEvent.VK_ADD)) {
+            float newVolume = Sound.getMusicVolume() + 0.01f;
+            Sound.setMusicVolume(newVolume);
+            System.out.println("Volume da Música: " + (int)(Sound.getMusicVolume() * 100) + "%");
+        }
+        
+        // Diminui o volume da música
+        if (InputManager.isKeyJustPressed(KeyEvent.VK_MINUS) || InputManager.isKeyJustPressed(KeyEvent.VK_SUBTRACT)) {
+            float newVolume = Sound.getMusicVolume() - 0.01f;
+            Sound.setMusicVolume(newVolume);
+            System.out.println("Volume da Música: " + (int)(Sound.getMusicVolume() * 100) + "%");
         }
         
         Camera.x = Camera.clamp(player.getX() - (Engine.WIDTH / 2), 0, world.WIDTH * 16 - Engine.WIDTH);

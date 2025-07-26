@@ -6,7 +6,8 @@ import java.awt.Rectangle;
 import java.util.Objects;
 
 import com.JDStudio.Engine.Engine;
-import com.JDStudio.Engine.Graphics.Sprite;
+import com.JDStudio.Engine.Graphics.Sprite.Sprite;
+import com.JDStudio.Engine.Graphics.Sprite.Animations.Animator;
 import com.JDStudio.Engine.World.Camera;
 
 /**
@@ -81,6 +82,7 @@ public abstract class GameObject {
     protected int maskWidth;
     /** A altura da máscara de colisão. */
     protected int maskHeight;
+    protected Animator animator;
     //</editor-fold>
 
     /**
@@ -104,6 +106,8 @@ public abstract class GameObject {
         this.maskY = 0;
         this.maskWidth = width;
         this.maskHeight = height;
+        
+        this.animator = new Animator();
     }
 
     /**
@@ -177,7 +181,9 @@ public abstract class GameObject {
      * Este método abstrato <b>deve</b> ser implementado por todas as subclasses e é chamado
      * pelo motor do jogo a cada quadro (frame).
      */
-    public abstract void tick();
+    public void tick() {
+    	animator.tick();
+    }
 
     /**
      * Renderiza o objeto na tela.
@@ -189,8 +195,16 @@ public abstract class GameObject {
      * @param g O contexto {@link Graphics} onde o objeto será desenhado.
      */
     public void render(Graphics g) {
-        if (sprite != null) {
+        /*if (sprite != null) {
             g.drawImage(sprite.getImage(), this.getX() - Camera.x, this.getY() - Camera.y, null);
+        }*/
+        Sprite currentSprite = animator.getCurrentSprite();
+        if (currentSprite != null) {
+            // Desenha o frame atual da animação
+            g.drawImage(currentSprite.getImage(), this.getX() - Camera.x, this.getY() - Camera.y, null);
+        } else if (this.sprite != null) {
+            // Se não houver animação, desenha o sprite estático padrão
+            g.drawImage(this.sprite.getImage(), this.getX() - Camera.x, this.getY() - Camera.y, null);
         }
 
         if (Engine.isDebug) {

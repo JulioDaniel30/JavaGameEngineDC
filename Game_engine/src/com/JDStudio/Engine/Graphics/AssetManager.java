@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.imageio.ImageIO;
 
+import com.JDStudio.Engine.Graphics.Sprite.Sprite;
+
 /**
  * Gerencia o carregamento, armazenamento (cache) e acesso a todos os sprites do jogo.
  * <p>

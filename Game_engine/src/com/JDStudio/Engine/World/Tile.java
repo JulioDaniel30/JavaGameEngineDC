@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 
 import com.JDStudio.Engine.Engine;
-import com.JDStudio.Engine.Graphics.Sprite;
+import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 
 /**
  * Representa um único tile estático no mapa do jogo.
