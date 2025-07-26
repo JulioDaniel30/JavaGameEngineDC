@@ -25,6 +25,8 @@ public class Tile {
 
     /** A coordenada Y (em pixels) do canto superior esquerdo do tile no mundo. */
     protected final int y;
+    protected final int width;
+    protected final int heigth;
 
     /** Define se o tile é sólido. Se {@code true}, GameObjects não podem atravessá-lo. */
     public boolean isSolid = false;
@@ -40,6 +42,15 @@ public class Tile {
         this.x = x;
         this.y = y;
         this.sprite = sprite;
+        this.heigth = 16;
+        this.width = 16;
+    }
+    public Tile(int x, int y, int width, int heigth, Sprite sprite) {
+        this.x = x;
+        this.y = y;
+        this.sprite = sprite;
+        this.heigth = heigth;
+        this.width = width;
     }
 
     /**

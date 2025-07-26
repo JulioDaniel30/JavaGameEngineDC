@@ -8,11 +8,7 @@ import java.awt.event.KeyListener;
  * Gerencia todo o input do teclado de forma centralizada usando o padrão Singleton.
  * <p>
  * Para usar, obtenha a instância única através de {@code InputManager.instance} e
- * adicione-a como um {@link KeyListener} ao seu frame principal (ex: {@code frame.addKeyListener(InputManager.instance);}).
- * <p>
- * <b>Importante:</b> O método {@link #update()} deve ser chamado exatamente uma vez por
- * frame, preferencialmente no início do loop principal do jogo, para que a detecção
- * de "tecla recém-pressionada" funcione corretamente.
+ * adicione-a como um {@link KeyListener} ao seu componente principal (ex: o Canvas do jogo).
  *
  * @author JDStudio
  * @since 1.0
@@ -36,9 +32,9 @@ public class InputManager implements KeyListener {
     /**
      * Atualiza o estado das teclas para o próximo frame.
      * <p>
-     * Este método copia o estado atual das teclas para o array de estado anterior,
-     * permitindo a verificação de transições de estado (ex: de não pressionada para pressionada).
-     * Deve ser chamado no início de cada iteração do loop principal do jogo.
+     * Este método copia o estado atual das teclas para o array de estado anterior.
+     * <strong>Importante:</strong> Deve ser chamado no <strong>final</strong> de cada iteração
+     * do loop principal do jogo para que a detecção de "toque único" funcione.
      */
     public void update() {
         System.arraycopy(keys, 0, prevKeys, 0, keys.length);
@@ -61,7 +57,6 @@ public class InputManager implements KeyListener {
      * Verifica se uma tecla acabou de ser pressionada neste exato frame.
      * <p>
      * Ideal para ações de toque único, como pular, atirar ou interagir com objetos.
-     * Para funcionar corretamente, o método {@link #update()} deve ser chamado a cada frame.
      *
      * @param keyCode O código da tecla a ser verificada (ex: {@link KeyEvent#VK_SPACE}).
      * @return {@code true} se a tecla foi pressionada neste frame e não no anterior, {@code false} caso contrário.
@@ -77,8 +72,7 @@ public class InputManager implements KeyListener {
     /**
      * {@inheritDoc}
      * <p>
-     * Chamado pelo AWT quando uma tecla é pressionada. Atualiza o estado da tecla para {@code true}.
-     * Este método não deve ser chamado diretamente.
+     * Chamado pelo AWT quando uma tecla é pressionada. Este método não deve ser chamado diretamente.
      */
     @Override
     public void keyPressed(KeyEvent e) {
@@ -91,8 +85,7 @@ public class InputManager implements KeyListener {
     /**
      * {@inheritDoc}
      * <p>
-     * Chamado pelo AWT quando uma tecla é solta. Atualiza o estado da tecla para {@code false}.
-     * Este método não deve ser chamado diretamente.
+     * Chamado pelo AWT quando uma tecla é solta. Este método não deve ser chamado diretamente.
      */
     @Override
     public void keyReleased(KeyEvent e) {

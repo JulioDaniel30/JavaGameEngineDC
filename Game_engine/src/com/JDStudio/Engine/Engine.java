@@ -6,7 +6,9 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
+
 import javax.swing.JFrame;
+
 import com.JDStudio.Engine.Input.InputManager;
 
 /**
@@ -77,12 +79,15 @@ public class Engine extends Canvas implements Runnable {
     public void initFrame() {
         frame = new JFrame("Game Engine");
         frame.add(this);
+        //frame.addKeyListener(InputManager.instance);
         frame.setResizable(false);
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
-    }
+        //frame.requestFocus();
+        //frame.requestFocusInWindow();
+}
     
     /**
      * Inicia a thread do jogo de forma segura.
@@ -167,8 +172,8 @@ public class Engine extends Canvas implements Runnable {
         double delta = 0;
         int frames = 0;
         double timer = System.currentTimeMillis();
-        requestFocus(); // Garante que o canvas receba o foco para o input funcionar
-
+       requestFocus();
+       requestFocusInWindow();
         while (isRunning) {
             long now = System.nanoTime();
             delta += (now - lastTime) / ns;

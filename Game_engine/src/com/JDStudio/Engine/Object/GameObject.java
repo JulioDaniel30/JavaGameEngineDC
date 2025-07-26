@@ -8,8 +8,6 @@ import java.util.Objects;
 import com.JDStudio.Engine.Engine;
 import com.JDStudio.Engine.Graphics.Sprite;
 import com.JDStudio.Engine.World.Camera;
-import com.JDStudio.Game.Enemy;
-import com.JDStudio.Game.Player;
 
 /**
  * Verifica se dois GameObjects estão colidindo, respeitando suas máscaras de colisão.

@@ -6,7 +6,7 @@ Um motor de jogo 2D simples, modular e orientado a objetos, construído em Java 
 
 A maneira mais fácil de usar este motor em seu próprio projeto é importando o arquivo `engine.jar` pré-compilado.
 
-1.  Encontre o arquivo no diretório: `Game_engine/bin/lib/engine.jar`.
+1.  Encontre o arquivo no diretório: `Game_engine/sourceLib/engine.jar`.
 2.  Adicione este `.jar` ao *build path* (caminho de compilação) do seu projeto Java na sua IDE de preferência (Eclipse, IntelliJ IDEA, etc.).
 3.  Agora você pode importar e usar todas as classes do motor (como `GameState`, `GameObject`, `InputManager`) para construir seu próprio jogo.
 

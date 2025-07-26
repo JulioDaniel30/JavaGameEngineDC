@@ -68,8 +68,9 @@ public class PlayingState extends GameState {
 
     @Override
     public void tick() {
-        if (InputManager.isKeyJustPressed(KeyEvent.VK_F9)) { // Alterado para F9 para evitar conflitos
+        if (InputManager.isKeyJustPressed(KeyEvent.VK_9)) { // Alterado para F9 para evitar conflitos
             Engine.isDebug = !Engine.isDebug;
+            System.out.println(Engine.isDebug);
         }
 
         // A lógica de tick dos objetos, colisões, etc. continua aqui...
@@ -83,12 +84,14 @@ public class PlayingState extends GameState {
                 GameObject obj2 = gameObjects.get(j);
                 if (GameObject.isColliding(obj1, obj2)) {
                     // Lógica de colisão (Player-Enemy, etc.)
-                	if ((obj1 instanceof Player && obj2 instanceof Enemy) || 
-                            (obj1 instanceof Enemy && obj2 instanceof Player)) {
+                	if ((obj1 instanceof Player && obj2 instanceof Lifepack) || 
+                            (obj1 instanceof Lifepack && obj2 instanceof Player)) {
                             
                             // Use o novo método utilitário!
                             Player player = GameObject.getInstanceOf(Player.class, obj1, obj2);
-                            Enemy enemy = GameObject.getInstanceOf(Enemy.class, obj1, obj2);
+                            Lifepack lifepack = GameObject.getInstanceOf(Lifepack.class, obj1, obj2);
+                            gameObjects.remove(lifepack);
+                            break;
                 	
                 	}
                 }
