@@ -1,10 +1,9 @@
 package com.JDStudio.Game;
 
-import java.awt.image.BufferedImage;
-
+import com.JDStudio.Engine.Graphics.Sprite;
 import com.JDStudio.Engine.Object.GameObject;
 public class Bullet extends GameObject {
-    public Bullet(double x, double y, int width, int height, BufferedImage sprite) {
+    public Bullet(double x, double y, int width, int height, Sprite sprite) {
         super(x, y, width, height, sprite);
     }
     @Override

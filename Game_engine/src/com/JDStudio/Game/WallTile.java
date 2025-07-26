@@ -1,9 +1,8 @@
 package com.JDStudio.Game;
-import java.awt.image.BufferedImage;
-
+import com.JDStudio.Engine.Graphics.Sprite;
 import com.JDStudio.Engine.World.Tile;
 public class WallTile extends Tile {
-    public WallTile(int x, int y, BufferedImage sprite) {
+    public WallTile(int x, int y, Sprite sprite) {
         super(x, y, sprite);
         this.isSolid = true;
     }

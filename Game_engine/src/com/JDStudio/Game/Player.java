@@ -1,8 +1,8 @@
 // package com.arcastudio.mygame;
 package com.JDStudio.Game;
 import java.awt.event.KeyEvent;
-import java.awt.image.BufferedImage;
 
+import com.JDStudio.Engine.Graphics.Sprite;
 import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.Object.GameObject;
 
@@ -10,8 +10,11 @@ public class Player extends GameObject {
 
     public double speed = 1.4;
     private World world; // <-- ADICIONE O CAMPO PARA GUARDAR O MUNDO
+    public double life = 100;    // <-- Vida atual
+    public double maxLife = 100; // <-- Vida máxima
+    public int ammo = 0;    
 
-    public Player(double x, double y, int width, int height, BufferedImage sprite) {
+    public Player(double x, double y, int width, int height, Sprite sprite) {
         super(x, y, width, height, sprite);
         setMaskWidth(9);
         setMaskX((int) (x+3));

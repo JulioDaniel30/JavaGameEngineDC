@@ -1,142 +1,108 @@
 package com.JDStudio.Game;
 
-
-
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
 
+// Importações corretas dos pacotes da sua Engine
 import com.JDStudio.Engine.Engine;
 import com.JDStudio.Engine.GameState;
+import com.JDStudio.Engine.Graphics.AssetManager;
 import com.JDStudio.Engine.Graphics.Spritesheet;
+import com.JDStudio.Engine.Graphics.UI.UIManager;
+import com.JDStudio.Engine.Graphics.UI.UIText;
 import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.Object.GameObject;
 import com.JDStudio.Engine.World.Camera;
 
 public class PlayingState extends GameState {
 
-    public static Spritesheet spritesheet;
+    public static AssetManager assets;
     public static Player player;
-    private List<GameObject> gameObjects;
     private World world;
-
-    // Sprites estáticos para entidades
-    public static BufferedImage TILE_FLOOR;
-    public static BufferedImage TILE_WALL;
-    public static BufferedImage LIFEPACK_EN;
-    public static BufferedImage WEAPON_EN;
-    public static BufferedImage BULLET_EN;
-    public static BufferedImage ENEMY_EN;
-    public static BufferedImage PLAYER_SPRITE;
+    private UIManager uiManager; // A declaração está correta
 
     public PlayingState() {
-        gameObjects = new ArrayList<>();
+        assets = new AssetManager();
+        loadAssets();
+
+        // Inicializa o UIManager
+        uiManager = new UIManager();
         
-        // Carregar todos os recursos gráficos aqui
-        spritesheet = new Spritesheet("/spritesheet.png");
-        TILE_FLOOR = spritesheet.getSprite(0, 0, 16, 16);
-        TILE_WALL = spritesheet.getSprite(16, 0, 16, 16);
-        PLAYER_SPRITE = spritesheet.getSprite(32, 0, 16, 16);
-        LIFEPACK_EN = spritesheet.getSprite(6 * 16, 0, 16, 16);
-        WEAPON_EN = spritesheet.getSprite(7 * 16, 0, 16, 16);
-        BULLET_EN = spritesheet.getSprite(6 * 16, 16, 16, 16);
-        ENEMY_EN = spritesheet.getSprite(7 * 16, 16, 16, 16);
-
-        // Criar objetos essenciais
-        player = new Player(0, 0, 16, 16, PLAYER_SPRITE);
+        player = new Player(0, 0, 16, 16, assets.getSprite("player"));
+        world = new World(this);
         
-        // A classe World do seu jogo agora estende a da engine
-        world = new com.JDStudio.Game.World("/level1.png",this);
-
-        // --- A CORREÇÃO CRUCIAL ESTÁ AQUI ---
-        player.setWorld(world); // Atribui a instância do mundo ao jogador
-        // ------------------------------------
-
-        this.addGameObject(player);    }
-
-    public void addGameObject(GameObject go) {
-        gameObjects.add(go);
+        player.setWorld(world);
+        this.addGameObject(player); // Agora este método funciona, pois está na classe pai
+        
+        setupUI(); // Configura a UI
     }
-    
+
+    private void loadAssets() {
+        System.out.println("Carregando assets da Spritesheet...");
+        Spritesheet worldSheet = new Spritesheet("/spritesheet.png"); //
+
+        assets.registerSprite("tile_floor", worldSheet.getSprite(0, 0, 16, 16));
+        assets.registerSprite("tile_wall", worldSheet.getSprite(16, 0, 16, 16));
+        assets.registerSprite("player", worldSheet.getSprite(32, 0, 16, 16));
+        assets.registerSprite("enemy", worldSheet.getSprite(7 * 16, 16, 16, 16));
+        assets.registerSprite("weapon", worldSheet.getSprite(7 * 16, 0, 16, 16));
+        assets.registerSprite("lifepack", worldSheet.getSprite(6 * 16, 0, 16, 16));
+        assets.registerSprite("bullet", worldSheet.getSprite(6 * 16, 16, 16, 16));
+    }
+
+    // 2. O método setupUI agora está preenchido e funcional
+    private void setupUI() {
+        UIText lifeText = new UIText(
+            5, 15,
+            new Font("Arial", Font.BOLD, 12),
+            Color.WHITE,
+            () -> "Vida: " + (int)player.life + "/" + (int)player.maxLife
+        );
+        uiManager.addElement(lifeText);
+    }
+
+    // O método addGameObject não é mais necessário aqui, pois foi movido para GameState
+    // public void addGameObject(GameObject go) { ... }
+
     @Override
     public void tick() {
-    	
-    	// Atualiza o estado do InputManager no início de cada frame
-        
-        
-        // Verifica o toque único para o debug
-        if (InputManager.isKeyJustPressed(KeyEvent.VK_9)) {
+        if (InputManager.isKeyJustPressed(KeyEvent.VK_F9)) { // Alterado para F9 para evitar conflitos
             Engine.isDebug = !Engine.isDebug;
-            System.out.println(Engine.isDebug);
         }
+
+        // A lógica de tick dos objetos, colisões, etc. continua aqui...
         for (int i = 0; i < gameObjects.size(); i++) {
             gameObjects.get(i).tick();
         }
-        
-     // 2. VERIFICA AS COLISÕES ENTRE AS ENTIDADES
+
         for (int i = 0; i < gameObjects.size(); i++) {
             GameObject obj1 = gameObjects.get(i);
             for (int j = i + 1; j < gameObjects.size(); j++) {
                 GameObject obj2 = gameObjects.get(j);
-
                 if (GameObject.isColliding(obj1, obj2)) {
-                    // HOUVE COLISÃO! Agora, vamos ver que tipo de colisão foi.
-                    
-                	 // Colisão entre Player e Inimigo (em qualquer ordem)
-                    if ((obj1 instanceof Player && obj2 instanceof Enemy) || 
-                        (obj1 instanceof Enemy && obj2 instanceof Player)) {
-
-                        // Identifica quem é o Player e quem é o Enemy
-                    	Player player = GameObject.getInstanceOf(Player.class, obj1, obj2);
-                        Enemy enemy = GameObject.getInstanceOf(Enemy.class, obj1, obj2);
-
-                        // Agora, execute a lógica de colisão UMA VEZ
-                        System.out.println("Colisão entre " + player.getClass().getSimpleName() + " e " + enemy.getClass().getSimpleName());
-                        // Ex: player.sofrerDano(enemy.getForcaAtaque());
-                    }
-
-                    // Colisão entre Player e Lifepack (em qualquer ordem)
-                    if ((obj1 instanceof Player && obj2 instanceof Lifepack) ||
-                        (obj1 instanceof Lifepack && obj2 instanceof Player)) {
-                            
-                    	Player player = GameObject.getInstanceOf(Player.class, obj1, obj2);
-                        Lifepack lifepack = GameObject.getInstanceOf(Lifepack.class, obj1, obj2);
-
-                        System.out.println("Jogador pegou um Lifepack!");
-                        // Ex: player.curar(lifepack.getValorCura());
-
-                        // Remove o item do jogo
-                        gameObjects.remove(lifepack);
-                        j--; // Ajusta o índice para não pular o próximo item
-                    }
-                    if((obj1 instanceof Player && obj2 instanceof Weapon) ||
-                    	(obj1 instanceof Weapon && obj2 instanceof Player)){
-                    	
-                    	Player player = GameObject.getInstanceOf(Player.class, obj1, obj2);
-                    	Weapon weapon = GameObject.getInstanceOf(Weapon.class, obj1, obj2);
-                    	
-                    	System.out.println("Colisão entre " + player.getClass().getSimpleName() + " e " + weapon.getClass().getSimpleName());
-                    	
-                    }
+                    // Lógica de colisão (Player-Enemy, etc.)
+                	
                 }
             }
-            }
+        }
         
-        // Lógica da Câmera
         Camera.x = Camera.clamp(player.getX() - (Engine.WIDTH / 2), 0, world.WIDTH * 16 - Engine.WIDTH);
         Camera.y = Camera.clamp(player.getY() - (Engine.HEIGHT / 2), 0, world.HEIGHT * 16 - Engine.HEIGHT);
+        
         InputManager.instance.update();
     }
 
     @Override
     public void render(Graphics g) {
+        // Renderiza o mundo e os objetos
         world.render(g);
-        for (int i = 0; i < gameObjects.size(); i++) {
-            gameObjects.get(i).render(g);
+        for (GameObject go : gameObjects) {
+            go.render(g);
         }
-    }
 
-    
+        // 3. RENDERIZA A UI POR ÚLTIMO
+         uiManager.render(g);
+    }
 }

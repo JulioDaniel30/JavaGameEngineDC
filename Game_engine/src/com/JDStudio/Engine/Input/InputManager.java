@@ -1,66 +1,114 @@
+// Arquivo: InputManager.java
 package com.JDStudio.Engine.Input;
-
-//Arquivo: InputManager.java
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+/**
+ * Gerencia todo o input do teclado de forma centralizada usando o padrão Singleton.
+ * <p>
+ * Para usar, obtenha a instância única através de {@code InputManager.instance} e
+ * adicione-a como um {@link KeyListener} ao seu frame principal (ex: {@code frame.addKeyListener(InputManager.instance);}).
+ * <p>
+ * <b>Importante:</b> O método {@link #update()} deve ser chamado exatamente uma vez por
+ * frame, preferencialmente no início do loop principal do jogo, para que a detecção
+ * de "tecla recém-pressionada" funcione corretamente.
+ *
+ * @author JDStudio
+ * @since 1.0
+ */
 public class InputManager implements KeyListener {
 
- private boolean[] keys = new boolean[256];
- private boolean[] prevKeys = new boolean[256]; // <-- ADICIONE: Array para o estado anterior
+    /** A instância única e global do gerenciador de input. */
+    public static final InputManager instance = new InputManager();
 
- public static InputManager instance = new InputManager();
- private InputManager() {}
- 
- /**
-  * Este método deve ser chamado uma vez por frame, no início do tick principal.
-  * Ele atualiza o estado anterior das teclas.
-  */
- public void update() { // <-- ADICIONE ESTE MÉTODO
-     // Copia o estado atual das teclas para o estado anterior
-     System.arraycopy(keys, 0, prevKeys, 0, keys.length);
- }
+    /** Array que armazena o estado atual das teclas (pressionada ou não). */
+    private final boolean[] keys = new boolean[256];
+    
+    /** Array que armazena o estado das teclas no frame anterior. */
+    private final boolean[] prevKeys = new boolean[256];
 
- public static boolean isKeyPressed(int keyCode) {
-     if (keyCode >= 0 && keyCode < instance.keys.length) {
-         return instance.keys[keyCode];
-     }
-     return false;
- }
- 
- /**
-  * Verifica se uma tecla acabou de ser pressionada neste frame.
-  * Ótimo para ações de toque único, como pular ou ativar/desativar algo.
-  * @param keyCode O código da tecla a ser verificada.
-  * @return true se a tecla foi pressionada neste frame, false caso contrário.
-  */
- public static boolean isKeyJustPressed(int keyCode) { // <-- ADICIONE ESTE MÉTODO
-     if (keyCode >= 0 && keyCode < instance.keys.length) {
-         // A tecla está pressionada agora E não estava pressionada no frame anterior?
-         return instance.keys[keyCode] && !instance.prevKeys[keyCode];
-     }
-     return false;
- }
+    /**
+     * Construtor privado para garantir que apenas uma instância desta classe exista (padrão Singleton).
+     */
+    private InputManager() {}
 
- @Override
- public void keyPressed(KeyEvent e) {
-     int keyCode = e.getKeyCode();
-     if (keyCode >= 0 && keyCode < keys.length) {
-         keys[keyCode] = true;
-     }
- }
+    /**
+     * Atualiza o estado das teclas para o próximo frame.
+     * <p>
+     * Este método copia o estado atual das teclas para o array de estado anterior,
+     * permitindo a verificação de transições de estado (ex: de não pressionada para pressionada).
+     * Deve ser chamado no início de cada iteração do loop principal do jogo.
+     */
+    public void update() {
+        System.arraycopy(keys, 0, prevKeys, 0, keys.length);
+    }
 
- @Override
- public void keyReleased(KeyEvent e) {
-     int keyCode = e.getKeyCode();
-     if (keyCode >= 0 && keyCode < keys.length) {
-         keys[keyCode] = false;
-     }
- }
+    /**
+     * Verifica se uma tecla está atualmente pressionada (sendo segurada).
+     *
+     * @param keyCode O código da tecla a ser verificada (ex: {@link KeyEvent#VK_W}).
+     * @return {@code true} se a tecla estiver pressionada, {@code false} caso contrário.
+     */
+    public static boolean isKeyPressed(int keyCode) {
+        if (keyCode >= 0 && keyCode < instance.keys.length) {
+            return instance.keys[keyCode];
+        }
+        return false;
+    }
 
- @Override
- public void keyTyped(KeyEvent e) {
-     // Não utilizado
- }
+    /**
+     * Verifica se uma tecla acabou de ser pressionada neste exato frame.
+     * <p>
+     * Ideal para ações de toque único, como pular, atirar ou interagir com objetos.
+     * Para funcionar corretamente, o método {@link #update()} deve ser chamado a cada frame.
+     *
+     * @param keyCode O código da tecla a ser verificada (ex: {@link KeyEvent#VK_SPACE}).
+     * @return {@code true} se a tecla foi pressionada neste frame e não no anterior, {@code false} caso contrário.
+     */
+    public static boolean isKeyJustPressed(int keyCode) {
+        if (keyCode >= 0 && keyCode < instance.keys.length) {
+            // A tecla está pressionada agora E não estava pressionada no frame anterior?
+            return instance.keys[keyCode] && !instance.prevKeys[keyCode];
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Chamado pelo AWT quando uma tecla é pressionada. Atualiza o estado da tecla para {@code true}.
+     * Este método não deve ser chamado diretamente.
+     */
+    @Override
+    public void keyPressed(KeyEvent e) {
+        int keyCode = e.getKeyCode();
+        if (keyCode >= 0 && keyCode < keys.length) {
+            keys[keyCode] = true;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Chamado pelo AWT quando uma tecla é solta. Atualiza o estado da tecla para {@code false}.
+     * Este método não deve ser chamado diretamente.
+     */
+    @Override
+    public void keyReleased(KeyEvent e) {
+        int keyCode = e.getKeyCode();
+        if (keyCode >= 0 && keyCode < keys.length) {
+            keys[keyCode] = false;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Não utilizado por este gerenciador.
+     */
+    @Override
+    public void keyTyped(KeyEvent e) {
+        // Intencionalmente deixado em branco.
+    }
 }

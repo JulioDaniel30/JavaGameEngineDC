@@ -1,17 +1,20 @@
 package com.JDStudio.Engine.Object;
 
-
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
+import java.util.Objects;
 
 import com.JDStudio.Engine.Engine;
+import com.JDStudio.Engine.Graphics.Sprite;
 import com.JDStudio.Engine.World.Camera;
 
 /**
- * A classe base para todos os objetos renderizáveis e atualizáveis no jogo.
- * Cada objeto no jogo deve estender esta classe.
+ * Representa a classe base para todos os objetos renderizáveis e atualizáveis no jogo.
+ * <p>
+ * Cada entidade, como jogadores, inimigos ou itens, deve estender esta classe para
+ * ser gerenciada pelo motor do jogo. Ela fornece funcionalidades essenciais como
+* posição, dimensões, renderização e detecção de colisão.
  *
  * <p><b>Exemplo de como criar uma nova entidade:</b>
  * {@snippet :
@@ -27,55 +30,89 @@ import com.JDStudio.Engine.World.Camera;
  * }
  * }
  *}
+ * @author JDStudio
+ * @since 1.0
  */
-
 public abstract class GameObject {
 
-    protected double x, y; // Double para movimento suave
-    protected int width, height;
-    protected BufferedImage sprite;
-    
-    // Máscara de colisão
-    protected int maskX, maskY, maskWidth, maskHeight;
+    /** A posição horizontal precisa (eixo X), usando double para movimento suave. */
+    protected double x;
 
-    public GameObject(double x, double y, int width, int height, BufferedImage sprite) {
+    /** A posição vertical precisa (eixo Y), usando double para movimento suave. */
+    protected double y;
+
+    /** A largura visual do objeto. */
+    protected int width;
+
+    /** A altura visual do objeto. */
+    protected int height;
+
+    /** O sprite (imagem) associado a este objeto. */
+    protected Sprite sprite;
+
+    //<editor-fold desc="Collision Mask">
+    /** O deslocamento da máscara de colisão no eixo X em relação à posição do objeto. */
+    protected int maskX;
+    /** O deslocamento da máscara de colisão no eixo Y em relação à posição do objeto. */
+    protected int maskY;
+    /** A largura da máscara de colisão. */
+    protected int maskWidth;
+    /** A altura da máscara de colisão. */
+    protected int maskHeight;
+    //</editor-fold>
+
+    /**
+     * Construtor base para todos os GameObjects.
+     *
+     * @param x      A posição inicial no eixo X.
+     * @param y      A posição inicial no eixo Y.
+     * @param width  A largura do objeto.
+     * @param height A altura do objeto.
+     * @param sprite O sprite a ser renderizado para este objeto. Pode ser nulo.
+     */
+    public GameObject(double x, double y, int width, int height, Sprite sprite) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.sprite = sprite;
-        
-     // Por padrão, a máscara de colisão é do mesmo tamanho do objeto
+
+        // Por padrão, a máscara de colisão ocupa todo o espaço do objeto.
         this.maskX = 0;
         this.maskY = 0;
         this.maskWidth = width;
         this.maskHeight = height;
     }
-    
+
     /**
-     * Define uma máscara de colisão customizada para o objeto.
-     * @param maskX O deslocamento X da máscara em relação ao X do objeto.
-     * @param maskY O deslocamento Y da máscara em relação ao Y do objeto.
-     * @param maskWidth A largura da máscara.
-     * @param maskHeight A altura da máscara.
+     * Define uma máscara de colisão customizada para o objeto, diferente de suas dimensões visuais.
+     *
+     * @param maskX      O deslocamento X da máscara em relação à posição (x) do objeto.
+     * @param maskY      O deslocamento Y da máscara em relação à posição (y) do objeto.
+     * @param maskWidth  A largura da máscara de colisão.
+     * @param maskHeight A altura da máscara de colisão.
      */
     public void setCollisionMask(int maskX, int maskY, int maskWidth, int maskHeight) {
         this.maskX = maskX;
         this.maskY = maskY;
         this.maskWidth = maskWidth;
-        this.maskHeight = maskHeight;
+        this.maskHeight = height;
     }
 
     /**
-     * Verifica se este GameObject está colidindo com outro.
-     * Utiliza o método de interseção de retângulos (AABB).
+     * Verifica se dois GameObjects estão colidindo.
+     * <p>
+     * Utiliza o método de interseção de retângulos (AABB - Axis-Aligned Bounding Box)
+     * com base nas máscaras de colisão de cada objeto.
      *
-     * @param obj1 O primeiro objeto.
-     * @param obj2 O segundo objeto.
-     * @return true se houver colisão, false caso contrário.
+     * @param obj1 O primeiro objeto a ser verificado.
+     * @param obj2 O segundo objeto a ser verificado.
+     * @return {@code true} se os objetos estiverem colidindo, {@code false} caso contrário.
      */
     public static boolean isColliding(GameObject obj1, GameObject obj2) {
-        // Cria os retângulos de colisão para cada objeto na sua posição atual
+        Objects.requireNonNull(obj1, "O objeto 1 não pode ser nulo.");
+        Objects.requireNonNull(obj2, "O objeto 2 não pode ser nulo.");
+        
         Rectangle rect1 = new Rectangle(
             obj1.getX() + obj1.maskX,
             obj1.getY() + obj1.maskY,
@@ -90,43 +127,18 @@ public abstract class GameObject {
             obj2.maskHeight
         );
 
-        // O método intersects faz toda a mágica da verificação
         return rect1.intersects(rect2);
     }
 
-    /** este metodo fica toda a logica do gameObject,
-     * ele é atualizado a cada frame
-     * */
-    public abstract void tick();
-
-   
-
-	public void render(Graphics g) {
-        // Desenha o sprite normal
-        g.drawImage(sprite, this.getX() - Camera.x, this.getY() - Camera.y, null);
-
-        // Se o modo de debug estiver ativo, desenha a máscara de colisão
-        if (Engine.isDebug) {
-            g.setColor(Color.RED); // Define uma cor para a hitbox
-            g.drawRect(
-                this.getX() + this.maskX - Camera.x,
-                this.getY() + this.maskY - Camera.y,
-                this.maskWidth,
-                this.maskHeight
-            );
-        }
-    }
-	
-	/**
+    /**
      * Um método utilitário genérico para encontrar uma instância de um tipo específico
-     * entre dois objetos. Isso elimina a necessidade de usar o operador ternário
-     * repetidamente no loop de colisão.
+     * entre dois objetos. Útil para identificar os participantes de uma colisão.
      *
-     * @param <T> O tipo genérico da classe que estamos procurando.
-     * @param clazz A classe do tipo que queremos encontrar (ex: Player.class).
-     * @param obj1 O primeiro objeto da colisão.
-     * @param obj2 O segundo objeto da colisão.
-     * @return A instância do tipo procurado, ou null se nenhum dos objetos for desse tipo.
+     * @param <T>   O tipo genérico da classe que estamos procurando.
+     * @param clazz A classe do tipo que queremos encontrar (ex: {@code Player.class}).
+     * @param obj1  O primeiro objeto da colisão.
+     * @param obj2  O segundo objeto da colisão.
+     * @return A instância do tipo procurado, ou {@code null} se nenhum dos objetos for desse tipo.
      */
     public static <T extends GameObject> T getInstanceOf(Class<T> clazz, GameObject obj1, GameObject obj2) {
         if (clazz.isInstance(obj1)) {
@@ -136,44 +148,62 @@ public abstract class GameObject {
         }
         return null; // Nenhum dos objetos é do tipo procurado
     }
-	
-    
-    // Getters and Setters
+
+    /**
+     * Contém a lógica de atualização do objeto, como movimento, IA ou resposta a inputs.
+     * <p>
+     * Este método abstrato <b>deve</b> ser implementado por todas as subclasses e é chamado
+     * pelo motor do jogo a cada quadro (frame).
+     */
+    public abstract void tick();
+
+    /**
+     * Renderiza o objeto na tela.
+     * <p>
+     * Desenha o sprite do objeto na sua posição atual, ajustada pela câmera.
+     * Se o modo de debug estiver ativo ({@code Engine.isDebug}), desenha também
+     * um retângulo vermelho representando a máscara de colisão.
+     *
+     * @param g O contexto {@link Graphics} onde o objeto será desenhado.
+     */
+    public void render(Graphics g) {
+        if (sprite != null) {
+            g.drawImage(sprite.getImage(), this.getX() - Camera.x, this.getY() - Camera.y, null);
+        }
+
+        if (Engine.isDebug) {
+            g.setColor(Color.RED);
+            g.drawRect(
+                this.getX() + this.maskX - Camera.x,
+                this.getY() + this.maskY - Camera.y,
+                this.maskWidth,
+                this.maskHeight
+            );
+        }
+    }
+
+    //<editor-fold desc="Getters and Setters">
     public void setX(double newX) { this.x = newX; }
     public void setY(double newY) { this.y = newY; }
+
+    /** Retorna a posição X do objeto como um inteiro. */
     public int getX() { return (int)this.x; }
+    /** Retorna a posição Y do objeto como um inteiro. */
     public int getY() { return (int)this.y; }
+
     public int getWidth() { return this.width; }
     public int getHeight() { return this.height; }
-    public int getMaskX() {
-		return maskX;
-	}
 
-	public void setMaskX(int maskX) {
-		this.maskX = maskX;
-	}
+    public int getMaskX() { return maskX; }
+    public void setMaskX(int maskX) { this.maskX = maskX; }
 
-	public int getMaskY() {
-		return maskY;
-	}
+    public int getMaskY() { return maskY; }
+    public void setMaskY(int maskY) { this.maskY = maskY; }
 
-	public void setMaskY(int maskY) {
-		this.maskY = maskY;
-	}
+    public int getMaskWidth() { return maskWidth; }
+    public void setMaskWidth(int maskWidth) { this.maskWidth = maskWidth; }
 
-	public int getMaskWidth() {
-		return maskWidth;
-	}
-
-	public void setMaskWidth(int maskWidth) {
-		this.maskWidth = maskWidth;
-	}
-
-	public int getMaskHeight() {
-		return maskHeight;
-	}
-
-	public void setMaskHeight(int maskHeight) {
-		this.maskHeight = maskHeight;
-	}
+    public int getMaskHeight() { return maskHeight; }
+    public void setMaskHeight(int maskHeight) { this.maskHeight = maskHeight; }
+    //</editor-fold>
 }
