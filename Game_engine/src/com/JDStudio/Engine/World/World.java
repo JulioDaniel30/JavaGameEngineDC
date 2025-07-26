@@ -126,7 +126,7 @@ public class World {
     }
 
     // ... (os seus métodos getTile, setTile e isFree estão corretos e não precisam de alteração)
-
+    
     /**
      * Define um tile em uma posição específica do grid.
      *

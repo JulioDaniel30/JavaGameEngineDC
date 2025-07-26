@@ -149,8 +149,6 @@ public class PlayingState extends GameState implements IMapLoaderListener {
 
   
 
-    // --- MÉTODOS DE CORREÇÃO ---
-
     @Override
     public Tile onTileFound(int tileId, int x, int y) {
         // CORREÇÃO 1: Usar o ID correto para a parede (2), conforme o seu map1.json
@@ -168,7 +166,6 @@ public class PlayingState extends GameState implements IMapLoaderListener {
 
     @Override
     public void onObjectFound(String type, int x, int y, JSONObject properties) {
-        // CORREÇÃO 2: Ler a identidade do objeto pelo seu "name", conforme o seu map1.json
         String objectName = properties.getString("name");
 
         if (objectName.equals("player_start")) {
