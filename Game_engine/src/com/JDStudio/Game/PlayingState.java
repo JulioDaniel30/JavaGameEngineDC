@@ -5,6 +5,9 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 // Importações corretas dos pacotes da sua Engine
 import com.JDStudio.Engine.Engine;
 import com.JDStudio.Engine.GameState;
@@ -17,8 +20,11 @@ import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.Object.GameObject;
 import com.JDStudio.Engine.Sound.Sound;
 import com.JDStudio.Engine.World.Camera;
+import com.JDStudio.Engine.World.IMapLoaderListener;
+import com.JDStudio.Engine.World.Tile;
+import com.JDStudio.Engine.World.World;
 
-public class PlayingState extends GameState {
+public class PlayingState extends GameState implements IMapLoaderListener {
 
     public static AssetManager assets;
     public static Player player;
@@ -32,10 +38,10 @@ public class PlayingState extends GameState {
         // Inicializa o UIManager
         uiManager = new UIManager();
         
-        player = new Player(0, 0, 16, 16, assets.getSprite("player"));
-        world = new World(this);
-        
+        player = new Player(0, 0, 16, 16);
+        world = new World("/map1.json", this); // Usa o World da engine
         player.setWorld(world);
+        
         this.addGameObject(player); // Agora este método funciona, pois está na classe pai
         
         setupUI(); // Configura a UI
@@ -136,12 +142,57 @@ public class PlayingState extends GameState {
             System.out.println("Volume da Música: " + (int)(Sound.getMusicVolume() * 100) + "%");
         }
         
-        Camera.x = Camera.clamp(player.getX() - (Engine.WIDTH / 2), 0, world.WIDTH * 16 - Engine.WIDTH);
-        Camera.y = Camera.clamp(player.getY() - (Engine.HEIGHT / 2), 0, world.HEIGHT * 16 - Engine.HEIGHT);
+        updateCamera();
         
         InputManager.instance.update();
     }
 
+  
+
+    // --- MÉTODOS DE CORREÇÃO ---
+
+    @Override
+    public Tile onTileFound(int tileId, int x, int y) {
+        // CORREÇÃO 1: Usar o ID correto para a parede (2), conforme o seu map1.json
+    	System.out.println("ontilefound");
+    	System.out.println("\n" + tileId);
+        if (tileId == 2) {
+        	System.out.println("id 2");
+            return new WallTile(x, y, PlayingState.assets.getSprite("tile_wall"));
+        } else if (tileId == 1) { // O ID 1 é o chão
+        	System.out.println("id 1");
+            return new FloorTile(x, y, PlayingState.assets.getSprite("tile_floor"));
+        }
+        return null;
+    }
+
+    @Override
+    public void onObjectFound(String type, int x, int y, JSONObject properties) {
+        // CORREÇÃO 2: Ler a identidade do objeto pelo seu "name", conforme o seu map1.json
+        String objectName = properties.getString("name");
+
+        if (objectName.equals("player_start")) {
+            player.setX(x);
+            player.setY(y);
+        } else if (objectName.equals("enemy")) {
+            this.addGameObject(new Enemy(x, y, 16, 16, PlayingState.assets.getSprite("enemy")));
+        } else if (objectName.equals("lifepack")) {
+            this.addGameObject(new Lifepack(x, y, 16, 16, PlayingState.assets.getSprite("lifepack")));
+        } else if (objectName.equals("weapon")) {
+            this.addGameObject(new Weapon(x, y, 16, 16, PlayingState.assets.getSprite("weapon")));
+        } else if (objectName.equals("bullet")) {
+            this.addGameObject(new Bullet(x, y, 16, 16, PlayingState.assets.getSprite("bullet")));
+        }
+    }
+    
+    private void updateCamera() {
+        int mapPixelWidth = world.WIDTH * World.TILE_SIZE;
+        int mapPixelHeight = world.HEIGHT * World.TILE_SIZE;
+        Camera.x = Camera.clamp(player.getX() - (Engine.WIDTH / 2), 0, mapPixelWidth - Engine.WIDTH);
+        Camera.y = Camera.clamp(player.getY() - (Engine.HEIGHT / 2), 0, mapPixelHeight - Engine.HEIGHT);
+    }
+
+    
     @Override
     public void render(Graphics g) {
         // Renderiza o mundo e os objetos
@@ -152,5 +203,6 @@ public class PlayingState extends GameState {
 
         // 3. RENDERIZA A UI POR ÚLTIMO
          uiManager.render(g);
-    }
+    }	
+    
 }

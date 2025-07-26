@@ -92,7 +92,6 @@ public abstract class GameObject {
      * @param y      A posição inicial no eixo Y.
      * @param width  A largura do objeto.
      * @param height A altura do objeto.
-     * @param sprite O sprite a ser renderizado para este objeto. Pode ser nulo.
      */
     public GameObject(double x, double y, int width, int height, Sprite sprite) {
         this.x = x;
@@ -109,6 +108,31 @@ public abstract class GameObject {
         
         this.animator = new Animator();
     }
+    
+    /**
+     * Construtor base para todos os GameObjects.
+     *
+     * @param x      A posição inicial no eixo X.
+     * @param y      A posição inicial no eixo Y.
+     * @param width  A largura do objeto.
+     * @param height A altura do objeto.
+     */
+    public GameObject(double x, double y, int width, int height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+
+        // Por padrão, a máscara de colisão ocupa todo o espaço do objeto.
+        this.maskX = 0;
+        this.maskY = 0;
+        this.maskWidth = width;
+        this.maskHeight = height;
+        
+        this.animator = new Animator();
+    }
+    
+    
 
     /**
      * Define uma máscara de colisão customizada para o objeto, diferente de suas dimensões visuais.

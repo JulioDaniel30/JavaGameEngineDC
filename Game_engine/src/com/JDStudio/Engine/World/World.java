@@ -1,14 +1,24 @@
 package com.JDStudio.Engine.World;
 
+import java.awt.Graphics;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import com.JDStudio.Engine.Engine;
+
 /**
  * Gerencia a estrutura do mundo do jogo, composta por uma grade de tiles.
  * <p>
- * Esta classe é responsável por armazenar todos os {@link Tile} do mapa,
- * fornecer acesso a eles e realizar verificações de colisão de entidades
- * contra o cenário (tiles sólidos).
+ * Esta classe é responsável por carregar um mapa a partir de um arquivo JSON do Tiled,
+ * armazenar todos os {@link Tile} do mapa, fornecer acesso a eles e realizar
+ * verificações de colisão de entidades contra o cenário (tiles sólidos).
  *
  * @author JDStudio
- * @since 1.0
+ * @since 1.1
  */
 public class World {
 
@@ -24,18 +34,98 @@ public class World {
     /** O tamanho (largura e altura) de cada tile em pixels. */
     public static final int TILE_SIZE = 16;
 
-
     /**
-     * Cria uma nova instância do mundo com dimensões específicas.
-     *
-     * @param width  A largura do mundo em número de tiles.
-     * @param height A altura do mundo em número de tiles.
+     * Carrega um mundo a partir de um arquivo de mapa JSON (do Tiled), delegando a
+     * criação de objetos específicos para um listener.
+     * @param mapPath O caminho para o arquivo .json do mapa.
+     * @param listener A classe (do jogo) que saberá como construir os tiles e objetos.
      */
-    public World(int width, int height) {
-        this.WIDTH = width;
-        this.HEIGHT = height;
-        this.tiles = new Tile[width * height];
+    public World(String mapPath, IMapLoaderListener listener) {
+        // --- O CÓDIGO RESTAURADO ESTÁ AQUI ---
+        try {
+            InputStream is = getClass().getResourceAsStream(mapPath);
+            if (is == null) {
+                System.err.println("ERRO CRÍTICO: Não foi possível encontrar o arquivo de mapa: " + mapPath);
+                return;
+            }
+            String jsonText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(jsonText);
+
+            this.WIDTH = json.getInt("width");
+            this.HEIGHT = json.getInt("height");
+            this.tiles = new Tile[WIDTH * HEIGHT];
+            
+            int tileWidth = json.getInt("tilewidth");
+            int tileHeight = json.getInt("tileheight");
+
+            JSONArray layers = json.getJSONArray("layers");
+            for (int i = 0; i < layers.length(); i++) {
+                JSONObject layer = layers.getJSONObject(i);
+                
+                if (layer.getString("type").equals("tilelayer")) {
+                    processTileLayer(layer, tileWidth, tileHeight, listener);
+                } else if (layer.getString("type").equals("objectgroup")) {
+                    processObjectLayer(layer, tileWidth, tileHeight, listener);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        // --- FIM DO CÓDIGO RESTAURADO ---
     }
+    
+    private void processTileLayer(JSONObject layer, int tileWidth, int tileHeight, IMapLoaderListener listener) {
+        JSONArray data = layer.getJSONArray("data");
+        for (int i = 0; i < data.length(); i++) {
+            int tileId = data.getInt(i);
+            if (tileId == 0) continue; // Pula tiles vazios
+
+            int x = (i % WIDTH) * tileWidth;
+            int y = (i / WIDTH) * tileHeight;
+            
+            // A engine DELEGA a criação do tile para o listener do jogo
+            Tile createdTile = listener.onTileFound(tileId, x, y);
+            if (createdTile != null) {
+                this.tiles[i] = createdTile;
+            }
+        }
+    }
+
+    private void processObjectLayer(JSONObject layer, int tileWidth, int tileHeight, IMapLoaderListener listener) {
+        JSONArray objects = layer.getJSONArray("objects");
+        for (int i = 0; i < objects.length(); i++) {
+            JSONObject object = objects.getJSONObject(i);
+            int x = object.getInt("x");
+            // Tiled posiciona objetos pela base, ajustamos para o topo
+            int y = object.getInt("y") - tileHeight; 
+            String type = object.has("type") ? object.getString("type") : "";
+            
+            // A engine DELEGA a criação do objeto para o listener do jogo
+            listener.onObjectFound(type, x, y, object);
+        }
+    }
+    
+    /**
+     * Renderiza a porção visível do mapa na tela.
+     */
+    public void render(Graphics g) {
+        int xstart = Camera.x / TILE_SIZE;
+        int ystart = Camera.y / TILE_SIZE;
+        
+        int xfinal = xstart + (Engine.WIDTH / TILE_SIZE) + 1;
+        int yfinal = ystart + (Engine.HEIGHT / TILE_SIZE) + 1;
+        
+        for (int xx = xstart; xx <= xfinal; xx++) {
+            for (int yy = ystart; yy <= yfinal; yy++) {
+                Tile tile = getTile(xx, yy);
+                if (tile != null) {
+                    tile.render(g);
+                }
+            }
+        }
+    }
+
+    // ... (os seus métodos getTile, setTile e isFree estão corretos e não precisam de alteração)
 
     /**
      * Define um tile em uma posição específica do grid.

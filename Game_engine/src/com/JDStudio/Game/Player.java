@@ -6,6 +6,7 @@ import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animation;
 import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.Object.GameObject;
+import com.JDStudio.Engine.World.World;
 
 public class Player extends GameObject {
 
@@ -15,8 +16,8 @@ public class Player extends GameObject {
     public double maxLife = 100; // <-- Vida máxima
     public int ammo = 0;    
 
-    public Player(double x, double y, int width, int height, Sprite sprite) {
-        super(x, y, width, height, sprite);
+    public Player(double x, double y, int width, int height) {
+        super(x, y, width, height);
         setMaskWidth(9);
         setMaskX((int) (x+3));
         setupAnimations();

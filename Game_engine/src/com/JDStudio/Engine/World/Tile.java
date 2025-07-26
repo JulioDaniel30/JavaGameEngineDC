@@ -62,9 +62,12 @@ public class Tile {
      * @param g O contexto {@link Graphics} onde o tile será desenhado.
      */
     public void render(Graphics g) {
-        // Desenha o sprite do tile
-        g.drawImage(sprite.getImage(), x - Camera.x, y - Camera.y, null);
-        
+    	// --- A CORREÇÃO ESTÁ AQUI ---
+        // Adiciona uma verificação para garantir que o sprite não é nulo
+        // antes de tentar desenhá-lo.
+        if (sprite != null) {
+            g.drawImage(sprite.getImage(), x - Camera.x, y - Camera.y, null);
+        }
         // Desenha a hitbox de debug se necessário
         if (Engine.isDebug && this.isSolid) {
             g.setColor(Color.BLUE);
