@@ -1,11 +1,10 @@
-package com.JDStudio.Game;
+package com.game.Game;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 // Importações corretas dos pacotes da sua Engine

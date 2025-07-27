@@ -1,4 +1,4 @@
-package com.JDStudio.Game;
+package com.game.Game;
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 import com.JDStudio.Engine.World.Tile;
 public class WallTile extends Tile {

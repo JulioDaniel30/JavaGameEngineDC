@@ -1,8 +1,7 @@
 // package com.arcastudio.mygame;
-package com.JDStudio.Game;
+package com.game.Game;
 import java.awt.event.KeyEvent;
 
-import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animation;
 import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.Object.GameObject;

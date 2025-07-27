@@ -1,4 +1,4 @@
-package com.JDStudio.Game;
+package com.game.Game;
 
 import com.JDStudio.Engine.Engine;
 
