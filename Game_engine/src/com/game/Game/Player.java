@@ -6,6 +6,7 @@ import java.awt.event.KeyEvent;
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animation;
 import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.Object.GameObject;
+import com.JDStudio.Engine.Sound.Sound;
 import com.JDStudio.Engine.World.World;
 
 public class Player extends GameObject {
@@ -67,7 +68,7 @@ public class Player extends GameObject {
 			if (this.life > this.maxLife) {
 				this.life = this.maxLife;
 			}
-
+			Sound.play("/hurt.wav", 0.5f);
 			// Sinaliza que o Lifepack deve ser destruído
 			other.isDestroyed = true;
 

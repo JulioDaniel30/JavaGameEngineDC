@@ -2,20 +2,17 @@ package com.JDStudio.Engine.World;
 
 import org.json.JSONObject;
 
-/**
- * Uma interface (contrato) que permite que a engine delegue a criação de
- * tiles e objetos específicos do jogo para a classe que está carregando o mapa.
- */
 public interface IMapLoaderListener {
 
     /**
      * Chamado pela engine sempre que um tile é encontrado no mapa.
+     * @param layerName O nome da camada onde o tile foi encontrado.
      * @param tileId O ID do tile lido do arquivo JSON.
      * @param x A posição X (em pixels) onde o tile deve ser colocado.
      * @param y A posição Y (em pixels) onde o tile deve ser colocado.
      * @return O objeto Tile específico do jogo a ser criado.
      */
-    Tile onTileFound(int tileId, int x, int y);
+    Tile onTileFound(String layerName, int tileId, int x, int y);
 
     /**
      * Chamado pela engine sempre que um objeto é encontrado em uma camada de objetos.

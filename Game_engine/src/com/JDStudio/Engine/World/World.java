@@ -11,27 +11,41 @@ import org.json.JSONObject;
 
 import com.JDStudio.Engine.Engine;
 
+/**
+ * Gerencia a estrutura do mundo do jogo, composta por uma grade de tiles.
+ * <p>
+ * Esta classe é responsável por carregar um mapa a partir de um arquivo JSON do Tiled,
+ * armazenar todos os {@link Tile} do mapa, e realizar a renderização e
+ * verificações de colisão contra o cenário.
+ */
 public class World {
 
-    public int WIDTH;  // Largura do mundo em tiles
-    public int HEIGHT; // Altura do mundo em tiles
-    
-    // --- MUDANÇA PRINCIPAL ---
-    // O tamanho do tile agora é específico para cada instância do mundo.
-    public int tileWidth;
-    public int tileHeight;
+   
 
-    protected Tile[] tiles;
-    
-    // A constante estática foi removida daqui.
-    // public static final int TILE_SIZE = 16;
+    /** A largura do mundo em unidades de tile. */
+    public final int WIDTH;
+    /** A altura do mundo em unidades de tile. */
+    public final int HEIGHT;
 
+    /** A largura de cada tile em pixels, lida do mapa. */
+    public final int tileWidth;
+    /** A altura de cada tile em pixels, lida do mapa. */
+    public final int tileHeight;
+
+    /** Um array unidimensional que armazena a grade de tiles bidimensional. */
+    protected final Tile[] tiles;
+
+    /**
+     * Carrega um mundo a partir de um arquivo de mapa JSON (do Tiled), delegando a
+     * criação de objetos específicos para um listener.
+     * @param mapPath O caminho para o arquivo .json do mapa.
+     * @param listener A classe (do jogo) que saberá como construir os tiles e objetos.
+     */
     public World(String mapPath, IMapLoaderListener listener) {
-        try {
-            InputStream is = getClass().getResourceAsStream(mapPath);
+        try (InputStream is = getClass().getResourceAsStream(mapPath)) {
             if (is == null) {
-                System.err.println("ERRO CRÍTICO: Não foi possível encontrar o arquivo de mapa: " + mapPath);
-                return;
+                // Lança uma exceção para interromper a criação do mundo se o mapa não for encontrado
+                throw new IOException("ERRO CRÍTICO: Não foi possível encontrar o arquivo de mapa: " + mapPath);
             }
             String jsonText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             JSONObject json = new JSONObject(jsonText);
@@ -40,8 +54,7 @@ public class World {
             this.HEIGHT = json.getInt("height");
             this.tiles = new Tile[WIDTH * HEIGHT];
             
-            // --- ATRIBUIÇÃO DOS NOVOS ATRIBUTOS ---
-            // Lemos o tamanho do tile do próprio arquivo JSON.
+            // O tamanho do tile agora é lido diretamente do arquivo JSON
             this.tileWidth = json.getInt("tilewidth");
             this.tileHeight = json.getInt("tileheight");
 
@@ -56,21 +69,24 @@ public class World {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            // Lança uma RuntimeException para sinalizar uma falha crítica na inicialização
+            throw new RuntimeException("Falha ao criar o mundo a partir de: " + mapPath, e);
         }
     }
     
     private void processTileLayer(JSONObject layer, IMapLoaderListener listener) {
         JSONArray data = layer.getJSONArray("data");
+        String layerName = layer.getString("name");
+
         for (int i = 0; i < data.length(); i++) {
             int tileId = data.getInt(i);
-            if (tileId == 0) continue;
+            if (tileId == 0) continue; // Pula tiles vazios
 
-            // Usa os novos atributos para calcular a posição em pixels
             int x = (i % WIDTH) * this.tileWidth;
             int y = (i / WIDTH) * this.tileHeight;
             
-            Tile createdTile = listener.onTileFound(tileId, x, y);
+            // Delega a criação do tile, passando o nome da camada e o ID do tile
+            Tile createdTile = listener.onTileFound(layerName, tileId, x, y);
             if (createdTile != null) {
                 this.tiles[i] = createdTile;
             }
@@ -82,7 +98,7 @@ public class World {
         for (int i = 0; i < objects.length(); i++) {
             JSONObject object = objects.getJSONObject(i);
             int x = object.getInt("x");
-            // Ajuste usa o tileHeight do mapa
+            // Tiled posiciona objetos pela base, ajustamos para o topo
             int y = object.getInt("y") - this.tileHeight; 
             String type = object.has("type") ? object.getString("type") : "";
             
@@ -90,12 +106,14 @@ public class World {
         }
     }
     
+    /**
+     * Renderiza a porção visível do mapa na tela.
+     */
     public void render(Graphics g) {
-        // Usa os novos atributos para calcular a área de renderização
         int xstart = Engine.camera.getX() / this.tileWidth;
         int ystart = Engine.camera.getY() / this.tileHeight;
         
-        int xfinal = xstart + (Engine.WIDTH / this.tileWidth) + 2; // Adicionado +2 para garantir cobertura com zoom/scroll
+        int xfinal = xstart + (Engine.WIDTH / this.tileWidth) + 2;
         int yfinal = ystart + (Engine.HEIGHT / this.tileHeight) + 2;
         
         for (int xx = xstart; xx <= xfinal; xx++) {
@@ -107,26 +125,25 @@ public class World {
             }
         }
     }
-
-    public void setTile(int x, int y, Tile tile) {
-        if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
-            tiles[x + (y * WIDTH)] = tile;
-        }
-    }
-
+    
+    /**
+     * Recupera um tile de uma posição específica do grid.
+     */
     public Tile getTile(int x, int y) {
         if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
-            // Usa os novos atributos para criar o tile "fantasma"
+            // Retorna um tile "fantasma" sólido para fora dos limites.
             return new Tile(x * this.tileWidth, y * this.tileHeight, this.tileWidth, this.tileHeight, null) {{ isSolid = true; }};
         }
         return tiles[x + (y * WIDTH)];
     }
 
+    /**
+     * Verifica se uma área retangular está livre ou se colide com um tile sólido.
+     */
     public boolean isFree(int x, int y, int maskX, int maskY, int maskWidth, int maskHeight) {
         int startX = x + maskX;
         int startY = y + maskY;
 
-        // Usa os novos atributos para converter de pixels para a grade de tiles
         int tileX1 = startX / this.tileWidth;
         int tileY1 = startY / this.tileHeight;
         int tileX2 = (startX + maskWidth - 1) / this.tileWidth;
@@ -136,13 +153,10 @@ public class World {
             for (int ix = tileX1; ix <= tileX2; ix++) {
                 Tile tile = getTile(ix, iy);
                 if (tile != null && tile.isSolid) {
-                    return false;
+                    return false; // Área bloqueada
                 }
             }
         }
         return true;
     }
-
 }
-
-
