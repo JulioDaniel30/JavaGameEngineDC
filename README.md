@@ -62,7 +62,6 @@ O código está organizado em pacotes que separam as diferentes responsabilidade
       * `Camera.java`: Classe que gerencia a posição, zoom, tremor e movimento suave da câmera.
       * `IMapLoaderListener.java`: Interface para delegar a criação de objetos durante o carregamento do mapa.
 
-
 ### Pré-requisitos
 
   * **JDK 11** ou superior.
