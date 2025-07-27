@@ -66,12 +66,13 @@ public class Tile {
         // Adiciona uma verificação para garantir que o sprite não é nulo
         // antes de tentar desenhá-lo.
         if (sprite != null) {
-            g.drawImage(sprite.getImage(), x - Camera.x, y - Camera.y, null);
+        	g.drawImage(sprite.getImage(), x - Engine.camera.getX(), y - Engine.camera.getY(), null);
         }
         // Desenha a hitbox de debug se necessário
         if (Engine.isDebug && this.isSolid) {
             g.setColor(Color.BLUE);
-            g.drawRect(x - Camera.x, y - Camera.y, 16, 16); // Assumindo tiles de 16x16
+            
+            g.drawRect(x - Engine.camera.getX(), y - Engine.camera.getY(), width, heigth);
         }
     }
     

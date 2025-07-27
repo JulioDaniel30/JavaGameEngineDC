@@ -6,53 +6,13 @@ import java.awt.Rectangle;
 import java.util.Objects;
 
 import com.JDStudio.Engine.Engine;
+import com.JDStudio.Engine.Components.MovementComponent;
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animator;
 import com.JDStudio.Engine.World.Camera;
 
 /**
- * Verifica se dois GameObjects estão colidindo, respeitando suas máscaras de colisão.
- * <p>
- * Este método utiliza a técnica de <strong>AABB (Axis-Aligned Bounding Box)</strong>.
- * Ele cria um {@link java.awt.Rectangle} para a máscara de colisão de cada objeto
- * e então usa o método {@code intersects()} para determinar se há uma sobreposição.
- *
- * <p><b>Etapa 1: Detectando a Colisão</b>
- * <p>O primeiro passo é usar este método dentro de um loop para detectar se uma
- * colisão entre quaisquer dois objetos ocorreu.
- *
- * <pre>{@code
- * // Exemplo dentro do método tick() do seu GameState
- * if (GameObject.isColliding(obj1, obj2)) {
- * // Colisão detectada! Prossiga para a próxima etapa.
- * // ...
- * }
- * }</pre>
- *
- * <p><b>Etapa 2: Identificando os Objetos e Executando a Ação</b>
- * <p>Após detectar a colisão, use {@code instanceof} para determinar o tipo de
- * interação e execute a lógica específica para aquela colisão.
- *
- * <pre>{@code
- * // Continuação do código dentro do if(isColliding(...))
- *
- * // A interação é entre um Player e um Enemy?
- * if ((obj1 instanceof Player && obj2 instanceof Enemy) ||
- * (obj1 instanceof Enemy && obj2 instanceof Player)) {
- *
- * // Sim. Obtenha as instâncias para usar seus métodos.
- * Player player = GameObject.getInstanceOf(Player.class, obj1, obj2);
- * Enemy enemy = GameObject.getInstanceOf(Enemy.class, obj1, obj2);
- *
- * // Execute a lógica de dano.
- * player.takeDamage(10);
- * }
- * }</pre>
- *
- * @param obj1 O primeiro objeto a ser verificado na colisão.
- * @param obj2 O segundo objeto a ser verificado na colisão.
- * @return {@code true} se as máscaras de colisão dos objetos se sobrepõem,
- * {@code false} caso contrário.
+ * Class GameObject
  * @author JDStudio
  * @since 1.0
  */
@@ -77,13 +37,14 @@ public abstract class GameObject {
     /** O deslocamento da máscara de colisão no eixo X em relação à posição do objeto. */
     protected int maskX;
     /** O deslocamento da máscara de colisão no eixo Y em relação à posição do objeto. */
-    protected int maskY;
+    public int maskY;
     /** A largura da máscara de colisão. */
     protected int maskWidth;
     /** A altura da máscara de colisão. */
     protected int maskHeight;
     protected Animator animator;
-    //</editor-fold>
+    public MovementComponent movement;
+    public boolean isDestroyed = false;
 
     /**
      * Construtor base para todos os GameObjects.
@@ -92,6 +53,7 @@ public abstract class GameObject {
      * @param y      A posição inicial no eixo Y.
      * @param width  A largura do objeto.
      * @param height A altura do objeto.
+     * @param sprite A sprite do objeto
      */
     public GameObject(double x, double y, int width, int height, Sprite sprite) {
         this.x = x;
@@ -107,6 +69,10 @@ public abstract class GameObject {
         this.maskHeight = height;
         
         this.animator = new Animator();
+        // Inicializa o componente de movimento com velocidade 0 por padrão.
+        // A velocidade real será definida pelas subclasses (como o Player).
+        this.movement = new MovementComponent(this, 0);
+        
     }
     
     /**
@@ -130,6 +96,10 @@ public abstract class GameObject {
         this.maskHeight = height;
         
         this.animator = new Animator();
+        
+     // Inicializa o componente de movimento com velocidade 0 por padrão.
+        // A velocidade real será definida pelas subclasses (como o Player).
+        this.movement = new MovementComponent(this, 0);
     }
     
     
@@ -149,6 +119,17 @@ public abstract class GameObject {
         this.maskHeight = height;
     }
 
+    
+    /**
+     * Chamado quando este objeto colide com outro.
+     * Subclasses devem sobrescrever este método para implementar a lógica de colisão específica.
+     * @param other O GameObject com o qual este objeto colidiu.
+     */
+    public void onCollision(GameObject other) {
+        // Por padrão, não faz nada.
+    }
+
+    
     /**
      * Verifica se dois GameObjects estão colidindo.
      * <p>
@@ -158,6 +139,8 @@ public abstract class GameObject {
      * @param obj1 O primeiro objeto a ser verificado.
      * @param obj2 O segundo objeto a ser verificado.
      * @return {@code true} se os objetos estiverem colidindo, {@code false} caso contrário.
+     * 
+     * 
      */
     public static boolean isColliding(GameObject obj1, GameObject obj2) {
         Objects.requireNonNull(obj1, "O objeto 1 não pode ser nulo.");
@@ -207,6 +190,7 @@ public abstract class GameObject {
      */
     public void tick() {
     	animator.tick();
+    	movement.tick(); // O GameObject agora delega a atualização do movimento
     }
 
     /**
@@ -225,17 +209,17 @@ public abstract class GameObject {
         Sprite currentSprite = animator.getCurrentSprite();
         if (currentSprite != null) {
             // Desenha o frame atual da animação
-            g.drawImage(currentSprite.getImage(), this.getX() - Camera.x, this.getY() - Camera.y, null);
+            g.drawImage(currentSprite.getImage(), this.getX() - Engine.camera.getX(), this.getY() -Engine.camera.getY(), null);
         } else if (this.sprite != null) {
             // Se não houver animação, desenha o sprite estático padrão
-            g.drawImage(this.sprite.getImage(), this.getX() - Camera.x, this.getY() - Camera.y, null);
+            g.drawImage(this.sprite.getImage(), this.getX() - Engine.camera.getX(), this.getY() - Engine.camera.getY(), null);
         }
 
         if (Engine.isDebug) {
             g.setColor(Color.RED);
             g.drawRect(
-                this.getX() + this.maskX - Camera.x,
-                this.getY() + this.maskY - Camera.y,
+                this.getX() + this.maskX - Engine.camera.getX(),
+                this.getY() + this.maskY - Engine.camera.getY(),
                 this.maskWidth,
                 this.maskHeight
             );
