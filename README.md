@@ -1,3 +1,10 @@
+<<<<<<< Updated upstream
+=======
+Com certeza. Com as últimas melhorias no sistema de tiles e som, uma reescrita completa do `README.md` é a melhor forma de consolidar tudo e deixar a documentação clara, profissional e alinhada com a versão atual da sua engine.
+    
+Abaixo está a nova versão completa do seu `README.md`. Ele foi reestruturado para destacar as novas funcionalidades e refinar as explicações, especialmente no tutorial para desenvolvedores.
+
+-----
 ## JD Studio Game Engine
 
 Um motor de jogo 2D simples, modular e orientado a objetos, construído em Java puro (AWT/Swing). Este projeto serve como uma base robusta para a criação de jogos 2D, especialmente aqueles baseados em tiles, e inclui um jogo de exemplo completo para demonstrar seus recursos avançados.
