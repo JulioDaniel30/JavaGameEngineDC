@@ -2,14 +2,6 @@
 
 Um motor de jogo 2D simples, modular e orientado a objetos, construído em Java puro, utilizando AWT e Swing para renderização. Este projeto serve como uma base sólida para a criação de jogos 2D, especialmente aqueles baseados em tiles, e inclui um jogo de exemplo completo para demonstrar seus recursos.
 
-## Como Começar Rapidamente (Usando o .jar)
-
-A maneira mais fácil de usar este motor em seu próprio projeto é importando o arquivo `engine.jar` pré-compilado.
-
-1.  Encontre o arquivo no diretório: `Game_engine/sourceLib/engine.jar`.
-2.  Adicione este `.jar` ao *build path* (caminho de compilação) do seu projeto Java na sua IDE de preferência (Eclipse, IntelliJ IDEA, etc.).
-3.  Agora você pode importar e usar todas as classes do motor (como `GameState`, `GameObject`, `InputManager`) para construir seu próprio jogo.
-
 ## Principais Funcionalidades do Motor
 
   * **Game Loop de Timestep Fixo**: Garante que a lógica do jogo execute a uma taxa constante (padrão de 60 UPS) para um comportamento previsível, independentemente do FPS.
@@ -89,6 +81,31 @@ Para ver o motor em ação, explore o jogo de exemplo incluído. Ele demonstra c
 
 -----
 
+### Passos para Criar o seu Jogo
+
+1.  **Obtenha o Projeto da Engine**
+    * Clone este repositório para a sua máquina local ou descarregue o ficheiro ZIP e extraia-o.
+
+2.  **Importe o Projeto no Eclipse**
+    * No Eclipse, vá a `File > Import...`.
+    * Selecione `Existing Projects into Workspace` e navegue até à pasta do projeto que acabou de obter.
+    * Clique em `Finish`.
+
+3.  **Crie o Pacote do seu Jogo**
+    * Dentro da pasta `src`, clique com o botão direito e vá a `New > Package`.
+    * Dê um nome ao pacote do seu jogo (ex: `com.meujogo.aventura`).
+
+4. **Recursos**
+    * Certifique-se de que a pasta contendo os recursos (spritesheets, arquivos de áudio, e *seus mapas `.json` do Tiled*) esteja no *Classpath* do projeto.
+    * Certifique-se de que esses recursos estejam indo para a pasta bin quando compliado
+
+5.  **Comece a Desenvolver!**
+    * O projeto já inclui um pacote de exemplo chamado **`com.JDStudio.Game`**. Você tem duas opções:
+        * **Opção A (Recomendado):** Apague o pacote `com.JDStudio.Game` e comece a criar as suas próprias classes (o seu `Main`, o seu `PlayingState`, o seu `Player`, etc.) dentro do novo pacote que criou.
+        * **Opção B (Para Aprender):** Use as classes dentro de `com.JDStudio.Game` como um modelo. Estude-as, modifique-as e adapte-as para criar o seu próprio jogo.
+
+
+
 ## Guia para Desenvolvedores
 
 Esta seção é para quem deseja modificar o motor ou o jogo de exemplo diretamente a partir do código-fonte.
@@ -105,7 +122,7 @@ Esta seção é para quem deseja modificar o motor ou o jogo de exemplo diretame
 2.  Abra o projeto na sua IDE.
 3.  Certifique-se de que a pasta contendo os recursos (spritesheets, arquivos de áudio, e *seus mapas `.json` do Tiled*) esteja no *Classpath* do projeto.
 4.  Certifique-se de ter a biblioteca `org.json` adicionada às dependências do seu projeto.
-5.  O ponto de entrada para executar o jogo de exemplo é o método `main` na classe `com.JDStudio.Game.Main`.
+5.  O ponto de entrada para executar o jogo de exemplo é o método `main` na classe `com.game.Game.Main`.
 
 ### Tutorial: Criando um Novo Jogo do Zero
 
