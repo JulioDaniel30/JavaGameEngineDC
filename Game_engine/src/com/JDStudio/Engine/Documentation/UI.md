@@ -1,23 +1,52 @@
-# Pacote `com.JDStudio.Engine.Graphics.UI`
+# Pacote: com.JdStudio.Engine.Graphics.UI
 
-Este pacote contém um sistema flexível para criar e gerenciar elementos de Interface de Usuário (UI).
+Componentes para construir interfaces de usuário.
 
-## Resumo das Classes
+## Classe Abstrata `UIElement`
 
-### `UIElement.java`
+A base para todos os elementos de UI. Define posição e visibilidade.
 
-Uma classe `abstract` que serve como a base para todos os componentes de UI (botões, painéis, textos, etc.).
-- **Estrutura Base:** Define propriedades comuns a todos os elementos, como posição (`x`, `y`), dimensões e um booleano `visible`.
-- **Contrato:** Exige que todas as subclasses implementem o método `render(Graphics g)`.
+## Classe `UIManager`
 
-### `UIManager.java`
+Um contêiner que gerencia e renderiza uma lista de `UIElement`.
 
-Um contêiner que gerencia uma coleção de `UIElement`s.
-- **Propósito:** Simplificar o gerenciamento da UI. Em vez de chamar o `render()` de cada elemento individualmente, você adiciona todos a um `UIManager` e chama apenas o `render()` do gerenciador, que por sua vez renderiza todos os elementos visíveis.
+## Classe `UIText`
 
-### `UIText.java`
+Um `UIElement` que desenha texto na tela. Pode ser estático ou dinâmico (atualizado a cada frame via `Supplier`).
 
-Uma implementação concreta de `UIElement` para exibir texto na tela.
-- **Flexibilidade:**
-    - **Texto Estático:** Pode exibir uma string de texto fixa.
-    - **Texto Dinâmico:** Sua principal característica é a capacidade de aceitar um `Supplier<String>`. Isso permite que o texto seja atualizado a cada frame, obtendo seu valor de uma função. É perfeito para exibir informações que mudam constantemente, como pontuação, vida do jogador ou um contador de FPS.
+### Exemplo de Uso
+
+O `EngineMenuState` já possui um `UIManager`. Para outros estados, você pode criar o seu.
+
+```java
+// Em um estado de jogo (ex: EnginePlayingState)
+public class Level1State extends EnginePlayingState {
+    
+    private UIManager uiManager;
+    private Player player;
+
+    public Level1State() {
+        super();
+        this.uiManager = new UIManager();
+        this.player = new Player(100, 100);
+        addGameObject(player);
+
+        // UI Estática
+        UIText label = new UIText(5, 15, new Font("Arial", Font.BOLD, 12), Color.WHITE, "VIDA:");
+        uiManager.addElement(label);
+
+        // UI Dinâmica: exibe a vida atual do jogador
+        // O texto é buscado a cada frame executando a lambda expression
+        UIText lifeCounter = new UIText(45, 15, new Font("Arial", Font.PLAIN, 12), Color.GREEN,
+            () -> String.valueOf(player.life)
+        );
+        uiManager.addElement(lifeCounter);
+    }
+
+    @Override
+    public void render(Graphics g) {
+        super.render(g); // Renderiza os GameObjects
+        uiManager.render(g); // Renderiza a UI por cima
+    }
+}
+```

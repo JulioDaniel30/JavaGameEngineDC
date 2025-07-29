@@ -1,27 +1,58 @@
-# Pacote `com.JDStudio.Engine.Graphics.Sprite.Animations`
+# Pacote: com.JdStudio.Engine.Graphics.Sprite.Animations
 
-Este pacote oferece um sistema completo para criar, gerenciar e exibir animações baseadas em sprites.
+Fornece um sistema de animação baseado em frames.
 
-## Resumo das Classes
+## Classe `Animation`
 
-### `Animation.java`
+Contém uma sequência de `Sprite` (os frames) e a lógica para alternar entre eles com base em uma velocidade. Pode ser configurada para executar em loop ou apenas uma vez.
 
-Representa uma única sequência de animação.
-- **Estrutura:** Contém um array de `Sprite`s (os frames) e uma velocidade (`animationSpeed`) que determina quantos ticks do jogo cada frame deve durar.
-- **Lógica:** O método `tick()` é responsável por avançar para o próximo frame da animação no tempo correto, reiniciando ao chegar no final para criar um loop.
+## Classe `Animator`
 
-### `Animator.java`
+Atua como uma máquina de estados para múltiplas `Animation`. Um `GameObject` possui um `Animator`, e você pode dizer a ele qual animação (`"walk_right"`, `"idle"`, etc.) deve ser executada.
 
-Atua como uma **máquina de estados** para as animações de um `GameObject`. É um componente que gerencia um conjunto de objetos `Animation`.
-- **Funcionalidades:**
-    - **Gerenciamento:** Armazena múltiplas animações associadas a uma chave de texto (ex: "walk_down", "idle", "attack").
-    - **Controle:** O método `play(key)` define qual animação está ativa. Ele é inteligente e evita reiniciar uma animação que já está em execução.
-    - **Atualização:** Seu método `tick()` chama o `tick()` da animação ativa.
-    - **Saída:** O método `getCurrentSprite()` retorna o frame atual da animação ativa, pronto para ser renderizado pelo `GameObject`.
+### Exemplo de Uso
 
-## Como Usar
+Normalmente, você configura o `Animator` de um objeto no seu construtor.
 
-1. Crie múltiplos objetos `Animation` para cada estado do seu personagem (andar, pular, etc.).
-2. Adicione essas animações a uma instância de `Animator` usando `addAnimation(key, animation)`.
-3. No `tick()` do seu `GameObject`, chame `animator.play(newState)` quando o estado do personagem mudar, e sempre chame `animator.tick()`.
-4. No `render()` do seu `GameObject`, desenhe o sprite retornado por `animator.getCurrentSprite()`.
+```java
+// Na classe Player, que herda de GameObject
+
+public Player(double x, double y) {
+    super(x, y, 16, 16);
+    
+    // O campo 'animator' já existe em GameObject
+    setupAnimations();
+}
+
+private void setupAnimations() {
+    // Busca os sprites previamente carregados no AssetManager
+    Sprite idleFrame = Game.assets.getSprite("player_idle");
+    Sprite walk1 = Game.assets.getSprite("player_walk_1");
+    Sprite walk2 = Game.assets.getSprite("player_walk_2");
+    
+    // Cria as animações
+    // Animação "idle": 1 frame, velocidade não importa, em loop
+    Animation idleAnim = new Animation(10, true, idleFrame);
+    
+    // Animação "walk": 2 frames, troca a cada 20 ticks, em loop
+    Animation walkAnim = new Animation(20, true, walk1, walk2);
+
+    // Adiciona as animações ao animator com chaves
+    this.animator.addAnimation("idle", idleAnim);
+    this.animator.addAnimation("walk", walkAnim);
+}
+
+@Override
+public void tick() {
+    // ... (lógica de input para mover o personagem)
+    
+    // Lógica para trocar de animação
+    if (isMoving) { // supondo que você tenha uma variável 'isMoving'
+        this.animator.play("walk");
+    } else {
+        this.animator.play("idle");
+    }
+
+    super.tick(); // Chama o tick do GameObject, que chama animator.tick()
+}
+```

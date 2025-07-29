@@ -98,4 +98,7 @@ public class Animator {
     public String getCurrentAnimationKey() {
         return this.currentAnimationKey;
     }
+    public Animation getCurrentAnimation() {
+        return this.currentAnimation;
+    }
 }

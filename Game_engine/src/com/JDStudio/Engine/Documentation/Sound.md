@@ -1,29 +1,43 @@
-# Pacote `com.JDStudio.Engine.Sound`
+# Pacote: com.JdStudio.Engine.Sound
 
-Um utilitário simples e estático para carregar e reproduzir áudio no jogo.
+Uma classe utilitária estática para controle de áudio.
 
-## Resumo das Classes
+## Classe `Sound`
 
-### `Sound.java`
+Gerencia o carregamento, cache e reprodução de efeitos sonoros (SFX) e músicas.
 
-Uma classe `final` com métodos estáticos, projetada para ser facilmente acessível de qualquer parte do código sem a necessidade de instanciar um objeto.
+### Visão Geral
 
-- **Funcionalidades:**
-    - `play(path)`: Reproduz um efeito sonoro uma única vez.
-    - `loop(path)`: Inicia a reprodução de uma música em loop contínuo. Se uma música já estiver tocando, ela é interrompida e a nova começa.
-    - **Controle de Volume:** Permite ajustar o volume dos efeitos sonoros (`setSfxVolume`) e da música (`setMusicVolume`) de forma independente.
-    - **Cache:** Armazena os dados dos arquivos de áudio em memória após o primeiro carregamento para evitar leituras repetidas do disco, melhorando a performance.
+-   **Métodos Estáticos**: Não precisa ser instanciada.
+-   **Cache de Áudio**: Efeitos sonoros são cacheados em memória para reprodução rápida. Músicas são cacheadas como `Clip` para controle de loop.
+-   **Separação de Volume**: Controles de volume separados para música e SFX.
 
-## Como Usar
+### Métodos Principais
 
-Para tocar um som ou música, basta chamar os métodos estáticos da classe:
+-   `play(path)`: Toca um efeito sonoro uma vez.
+-   `loop(path)`: Toca uma música em loop contínuo. Para a música anterior antes de tocar a nova.
+-   `stopMusic()`: Para a música que estiver tocando.
+-   `setMusicVolume(float)` e `setSfxVolume(float)`: Ajustam o volume (0.0f a 1.0f).
+
+### Exemplo de Uso
 
 ```java
-// Tocar um efeito sonoro de pulo
-Sound.play("/sounds/jump.wav");
+public class MyGame {
 
-// Iniciar a música da fase em loop
-Sound.loop("/music/level1_theme.wav");
+    public void init() {
+        // Toca a música de fundo da fase
+        Sound.loop("/music/level1_theme.wav");
+        Sound.setMusicVolume(0.8f);
+    }
+    
+    public void playerShoot() {
+        // Toca o som do tiro
+        Sound.play("/sfx/laser_shot.wav");
+    }
 
-// Ajustar o volume
-Sound.setMusicVolume(0.5f); // 50% do volume
+    public void openSettingsMenu() {
+        // Exemplo de como diminuir o volume da música ao entrar em um menu
+        Sound.setMusicVolume(0.3f);
+    }
+}
+```

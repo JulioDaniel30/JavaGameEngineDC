@@ -1,68 +1,75 @@
+// engine
 package com.JDStudio.Engine.Graphics.Sprite.Animations;
 
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 
-/**
- * Representa uma sequência de sprites (frames) que formam uma animação.
- * Controla a velocidade da animação e qual frame deve ser exibido a cada momento.
- */
 public class Animation {
 
-    /** O array de sprites que compõem os quadros (frames) da animação. */
-    private Sprite[] frames;
+    private final Sprite[] frames;
+    private final int animationSpeed;
+    private final boolean loop; // <-- NOSSO NOVO "INTERRUPTOR"
     
-    /** A velocidade da animação, em "ticks por frame". Um valor maior resulta em uma animação mais lenta. */
-    private int animationSpeed;
-    
-    /** O índice do quadro atual que está sendo exibido. */
     private int currentFrame = 0;
-    
-    /** Um contador de ticks para controlar o tempo até a troca para o próximo quadro. */
     private int frameCount = 0;
+    private boolean finished = false; // <-- Flag para saber se a animação terminou
 
     /**
-     * Cria uma nova instância de Animação.
-     *
-     * @param speed  A velocidade da animação, definida como o número de ticks do jogo
-     * que cada frame deve durar. Quanto maior o valor, mais lenta a animação.
-     * @param frames Uma sequência de objetos {@link Sprite} (varargs) que representam
-     * os quadros da animação.
+     * Construtor completo para criar uma animação.
+     * @param speed  Velocidade da animação (ticks por frame).
+     * @param loop   Se a animação deve repetir ao terminar.
+     * @param frames Os sprites que compõem a animação.
      */
-    public Animation(int speed, Sprite... frames) {
+    public Animation(int speed, boolean loop, Sprite... frames) {
         this.animationSpeed = speed;
+        this.loop = loop;
         this.frames = frames;
     }
 
     /**
-     * Atualiza a lógica da animação, avançando para o próximo frame se necessário.
-     * Este método deve ser chamado a cada tick do jogo.
+     * Construtor de conveniência para animações em loop (comportamento antigo).
      */
+    public Animation(int speed, Sprite... frames) {
+        this(speed, true, frames); // Por padrão, cria uma animação em loop
+    }
+
     public void tick() {
+        if (finished) return; // Se já terminou, não faz mais nada
+
         frameCount++;
         if (frameCount >= animationSpeed) {
             frameCount = 0;
             currentFrame++;
             if (currentFrame >= frames.length) {
-                // Reinicia a animação quando chega ao fim (loop).
-                currentFrame = 0;
+                if (loop) {
+                    // Se for em loop, reinicia
+                    currentFrame = 0;
+                } else {
+                    // Se não for em loop, para no último frame e marca como finalizada
+                    currentFrame = frames.length - 1;
+                    finished = true;
+                }
             }
         }
     }
-
-    /**
-     * Obtém o sprite (frame) atual da animação que deve ser renderizado.
-     * @return O {@link Sprite} correspondente ao quadro atual.
-     */
+    
     public Sprite getCurrentFrame() {
         return frames[currentFrame];
     }
-
+    
     /**
-     * Reinicia a animação para o primeiro frame.
-     * Útil para quando uma ação específica precisa recomeçar sua animação (ex: um ataque).
+     * Reinicia a animação, permitindo que ela toque novamente.
      */
     public void reset() {
         this.currentFrame = 0;
         this.frameCount = 0;
+        this.finished = false;
+    }
+
+    /**
+     * Verifica se uma animação sem loop já terminou de tocar.
+     * @return true se a animação tocou até o fim, false caso contrário.
+     */
+    public boolean hasFinished() {
+        return this.finished;
     }
 }

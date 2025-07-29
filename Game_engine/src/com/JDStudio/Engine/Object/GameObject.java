@@ -1,15 +1,16 @@
 package com.JDStudio.Engine.Object;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.util.Objects;
 
 import com.JDStudio.Engine.Engine;
-import com.JDStudio.Engine.Components.MovementComponent;
+import com.JDStudio.Engine.Components.Moviments.BaseMovementComponent;
+import com.JDStudio.Engine.Components.Moviments.MovementComponent;
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animator;
-import com.JDStudio.Engine.World.Camera;
 
 /**
  * Class GameObject
@@ -43,8 +44,9 @@ public abstract class GameObject {
     /** A altura da máscara de colisão. */
     protected int maskHeight;
     protected Animator animator;
-    public MovementComponent movement;
+    public BaseMovementComponent movement;
     public boolean isDestroyed = false;
+    public boolean isSolid = false;
 
     /**
      * Construtor base para todos os GameObjects.
@@ -55,51 +57,31 @@ public abstract class GameObject {
      * @param height A altura do objeto.
      * @param sprite A sprite do objeto
      */
-    public GameObject(double x, double y, int width, int height, Sprite sprite) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.sprite = sprite;
-
-        // Por padrão, a máscara de colisão ocupa todo o espaço do objeto.
-        this.maskX = 0;
-        this.maskY = 0;
-        this.maskWidth = width;
-        this.maskHeight = height;
-        
-        this.animator = new Animator();
-        // Inicializa o componente de movimento com velocidade 0 por padrão.
-        // A velocidade real será definida pelas subclasses (como o Player).
-        this.movement = new MovementComponent(this, 0);
-        
-    }
-    
-    /**
-     * Construtor base para todos os GameObjects.
-     *
-     * @param x      A posição inicial no eixo X.
-     * @param y      A posição inicial no eixo Y.
-     * @param width  A largura do objeto.
-     * @param height A altura do objeto.
-     */
+ // Construtor principal
     public GameObject(double x, double y, int width, int height) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
-
-        // Por padrão, a máscara de colisão ocupa todo o espaço do objeto.
         this.maskX = 0;
         this.maskY = 0;
         this.maskWidth = width;
         this.maskHeight = height;
-        
         this.animator = new Animator();
         
-     // Inicializa o componente de movimento com velocidade 0 por padrão.
-        // A velocidade real será definida pelas subclasses (como o Player).
-        this.movement = new MovementComponent(this, 0);
+        // --- REMOVA A INICIALIZAÇÃO DAQUI ---
+        // A linha abaixo deve ser apagada. O campo 'movement' começará como null.
+         this.movement = new BaseMovementComponent(this, 0) {
+            @Override
+            public void tick() { }
+        };
+        
+    }
+
+    // Construtor secundário
+    public GameObject(double x, double y, int width, int height, Sprite sprite) {
+        this(x, y, width, height); // Chama o construtor principal
+        this.sprite = sprite;
     }
     
     
@@ -190,7 +172,7 @@ public abstract class GameObject {
      */
     public void tick() {
     	animator.tick();
-    	movement.tick(); // O GameObject agora delega a atualização do movimento
+    	//movement.tick(); // O GameObject agora delega a atualização do movimento
     }
 
     /**
@@ -215,18 +197,44 @@ public abstract class GameObject {
             g.drawImage(this.sprite.getImage(), this.getX() - Engine.camera.getX(), this.getY() - Engine.camera.getY(), null);
         }
 
-        if (Engine.isDebug) {
-            g.setColor(Color.RED);
-            g.drawRect(
-                this.getX() + this.maskX - Engine.camera.getX(),
-                this.getY() + this.maskY - Engine.camera.getY(),
-                this.maskWidth,
-                this.maskHeight
-            );
-        }
+       renderDebug(g);
+    }
+    
+    public void renderDebug(Graphics g) {
+    	if (Engine.isDebug) {
+	    	// Desenha a posição (origem) do objeto
+	    	g.setColor(Color.GREEN);
+	    	g.setFont(new Font("Arial", Font.PLAIN, 10));
+	    	String posString = "(" + getX() + ", " + getY() + ")";
+	    	g.drawString(
+	    			posString,
+	    			getX() - Engine.camera.getX(),
+	    			getY() - Engine.camera.getY() - 5 // Desenha um pouco acima do objeto
+	    	);
+	    	g.setColor(Color.CYAN); // Uma cor que se destaca
+	        // Desenha um pequeno quadrado de 3x3 pixels centrado na origem do objeto
+	        g.fillRect(
+	            this.getX() - Engine.camera.getX() - 1, 
+	            this.getY() - Engine.camera.getY() - 1, 
+	            3, 
+	            3
+	        );
+	
+	       // Desenha a máscara de colisão
+	       g.setColor(Color.RED);
+	       g.drawRect(
+	           getX() - Engine.camera.getX() + maskX,
+	           getY() - Engine.camera.getY() + maskY,
+	           maskWidth,
+	           maskHeight
+	       );
+    	}
+    }
+    
+    public void setSprite(Sprite newSprite) {
+        this.sprite = newSprite;
     }
 
-    //<editor-fold desc="Getters and Setters">
     public void setX(double newX) { this.x = newX; }
     public void setY(double newY) { this.y = newY; }
 
@@ -249,5 +257,4 @@ public abstract class GameObject {
 
     public int getMaskHeight() { return maskHeight; }
     public void setMaskHeight(int maskHeight) { this.maskHeight = maskHeight; }
-    //</editor-fold>
 }

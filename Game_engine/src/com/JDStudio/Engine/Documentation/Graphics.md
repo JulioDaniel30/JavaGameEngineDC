@@ -1,16 +1,40 @@
-# Pacote `com.JDStudio.Engine.Graphics`
+# Pacote: com.JdStudio.Engine.Graphics
 
-Este pacote contém classes de alto nível para o gerenciamento de recursos gráficos.
+Contém o gerenciador de recursos visuais.
 
-## Resumo das Classes
+## Classe `AssetManager`
 
-### `AssetManager.java`
+Centraliza o carregamento e o acesso a todos os `Sprite` do jogo. Usa um cache para evitar carregar a mesma imagem múltiplas vezes.
 
-Uma classe de gerenciamento central para todos os recursos visuais (assets) do jogo. O seu principal objetivo é carregar e armazenar sprites para que eles possam ser facilmente acessados de qualquer parte do jogo sem a necessidade de recarregá-los do disco.
+### Métodos Principais
 
-- **Funcionalidades:**
-    - **Cache de Sprites:** Utiliza um `Map` para armazenar `Sprite`s associados a uma chave de texto única (ex: "player_idle").
-    - **Carregamento:** O método `loadSprite(key, path)` carrega uma imagem de um arquivo e a armazena no cache.
-    - **Registro:** O método `registerSprite(key, sprite)` permite adicionar ao cache um `Sprite` já existente, o que é ideal para sprites extraídos de uma `Spritesheet`.
-    - **Acesso:** O método `getSprite(key)` recupera um sprite do cache de forma rápida.
-    - **Prevenção de Duplicidade:** Garante que cada recurso seja carregado da memória apenas uma vez, economizando recursos e otimizando a performance.
+-   `loadSprite(key, path)`: Carrega uma imagem de um arquivo e a armazena no cache com uma chave.
+-   `registerSprite(key, sprite)`: Armazena um objeto `Sprite` já existente (útil para sprites de uma `Spritesheet`).
+-   `getSprite(key)`: Recupera um `Sprite` do cache usando sua chave.
+
+### Exemplo de Uso
+
+```java
+public class Game {
+    public static AssetManager assets;
+
+    public void initialize() {
+        assets = new AssetManager();
+        
+        // Carregando sprites individuais
+        assets.loadSprite("player_idle", "/sprites/player.png");
+        assets.loadSprite("enemy_type_A", "/sprites/enemyA.png");
+
+        // Carregando uma spritesheet e registrando seus recortes
+        Spritesheet uiSheet = new Spritesheet("/ui/ui_sheet.png");
+        assets.registerSprite("heart_full", uiSheet.getSprite(0, 0, 16, 16));
+        assets.registerSprite("heart_empty", uiSheet.getSprite(16, 0, 16, 16));
+    }
+    
+    public void createPlayer() {
+        // Usando o sprite carregado
+        Sprite playerSprite = assets.getSprite("player_idle");
+        Player player = new Player(100, 100, 16, 16, playerSprite);
+    }
+}
+```

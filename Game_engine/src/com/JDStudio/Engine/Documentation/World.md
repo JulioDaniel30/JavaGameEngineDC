@@ -1,35 +1,90 @@
-# Pacote `com.JDStudio.Engine.World`
+# Pacote: com.JdStudio.Engine.World
 
-Este pacote é responsável por tudo relacionado à criação, representação e visualização do cenário do jogo.
+Classes responsáveis pela representação e gerenciamento do ambiente do jogo.
 
-## Resumo das Classes e Interfaces
+## Classe `World`
 
-### `World.java`
+Carrega e gerencia um mapa baseado em tiles a partir de um arquivo JSON (exportado pelo editor Tiled). Renderiza o cenário e verifica colisões contra ele.
 
-Gerencia a estrutura do mapa do jogo, que é composto por uma grade de tiles.
-- **Carregamento de Mapa:** Lê e interpreta arquivos de mapa no formato JSON exportados pelo editor **Tiled**.
-- **Estrutura:** Armazena todos os `Tile`s do cenário em um array.
-- **Renderização Otimizada:** Renderiza apenas a porção do mapa que está visível na câmera, evitando processamento desnecessário.
-- **Colisão com Cenário:** Oferece o método `isFree()` para verificar se uma determinada área retangular está livre ou se colide com um `Tile` sólido.
+## Interface `IMapLoaderListener`
 
-### `Tile.java`
+Um contrato que você deve implementar para ensinar ao `World` como construir os objetos específicos do *seu jogo* a partir dos dados do mapa.
 
-Representa um único bloco estático na grade do mundo.
-- **Propriedades:** Posição, `Sprite` para sua imagem e uma flag booleana `isSolid` para indicar se bloqueia ou não o movimento de `GameObject`s.
+## Classe `Camera`
 
-### `Camera.java`
+Gerencia a posição da "câmera" no mundo, controlando qual parte do mapa é visível.
 
-Controla a "visão" do jogador dentro do mundo.
-- **Funcionalidades Avançadas:**
-    - **Seguir Alvo:** Move-se suavemente para seguir um `GameObject` (geralmente o jogador).
-    - **Limites do Mundo:** Garante que a câmera não mostre áreas fora do mapa.
-    - **Efeitos:** Implementa funcionalidades de **zoom** e **tremor de tela** (`shake`).
+### Visão Geral da Câmera
 
-### `IMapLoaderListener.java`
+-   **Smooth Follow**: Segue um `GameObject` alvo com suavidade.
+-   **Shake**: Efeito de tremor.
+-   **Zoom**: Permite aplicar zoom na renderização.
+-   **Clamping**: Garante que a câmera não mostre áreas fora do mapa.
 
-Uma interface (contrato) que desacopla a engine do jogo.
-- **Propósito:** O `World` sabe como ler o arquivo JSON, mas não sabe o que fazer com os dados. A classe do jogo que implementa esta interface é quem decide qual `Tile` criar para um ID específico ou qual `GameObject` instanciar quando um objeto é encontrado no mapa do Tiled.
+## Classe `Tile`
 
-## Como Funciona
+Representa um único bloco no grid do mapa. Pode ser visual e/ou sólido.
 
-O `World` é instanciado com o caminho para um mapa JSON e um `IMapLoaderListener`. Durante a criação, ele lê as camadas de tiles e objetos do arquivo. Para cada tile ou objeto encontrado, ele notifica o `listener` através dos métodos `onTileFound` e `onObjectFound`, permitindo que o jogo crie suas próprias instâncias de tiles e entidades.
+### Exemplo de Uso (`World` e `IMapLoaderListener`)
+
+Para carregar um mapa, você precisa de uma classe que implemente `IMapLoaderListener`.
+
+```java
+// Em seu estado de jogo (ex: Level1State)
+
+public class Level1State extends EnginePlayingState implements IMapLoaderListener {
+    
+    private World world;
+    private Player player;
+
+    public Level1State() {
+        super();
+        assets = new AssetManager();
+        assets.loadSprite("wall_tile", "/tiles/wall.png");
+        assets.loadSprite("floor_tile", "/tiles/floor.png");
+        
+        // O World precisa do listener para construir os objetos
+        world = new World("/maps/level1.json", this);
+    }
+    
+    // O World vai chamar este método para cada TILE que encontrar no JSON
+    @Override
+    public Tile onTileFound(String layerName, int tileId, int x, int y) {
+        if (layerName.equals("Walls")) {
+            // ID 1 no Tiled corresponde à nossa parede
+            if (tileId == 1) { 
+                Tile wall = new Tile(x, y, assets.getSprite("wall_tile"));
+                wall.isSolid = true;
+                return wall;
+            }
+        }
+        if (layerName.equals("Floors")) {
+            // ID 2 no Tiled corresponde ao nosso chão
+            if (tileId == 2) {
+                return new Tile(x, y, assets.getSprite("floor_tile"));
+            }
+        }
+        return null; // Tile vazio
+    }
+
+    // O World vai chamar este método para cada OBJETO que encontrar no JSON
+    @Override
+    public void onObjectFound(String type, int x, int y, int width, int height, JSONObject properties) {
+        if (type.equals("PlayerStart")) {
+            player = new Player(x, y);
+            addGameObject(player);
+        } else if (type.equals("EnemySpawner")) {
+            Enemy enemy = new Enemy(x, y);
+            addGameObject(enemy);
+        }
+    }
+
+    @Override
+    public void render(Graphics g) {
+        // Renderiza o mapa primeiro
+        world.render(g);
+        // Depois renderiza os objetos
+        super.render(g);
+    }
+}
+```

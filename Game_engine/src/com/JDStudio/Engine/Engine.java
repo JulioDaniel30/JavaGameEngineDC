@@ -11,6 +11,7 @@ import java.awt.image.BufferedImage;
 import javax.swing.JFrame;
 
 import com.JDStudio.Engine.Input.InputManager;
+import com.JDStudio.Engine.States.GameState;
 import com.JDStudio.Engine.World.Camera; // Importação da câmera
 
 public class Engine extends Canvas implements Runnable {

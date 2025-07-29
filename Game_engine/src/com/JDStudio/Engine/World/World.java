@@ -97,12 +97,16 @@ public class World {
         JSONArray objects = layer.getJSONArray("objects");
         for (int i = 0; i < objects.length(); i++) {
             JSONObject object = objects.getJSONObject(i);
-            int x = object.getInt("x");
-            // Tiled posiciona objetos pela base, ajustamos para o topo
-            int y = object.getInt("y") - this.tileHeight; 
-            String type = object.has("type") ? object.getString("type") : "";
             
-            listener.onObjectFound(type, x, y, object);
+            int width = object.getInt("width");
+            int height = object.getInt("height");
+            int x = object.getInt("x");
+            int y = object.getInt("y") - height; 
+            String type = object.has("class") ? object.getString("class") : 
+                (object.has("type") ? object.getString("type") : "");
+  
+            // Passamos as novas informações (width, height) para o listener
+            listener.onObjectFound(type, x, y, width, height, object);
         }
     }
     

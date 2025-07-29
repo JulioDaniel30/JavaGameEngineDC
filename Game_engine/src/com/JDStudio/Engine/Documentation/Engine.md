@@ -1,26 +1,36 @@
-# Pacote `com.JDStudio.Engine`
+# Pacote: com.JdStudio.Engine
 
-Este é o pacote central da engine, contendo as classes fundamentais que gerenciam o ciclo de vida do jogo, a janela e a transição entre os diferentes estados.
+Este pacote contém a classe principal que inicializa e executa o engine.
 
-## Resumo das Classes
+## Classe `Engine`
 
-### `Engine.java`
+É a classe central do projeto. Ela cria a janela do jogo, gerencia o game loop (tick e render) e mantém referências estáticas importantes, como a `camera`.
 
-É o coração da aplicação. Esta classe é responsável por:
-- **Inicialização da Janela:** Cria e configura o `JFrame` principal do jogo.
-- **Game Loop:** Implementa a interface `Runnable` para criar o loop principal que controla as atualizações de lógica (`tick`) e renderização (`render`) em uma taxa de quadros fixa (padrão de 60 FPS).
-- **Gerenciamento de Estado:** Mantém uma referência ao `GameState` atual, delegando a ele toda a lógica e renderização.
-- **Ponto de Entrada:** Contém o método `main`, que inicia a engine.
-- **Componentes Globais:** Mantém instâncias estáticas de componentes essenciais, como a `Camera`.
+### Visão Geral
 
-### `GameState.java`
+-   **Canvas & Runnable**: Herda de `Canvas` para ser o componente de desenho e implementa `Runnable` para ter seu próprio `Thread`.
+-   **Game Loop**: Possui um game loop de taxa de atualização fixa (60 FPS por padrão).
+-   **Gerenciador de Estado**: Chama os métodos `tick()` e `render()` do `GameState` atual.
 
-Uma classe abstrata que serve como base para todos os "estados" do jogo, seguindo o padrão de projeto **State**.
-- **Propósito:** Permite que o comportamento do jogo mude drasticamente (ex: de um Menu para uma Fase) de forma encapsulada.
-- **Funcionalidades:**
-    - Cada estado gerencia sua própria lista de `GameObject`s.
-    - Subclasses devem implementar os métodos `tick()` e `render(Graphics g)` para definir a lógica e a aparência específicas daquele estado.
+### Exemplo de Uso
 
-## Como Funciona
+A classe `Engine` é o ponto de entrada da sua aplicação.
 
-A classe `Engine` cria a janela e inicia o game loop. Em qualquer momento, a engine tem um `currentGameState` ativo. A cada iteração do loop, a engine chama `currentGameState.tick()` e `currentGameState.render()`. Para mudar de uma tela para outra (ex: sair do menu e iniciar o jogo), basta chamar `Engine.setGameState(new LevelState())`.
+```java
+// Em algum lugar no seu código de inicialização do jogo
+public class Main {
+    public static void main(String[] args) {
+        // Cria uma instância do engine
+        Engine engine = new Engine();
+
+        // Inicializa os seus GameStates (menu, fase 1, etc)
+        GameState menuState = new MyMenuState(); // Supondo que você criou essa classe
+        
+        // Define o estado inicial do jogo
+        Engine.setGameState(menuState);
+
+        // Inicia o game loop em uma nova thread
+        engine.start();
+    }
+}
+```

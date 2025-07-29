@@ -75,6 +75,71 @@ O projeto inclui um jogo de exemplo (`com.game.Game`) que demonstra como usar a 
   * **Debug**: Pressione **9** para ativar/desativar a visualização de caixas de colisão.
   * **Câmera**: Pressione **I** para aproximar (zoom in), **O** para afastar (zoom out) e **Espaço** para testar o efeito de tremor.
 
+### Configuração do Ambiente de Desenvolvimento (Eclipse)
+
+**Pré-requisitos:**
+
+  * Git instalado.
+  * Eclipse IDE for Java Developers.
+  * JDK 11 ou superior configurado no Eclipse.
+
+**Passo 1: Clonar o Repositório**
+
+Primeiro, obtenha o código-fonte. Abra um terminal ou Git Bash, navegue até a pasta onde deseja salvar o projeto e execute:
+
+```bash
+git clone https://github.com/JulioDaniel30/JavaGameEngineDC.git
+```
+
+Isso criará uma pasta principal contendo os diretórios `Game_engine` e `Game`.
+
+**Passo 2: Importar os Projetos no Eclipse**
+
+Precisamos importar as duas pastas como projetos separados no seu Workspace.
+
+1.  Abra o Eclipse.
+2.  Vá em `File` \> `Import...`.
+3.  Na janela de importação, expanda a pasta `General` e selecione **`Existing Projects into Workspace`**. Clique em `Next`.
+4.  Ao lado de "Select root directory", clique em `Browse...` e navegue até a pasta principal que você acabou de clonar (a pasta que contém `Game_engine` и `Game`).
+5.  O Eclipse deve detectar automaticamente os dois projetos na seção "Projects". Certifique-se de que **ambos estejam marcados com um ✓**.
+6.  Clique em `Finish`.
+
+Agora você deve ver os dois projetos, `Game_engine` e `Game`, no seu "Package Explorer".
+
+**Passo 3: Verificar a Dependência e Bibliotecas**
+
+O projeto `Game` depende do `Game_engine`. O Eclipse geralmente configura isso automaticamente durante a importação, mas é bom verificar.
+
+1.  **Verificar Dependência do Projeto:**
+
+      * Clique com o botão direito no projeto `Game` -\> `Properties` -\> `Java Build Path`.
+      * Na aba `Projects`, verifique se `Game_engine` está listado. Se não estiver, adicione-o usando o botão `Add...`.
+      * O projeto `Game` não deve apresentar nenhum erro de compilação.
+
+2.  **Configurar a Biblioteca `org.json` (Importante):**
+
+      * Para que o projeto seja portátil, é uma boa prática manter as bibliotecas (`.jar`) dentro da pasta do projeto.
+      * Dentro do projeto `Game_engine`, crie uma pasta chamada `libs`.
+      * Copie o seu arquivo `json-...jar` para dentro desta nova pasta `libs`.
+      * Clique com o botão direito no projeto `Game_engine` -\> `Properties` -\> `Java Build Path`.
+      * Vá para a aba `Libraries`. Se houver uma referência antiga ao `.jar` com um caminho absoluto (ex: `C:/Users/...`), selecione-a e clique em `Remove`.
+      * Clique em `Add JARs...` (não `Add External JARs...`).
+      * Navegue para `Game_engine` \> `libs` e selecione o arquivo `json-...jar`.
+      * Clique em `OK` e depois em `Apply and Close`.
+
+**Passo 4: Executar o Jogo**
+
+O ponto de entrada (`Main.java`) está no projeto `Game`.
+
+1.  No "Package Explorer", dentro do projeto `Game`, encontre a classe `Main.java`.
+2.  Clique com o botão direito sobre ela.
+3.  Vá em `Run As` \> `Java Application`.
+
+O jogo deve iniciar corretamente, com o projeto `Game` utilizando o código e os recursos do projeto `Game_engine`.
+
+*(O resto do README, como "Guia para Desenvolvedores", "Roadmap", etc., pode continuar como está.)*
+
+
 ### Guia Rápido para Desenvolvedores
 
 Este guia mostra o fluxo de trabalho para criar um nível usando a engine.

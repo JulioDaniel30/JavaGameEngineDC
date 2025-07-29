@@ -1,22 +1,40 @@
-# Pacote `com.JDStudio.Engine.Graphics.Sprite`
+# Pacote: com.JdStudio.Engine.Graphics
 
-Este pacote fornece as classes fundamentais para representar e manipular os recursos visuais básicos do jogo: imagens individuais (sprites) e folhas de sprites (spritesheets).
+Contém o gerenciador de recursos visuais.
 
-## Resumo das Classes
+## Classe `AssetManager`
 
-### `Sprite.java`
+Centraliza o carregamento e o acesso a todos os `Sprite` do jogo. Usa um cache para evitar carregar a mesma imagem múltiplas vezes.
 
-Representa uma única imagem ou "sprite" que pode ser desenhada na tela. Essencialmente, atua como um wrapper para a classe `BufferedImage` do Java.
-- **Propósito:** Encapsular a imagem permite futuras extensões sem a necessidade de alterar todas as partes da engine que renderizam imagens.
-- **Funcionalidades:** Fornece acesso à imagem (`getImage()`) e às suas dimensões (`getWidth()`, `getHeight()`).
+### Métodos Principais
 
-### `Spritesheet.java`
+-   `loadSprite(key, path)`: Carrega uma imagem de um arquivo e a armazena no cache com uma chave.
+-   `registerSprite(key, sprite)`: Armazena um objeto `Sprite` já existente (útil para sprites de uma `Spritesheet`).
+-   `getSprite(key)`: Recupera um `Sprite` do cache usando sua chave.
 
-Uma classe utilitária projetada para carregar um único arquivo de imagem grande (uma "folha de sprites") que contém múltiplos sprites menores organizados em uma grade.
-- **Funcionalidades:**
-    - **Carregamento:** Carrega a imagem da folha de sprites a partir de um caminho no classpath.
-    - **Extração:** Possui o método `getSprite(x, y, width, height)` que "recorta" e retorna um `Sprite` individual de uma área específica da folha.
+### Exemplo de Uso
 
-## Como Funciona
+```java
+public class Game {
+    public static AssetManager assets;
 
-Tipicamente, você carrega uma `Spritesheet` uma vez. Em seguida, percorre a folha e extrai todos os `Sprite`s individuais usando `getSprite()`. Esses sprites podem então ser registrados em um `AssetManager` para fácil acesso ou usados para criar objetos `Animation`.
+    public void initialize() {
+        assets = new AssetManager();
+        
+        // Carregando sprites individuais
+        assets.loadSprite("player_idle", "/sprites/player.png");
+        assets.loadSprite("enemy_type_A", "/sprites/enemyA.png");
+
+        // Carregando uma spritesheet e registrando seus recortes
+        Spritesheet uiSheet = new Spritesheet("/ui/ui_sheet.png");
+        assets.registerSprite("heart_full", uiSheet.getSprite(0, 0, 16, 16));
+        assets.registerSprite("heart_empty", uiSheet.getSprite(16, 0, 16, 16));
+    }
+    
+    public void createPlayer() {
+        // Usando o sprite carregado
+        Sprite playerSprite = assets.getSprite("player_idle");
+        Player player = new Player(100, 100, 16, 16, playerSprite);
+    }
+}
+```

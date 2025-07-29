@@ -15,11 +15,12 @@ public interface IMapLoaderListener {
     Tile onTileFound(String layerName, int tileId, int x, int y);
 
     /**
-     * Chamado pela engine sempre que um objeto é encontrado em uma camada de objetos.
-     * @param type O "Tipo" do objeto definido no Tiled (ex: "player_start").
+     * @param type O "type" ou "class" do objeto lido do JSON.
      * @param x A posição X do objeto.
      * @param y A posição Y do objeto.
-     * @param properties O objeto JSON contendo todas as propriedades personalizadas do objeto.
+     * @param width A largura do objeto.
+     * @param height A altura do objeto.
+     * @param properties O objeto JSON contendo todas as propriedades.
      */
-    void onObjectFound(String type, int x, int y, JSONObject properties);
+    void onObjectFound(String type, int x, int y, int width, int height, JSONObject properties);
 }
