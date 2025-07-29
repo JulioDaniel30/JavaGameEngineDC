@@ -9,9 +9,12 @@ import java.awt.event.KeyEvent;
 import org.json.JSONObject;
 
 import com.JDStudio.Engine.Engine;
+import com.JDStudio.Engine.Dialogue.ActionManager;
+import com.JDStudio.Engine.Dialogue.DialogueManager;
 import com.JDStudio.Engine.Graphics.AssetManager;
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 import com.JDStudio.Engine.Graphics.Sprite.Spritesheet;
+import com.JDStudio.Engine.Graphics.UI.DialogueBox;
 import com.JDStudio.Engine.Graphics.UI.UIManager;
 import com.JDStudio.Engine.Graphics.UI.UIText;
 import com.JDStudio.Engine.Input.InputManager;
@@ -29,19 +32,22 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
     public static Player player;
     public static World world;
     private UIManager uiManager;
+    private DialogueBox dialogueBox;
 
 	public PlayingState() {
         assets = new AssetManager();
         loadAssets(); 
 
         uiManager = new UIManager();
-        
+        uiManager.addElement(createDialogueBox());
+     // Chama os métodos de configuração para manter o construtor limpo
+        registerDialogueActions();
         // 1. Cria o jogador
         player = new Player(0, 0, 16, 16);
         this.addGameObject(player);
         
         // 2. Cria o mundo (isso chamará onObjectFound e criará os outros objetos, como inimigos)
-        world = new World("/map1.json", this); 
+        world = new World("/map1.json", this);
         
         // 3. Agora que TODOS os objetos existem, configure seus componentes
         for (GameObject go : this.gameObjects) {
@@ -97,26 +103,68 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 		assets.registerSprite("door_frame_1", worldSheet.getSprite(32, 32, 16, 16)); // Frame 1: Fechada
 	    assets.registerSprite("door_frame_2", worldSheet.getSprite(48, 32, 16, 16)); // Frame 2: Meio-aberta
 	    assets.registerSprite("door_frame_3", worldSheet.getSprite(64, 32, 16, 16)); // Frame 3: Aberta
+	    assets.registerSprite("npc_sprite", worldSheet.getSprite(112, 0, 16, 16));
     }
     
     private void setupUI() {
         uiManager.addElement(new UIText(5, 15, new Font("Arial", Font.BOLD, 12), Color.WHITE, () -> "Vida: " + (int)player.life + "/" + (int)player.maxLife));
     }
+    
+    private DialogueBox createDialogueBox() {
+    	// 1. Cria a caixa de diálogo da engine
+        dialogueBox = new DialogueBox(10, 90, Engine.WIDTH - 20, 65);
+
+        // 2. --- CONFIGURA A APARÊNCIA A PARTIR DO JOGO ---
+        Font jogoFonteNome = new Font("Courier New", Font.BOLD, 12);
+        Font jogoFonteTexto = new Font("Courier New", Font.PLAIN, 10);
+        dialogueBox.setFonts(jogoFonteNome, jogoFonteTexto);
+        
+        Color corFundo = new Color(20, 20, 80, 230); // Azul escuro, quase opaco
+        Color corBorda = Color.CYAN;
+        dialogueBox.setColors(corFundo, Color.WHITE, Color.YELLOW, corBorda);
+        
+        dialogueBox.setPadding(2);
+        dialogueBox.setLineSpacing(10);
+        dialogueBox.setSectionSpacing(10);
+        
+        dialogueBox.setTypewriterSpeed(3); // Deixa o texto um pouco mais lento
+    	return dialogueBox;
+    }
+    
+    /**
+     * Um método dedicado apenas para registrar todas as ações de diálogo do jogo.
+     * Isso mantém o construtor mais limpo.
+     */
+    private void registerDialogueActions() {
+        ActionManager actionManager = ActionManager.getInstance();
+        
+        // Exemplo: Ação para aceitar a quest do martelo
+        actionManager.registerAction("accept_quest_martelo", (player, npc) -> {
+            System.out.println("AÇÃO EXECUTADA: Missão 'Consiga o Martelo' iniciada!");
+            // ((Player)player).quests.add(new Quest("Martelo do Ferreiro"));
+        });
+
+        // Exemplo: Ação para dar um item
+        actionManager.registerAction("give_item_pocao", (player, npc) -> {
+            System.out.println("AÇÃO EXECUTADA: O jogador recebeu uma poção!");
+            // ((Player)player).inventory.add(new Potion());
+        });
+
+        // Adicione outras ações aqui...
+    }
 
     @Override
     public void tick() {
-    	keyboardEventsUpdate();
-        for (int i = 0; i < gameObjects.size(); i++) { gameObjects.get(i).tick();        }
-
-        collisionsUpdate();
-
-        for (int i = gameObjects.size() - 1; i >= 0; i--) {
-            if (gameObjects.get(i).isDestroyed) {
-                gameObjects.remove(i);
-            }
+    	// Se um diálogo está ativo, ele tem prioridade
+        if (DialogueManager.getInstance().isActive()) {
+            dialogueBox.tick(); // Processa o input da caixa de diálogo
+        } else {
+            // Se não, processa o input normal do jogo
+            super.tick(); 
+            keyboardEventsUpdate();
+            collisionsUpdate();
+            Engine.camera.update(player, world);
         }
-        
-        Engine.camera.update(player, world);
         InputManager.instance.update();
     }
     
@@ -201,7 +249,13 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 			    door.setGameObjects(this.gameObjects);
 			    
 			    this.addGameObject(door);
-	    }
+	    }else if (objectClass.equals("NPC")) {
+			if(objectName.equals("ferreiro")) {
+				// Cria o NPC com esse diálogo e o adiciona ao jogo
+		        Ferreiro ferreiro = new Ferreiro(x, y, "/ferreiro.json"); // Posição (x, y) de exemplo
+		        this.addGameObject(ferreiro);
+			}
+		}
 	}
 
     @Override

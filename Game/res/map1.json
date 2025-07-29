@@ -194,6 +194,18 @@
                  "width":16,
                  "x":528,
                  "y":64
+                }, 
+                {
+                 "gid":100,
+                 "height":16,
+                 "id":12,
+                 "name":"ferreiro",
+                 "rotation":0,
+                 "type":"NPC",
+                 "visible":true,
+                 "width":16,
+                 "x":112,
+                 "y":96
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -202,7 +214,7 @@
          "y":0
         }],
  "nextlayerid":4,
- "nextobjectid":12,
+ "nextobjectid":13,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

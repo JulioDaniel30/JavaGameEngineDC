@@ -16,6 +16,7 @@ Navegue pelos pacotes abaixo para encontrar detalhes sobre cada parte do engine.
 * **Estrutura do Jogo**
     * [States](States.md) - Classes para gerenciar diferentes estados do jogo (ex: menu, jogando).
     * [Object](Object.md) - As classes base para todos os objetos do jogo (`GameObject`, `Character`).
+    * [Dialogue](Dialogue.md) - Sistema para criar e gerenciar conversas com NPCs.
 
 * **Mundo e Cenário**
     * [World](World.md) - Classes responsáveis por carregar e renderizar o mundo do jogo, incluindo tiles e câmera.

@@ -4,6 +4,7 @@ package com.game;
 import java.awt.event.KeyEvent;
 
 import com.JDStudio.Engine.Components.Moviments.MovementComponent;
+import com.JDStudio.Engine.Dialogue.DialogueManager;
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animation;
 import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.Object.Character;
@@ -85,6 +86,18 @@ public class Player extends Character{
 	@Override
 	public void tick() {
 		
+		 // A lógica de movimento do jogador só deve ser processada
+	    // se não houver um diálogo ativo.
+	    if (!DialogueManager.getInstance().isActive()) {
+	        handleMovement(); // Colocamos a lógica de movimento em um método separado
+	    }
+		
+		super.tick(); 
+        this.movement.tick();
+	}
+	
+	private void handleMovement() {
+
 		MovementComponent playerMovement = (MovementComponent) this.movement;
 		double dx = 0;
 		double dy = 0;
@@ -118,8 +131,6 @@ public class Player extends Character{
 		} else {
 			animator.play("idle");
 		}
-		super.tick(); 
-        this.movement.tick(); // <-- ADICIONE ESTA LINHA
-
+		
 	}
 }

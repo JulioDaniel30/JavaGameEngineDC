@@ -48,7 +48,7 @@ public class Enemy extends Character {
                 if (distanceToPlayer < visionRadius) currentState = AIState.CHASING;
                 break;
             case CHASING:
-                aiMovement.setTarget(player);
+               // aiMovement.setTarget(player);
                 if (distanceToPlayer > visionRadius) currentState = AIState.IDLE;
                 else if (distanceToPlayer < attackRadius) currentState = AIState.ATTACKING;
                 break;
