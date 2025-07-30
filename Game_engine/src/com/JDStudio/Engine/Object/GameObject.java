@@ -6,11 +6,13 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.util.Objects;
 
+import org.json.JSONObject;
+
 import com.JDStudio.Engine.Engine;
 import com.JDStudio.Engine.Components.Moviments.BaseMovementComponent;
-import com.JDStudio.Engine.Components.Moviments.MovementComponent;
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animator;
+import com.JDStudio.Engine.Utils.PropertiesReader;
 
 /**
  * Class GameObject
@@ -46,44 +48,73 @@ public abstract class GameObject {
     protected Animator animator;
     public BaseMovementComponent movement;
     public boolean isDestroyed = false;
-    public boolean isSolid = false;
+    
+    
+    public String name = "";
 
-    /**
-     * Construtor base para todos os GameObjects.
-     *
-     * @param x      A posição inicial no eixo X.
-     * @param y      A posição inicial no eixo Y.
-     * @param width  A largura do objeto.
-     * @param height A altura do objeto.
-     * @param sprite A sprite do objeto
-     */
- // Construtor principal
-    public GameObject(double x, double y, int width, int height) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.maskX = 0;
-        this.maskY = 0;
-        this.maskWidth = width;
-        this.maskHeight = height;
-        this.animator = new Animator();
-        
-        // --- REMOVA A INICIALIZAÇÃO DAQUI ---
-        // A linha abaixo deve ser apagada. O campo 'movement' começará como null.
-         this.movement = new BaseMovementComponent(this, 0) {
-            @Override
-            public void tick() { }
-        };
-        
-    }
-
-    // Construtor secundário
-    public GameObject(double x, double y, int width, int height, Sprite sprite) {
-        this(x, y, width, height); // Chama o construtor principal
-        this.sprite = sprite;
+    public enum CollisionType {
+        NO_COLLISION, // Não colide com nada
+        SOLID,        // Bloqueia o movimento
+        TRIGGER       // Não bloqueia, mas detecta sobreposição
     }
     
+    public CollisionType collisionType = CollisionType.TRIGGER;
+    
+    public GameObject(JSONObject properties) {
+        // O construtor agora recebe o objeto de propriedades
+        this.animator = new Animator();
+        initialize(properties); // Chama o método de inicialização
+        this.movement = new BaseMovementComponent(this, 0) {
+            @Override
+            public void tick() { /* Não faz nada */ }
+        };
+    }
+
+    /**
+     * Inicializa o GameObject a partir de um conjunto de propriedades do Tiled.
+     * As subclasses devem chamar super.initialize(properties) primeiro.
+     */
+    public void initialize(JSONObject properties) {
+        PropertiesReader reader = new PropertiesReader(properties);
+        
+        // Pega as propriedades básicas que todo GameObject tem
+        this.x = reader.getInt("x", 0);
+        this.width = reader.getInt("width", 16);
+        this.height = reader.getInt("height", 16);
+        this.y = reader.getInt("y", 0) - this.height; // Ajuste automático de Y
+        this.name = reader.getString("name", "");
+        
+     // A máscara é inicializada com o tamanho total por padrão.
+        // O setCollisionType cuidará de ajustá-la se necessário.
+        this.maskX = 0;
+        this.maskY = 0;
+        this.maskWidth = this.width;
+        this.maskHeight = this.height;
+        
+    }
+    
+    /**
+     * NOVO MÉTODO "ENGINE SIDE"
+     * Define o tipo de colisão e ajusta a máscara de colisão de acordo.
+     */
+    public void setCollisionType(CollisionType type) {
+        this.collisionType = type;
+        
+        if (type == CollisionType.NO_COLLISION) {
+            // Se não há colisão, zera a máscara.
+            setCollisionMask(0, 0, 0, 0);
+        } else {
+            // Para SOLID ou TRIGGER, a máscara física existe e tem o tamanho do objeto.
+            setCollisionMask(0, 0, this.maskWidth, this.maskHeight);
+        }
+    }
+
+    /**
+     * Retorna o tipo de colisão atual do objeto.
+     */
+    public CollisionType getCollisionType() {
+        return this.collisionType;
+    }
     
 
     /**
@@ -201,34 +232,35 @@ public abstract class GameObject {
     }
     
     public void renderDebug(Graphics g) {
-    	if (Engine.isDebug) {
-	    	// Desenha a posição (origem) do objeto
-	    	g.setColor(Color.GREEN);
-	    	g.setFont(new Font("Arial", Font.PLAIN, 10));
-	    	String posString = "(" + getX() + ", " + getY() + ")";
-	    	g.drawString(
-	    			posString,
-	    			getX() - Engine.camera.getX(),
-	    			getY() - Engine.camera.getY() - 5 // Desenha um pouco acima do objeto
-	    	);
-	    	g.setColor(Color.CYAN); // Uma cor que se destaca
-	        // Desenha um pequeno quadrado de 3x3 pixels centrado na origem do objeto
-	        g.fillRect(
-	            this.getX() - Engine.camera.getX() - 1, 
-	            this.getY() - Engine.camera.getY() - 1, 
-	            3, 
-	            3
-	        );
-	
-	       // Desenha a máscara de colisão
-	       g.setColor(Color.RED);
-	       g.drawRect(
-	           getX() - Engine.camera.getX() + maskX,
-	           getY() - Engine.camera.getY() + maskY,
-	           maskWidth,
-	           maskHeight
-	       );
-    	}
+    	if (!Engine.isDebug) return;
+    	
+    	// Desenha a posição (origem) do objeto
+    	g.setColor(Color.GREEN);
+    	g.setFont(new Font("Arial", Font.PLAIN, 10));
+    	String posString = "(" + getX() + ", " + getY() + ")";
+    	g.drawString(
+    			posString,
+    			getX() - Engine.camera.getX(),
+    			getY() - Engine.camera.getY() - 5 // Desenha um pouco acima do objeto
+    	);
+    	g.setColor(Color.CYAN); // Uma cor que se destaca
+        // Desenha um pequeno quadrado de 3x3 pixels centrado na origem do objeto
+        g.fillRect(
+            this.getX() - Engine.camera.getX() - 1, 
+            this.getY() - Engine.camera.getY() - 1, 
+            3, 
+            3
+        );
+
+       // Desenha a máscara de colisão
+       g.setColor(Color.RED);
+       g.drawRect(
+           getX() - Engine.camera.getX() + maskX,
+           getY() - Engine.camera.getY() + maskY,
+           maskWidth,
+           maskHeight
+       );
+    	
     }
     
     public void setSprite(Sprite newSprite) {

@@ -1,12 +1,14 @@
 package com.game;
 
-import com.JDStudio.Engine.Graphics.Sprite.Sprite;
+import org.json.JSONObject;
+
 import com.JDStudio.Engine.Object.GameObject;
 
 public class Weapon extends GameObject {
-	public Weapon(double x, double y, int width, int height, Sprite sprite) {
-		super(x, y, width, height, sprite);
-	}
+	public Weapon(JSONObject properties) {
+        super(properties);
+        this.sprite = PlayingState.assets.getSprite("weapon");
+    }
 
 	@Override
 	public void tick() {

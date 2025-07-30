@@ -5,7 +5,7 @@ import com.JDStudio.Engine.Object.GameObject;
 
 public class MovementComponent extends BaseMovementComponent {
 
-    private double dx = 0, dy = 0;
+   // private double dx = 0, dy = 0;
 
     public MovementComponent(GameObject owner, double speed) {
         super(owner, speed);

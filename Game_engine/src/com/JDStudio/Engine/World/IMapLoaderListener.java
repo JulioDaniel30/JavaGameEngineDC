@@ -1,5 +1,8 @@
 package com.JDStudio.Engine.World;
 
+import java.awt.Point;
+import java.util.List;
+
 import org.json.JSONObject;
 
 public interface IMapLoaderListener {
@@ -23,4 +26,11 @@ public interface IMapLoaderListener {
      * @param properties O objeto JSON contendo todas as propriedades.
      */
     void onObjectFound(String type, int x, int y, int width, int height, JSONObject properties);
+    
+    /**
+     * Chamado pela engine sempre que um objeto do tipo Polilinha é encontrado.
+     * @param pathName O nome dado ao objeto de Polilinha no Tiled.
+     * @param pathPoints A lista de pontos (coordenadas) que compõem o caminho.
+     */
+    void onPathFound(String pathName, List<Point> pathPoints);
 }

@@ -4,27 +4,36 @@ package com.game;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Point;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.json.JSONObject;
 
 import com.JDStudio.Engine.Engine;
+import com.JDStudio.Engine.Components.PathComponent.PatrolMode;
 import com.JDStudio.Engine.Dialogue.ActionManager;
 import com.JDStudio.Engine.Dialogue.DialogueManager;
 import com.JDStudio.Engine.Graphics.AssetManager;
-import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 import com.JDStudio.Engine.Graphics.Sprite.Spritesheet;
 import com.JDStudio.Engine.Graphics.UI.DialogueBox;
 import com.JDStudio.Engine.Graphics.UI.UIManager;
 import com.JDStudio.Engine.Graphics.UI.UIText;
 import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.Object.GameObject;
+import com.JDStudio.Engine.Object.GameObject.CollisionType;
+import com.JDStudio.Engine.Object.Character;
 import com.JDStudio.Engine.Object.Interactable;
+import com.JDStudio.Engine.Object.TriggerZone;
 import com.JDStudio.Engine.Sound.Sound;
 import com.JDStudio.Engine.States.EnginePlayingState;
 import com.JDStudio.Engine.World.IMapLoaderListener;
 import com.JDStudio.Engine.World.Tile;
 import com.JDStudio.Engine.World.World;
+
 @SuppressWarnings("static-access")
 public class PlayingState extends EnginePlayingState implements IMapLoaderListener {
 
@@ -33,6 +42,9 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
     public static World world;
     private UIManager uiManager;
     private DialogueBox dialogueBox;
+    private Map<String, List<Point>> loadedPaths;
+    private List<TriggerZone> triggerZones;
+    private Map<String, Door> doors;
 
 	public PlayingState() {
         assets = new AssetManager();
@@ -40,16 +52,18 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 
         uiManager = new UIManager();
         uiManager.addElement(createDialogueBox());
-     // Chama os métodos de configuração para manter o construtor limpo
         registerDialogueActions();
-        // 1. Cria o jogador
-        player = new Player(0, 0, 16, 16);
+
+        player = new Player(new JSONObject());
         this.addGameObject(player);
+        this.loadedPaths = new HashMap<>();
+        this.triggerZones = new ArrayList<>();
+        this.doors = new HashMap<>();
         
-        // 2. Cria o mundo (isso chamará onObjectFound e criará os outros objetos, como inimigos)
+        // A engine agora lida com a ordem de carregamento internamente.
         world = new World("/map1.json", this);
         
-        // 3. Agora que TODOS os objetos existem, configure seus componentes
+        // Configura os componentes de movimento DEPOIS que todos os objetos foram criados.
         for (GameObject go : this.gameObjects) {
             if (go.movement != null) {
                 go.movement.setWorld(world);
@@ -65,44 +79,28 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
         Sound.setMusicVolume(0.01f);
         Sound.setSfxVolume(0.02f);
     }
+    
     private void loadAssets() {
         Spritesheet worldSheet = new Spritesheet("/spritesheet.png");
         
-
-        // Registra os mesmos sprites com nomes para o modo BY_TILE_ID
         assets.registerSprite("floor_1", worldSheet.getSprite(0, 0, 16, 16));
         assets.registerSprite("floor_2", worldSheet.getSprite(0, 48, 16, 16));
         assets.registerSprite("wall_1", worldSheet.getSprite(16, 0, 16, 16));
         
-        assets.registerSprite("player", worldSheet.getSprite(32, 0, 16, 16));
-		assets.registerSprite("enemy", worldSheet.getSprite(7 * 16, 16, 16, 16));
-		assets.registerSprite("weapon", worldSheet.getSprite(7 * 16, 0, 16, 16));
-		assets.registerSprite("lifepack", worldSheet.getSprite(6 * 16, 0, 16, 16));
-		assets.registerSprite("bullet", worldSheet.getSprite(6 * 16, 16, 16, 16));
+        assets.registerSprite("enemy", worldSheet.getSprite(7 * 16, 16, 16, 16));
+        assets.registerSprite("lifepack", worldSheet.getSprite(6 * 16, 0, 16, 16));
 
-		Sprite player_idle_frame1 = worldSheet.getSprite(32, 0, 16, 16);
-		assets.registerSprite("player_idle", player_idle_frame1);
-
-		Sprite player_walk_right_frame1 = worldSheet.getSprite(48, 0, 16, 16);
-		Sprite player_walk_right_frame2 = worldSheet.getSprite(64, 0, 16, 16);
-		Sprite player_walk_right_frame3 = worldSheet.getSprite(80, 0, 16, 16);
-		assets.registerSprite("player_walk_right_1", player_walk_right_frame1);
-		assets.registerSprite("player_walk_right_2", player_walk_right_frame2);
-		assets.registerSprite("player_walk_right_3", player_walk_right_frame3);
-
-		Sprite player_walk_left_frame1 = worldSheet.getSprite(48, 16, 16, 16);
-		Sprite player_walk_left_frame2 = worldSheet.getSprite(64, 16, 16, 16);
-		Sprite player_walk_left_frame3 = worldSheet.getSprite(80, 16, 16, 16);
-		assets.registerSprite("player_walk_left_1", player_walk_left_frame1);
-		assets.registerSprite("player_walk_left_2", player_walk_left_frame2);
-		assets.registerSprite("player_walk_left_3", player_walk_left_frame3);
-		
-		assets.registerSprite("door_closed", worldSheet.getSprite(32, 32, 16, 16)); // Exemplo de coordenada
-		assets.registerSprite("door_open", worldSheet.getSprite(64, 32, 16, 16)); // Exemplo de coordenada
-		
-		assets.registerSprite("door_frame_1", worldSheet.getSprite(32, 32, 16, 16)); // Frame 1: Fechada
-	    assets.registerSprite("door_frame_2", worldSheet.getSprite(48, 32, 16, 16)); // Frame 2: Meio-aberta
-	    assets.registerSprite("door_frame_3", worldSheet.getSprite(64, 32, 16, 16)); // Frame 3: Aberta
+        assets.registerSprite("player_idle", worldSheet.getSprite(32, 0, 16, 16));
+        assets.registerSprite("player_walk_right_1", worldSheet.getSprite(48, 0, 16, 16));
+        assets.registerSprite("player_walk_right_2", worldSheet.getSprite(64, 0, 16, 16));
+        assets.registerSprite("player_walk_right_3", worldSheet.getSprite(80, 0, 16, 16));
+        assets.registerSprite("player_walk_left_1", worldSheet.getSprite(48, 16, 16, 16));
+        assets.registerSprite("player_walk_left_2", worldSheet.getSprite(64, 16, 16, 16));
+        assets.registerSprite("player_walk_left_3", worldSheet.getSprite(80, 16, 16, 16));
+        
+	    assets.registerSprite("door_frame_1", worldSheet.getSprite(32, 32, 16, 16));
+	    assets.registerSprite("door_frame_2", worldSheet.getSprite(48, 32, 16, 16));
+	    assets.registerSprite("door_frame_3", worldSheet.getSprite(64, 32, 16, 16));
 	    assets.registerSprite("npc_sprite", worldSheet.getSprite(112, 0, 16, 16));
     }
     
@@ -111,76 +109,56 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
     }
     
     private DialogueBox createDialogueBox() {
-    	// 1. Cria a caixa de diálogo da engine
-        dialogueBox = new DialogueBox(10, 90, Engine.WIDTH - 20, 65);
-
-        // 2. --- CONFIGURA A APARÊNCIA A PARTIR DO JOGO ---
-        Font jogoFonteNome = new Font("Courier New", Font.BOLD, 12);
-        Font jogoFonteTexto = new Font("Courier New", Font.PLAIN, 10);
-        dialogueBox.setFonts(jogoFonteNome, jogoFonteTexto);
-        
-        Color corFundo = new Color(20, 20, 80, 230); // Azul escuro, quase opaco
-        Color corBorda = Color.CYAN;
-        dialogueBox.setColors(corFundo, Color.WHITE, Color.YELLOW, corBorda);
-        
-        dialogueBox.setPadding(2);
-        dialogueBox.setLineSpacing(10);
-        dialogueBox.setSectionSpacing(10);
-        
-        dialogueBox.setTypewriterSpeed(3); // Deixa o texto um pouco mais lento
+        dialogueBox = new DialogueBox(10, 85, Engine.WIDTH - 20, 70);
+        // Configurações de aparência
+        dialogueBox.setFonts(new Font("Courier New", Font.BOLD, 12), new Font("Courier New", Font.PLAIN, 10));
+        dialogueBox.setColors(new Color(20, 20, 80, 230), Color.WHITE, Color.YELLOW, Color.CYAN);
+        dialogueBox.setPadding(5);
+        dialogueBox.setLineSpacing(12);
+        dialogueBox.setSectionSpacing(8);
+        dialogueBox.setTypewriterSpeed(2);
     	return dialogueBox;
     }
     
-    /**
-     * Um método dedicado apenas para registrar todas as ações de diálogo do jogo.
-     * Isso mantém o construtor mais limpo.
-     */
     private void registerDialogueActions() {
         ActionManager actionManager = ActionManager.getInstance();
-        
-        // Exemplo: Ação para aceitar a quest do martelo
         actionManager.registerAction("accept_quest_martelo", (player, npc) -> {
-            System.out.println("AÇÃO EXECUTADA: Missão 'Consiga o Martelo' iniciada!");
-            // ((Player)player).quests.add(new Quest("Martelo do Ferreiro"));
+            System.out.println("AÇÃO: Missão 'Consiga o Martelo' iniciada!");
         });
-
-        // Exemplo: Ação para dar um item
         actionManager.registerAction("give_item_pocao", (player, npc) -> {
-            System.out.println("AÇÃO EXECUTADA: O jogador recebeu uma poção!");
-            // ((Player)player).inventory.add(new Potion());
+            System.out.println("AÇÃO: O jogador recebeu uma poção!");
         });
-
-        // Adicione outras ações aqui...
     }
 
     @Override
     public void tick() {
-    	// Se um diálogo está ativo, ele tem prioridade
         if (DialogueManager.getInstance().isActive()) {
-            dialogueBox.tick(); // Processa o input da caixa de diálogo
+            dialogueBox.tick();
         } else {
-            // Se não, processa o input normal do jogo
             super.tick(); 
+            guidanceUpdate();
             keyboardEventsUpdate();
             collisionsUpdate();
-            Engine.camera.update(player, world);
+            if (player != null && world != null) {
+                Engine.camera.update(player, world);
+            }
         }
         InputManager.instance.update();
     }
     
     private void collisionsUpdate() {
-    	
-    	 for (int i = 0; i < gameObjects.size(); i++) {
-             GameObject obj1 = gameObjects.get(i);
-             for (int j = i + 1; j < gameObjects.size(); j++) {
-                 GameObject obj2 = gameObjects.get(j);
-                 if (GameObject.isColliding(obj1, obj2)) {
-                     obj1.onCollision(obj2);
-                     obj2.onCollision(obj1);
-                 }
-             }
-         }
-    }
+        for (int i = 0; i < gameObjects.size(); i++) {
+            GameObject obj1 = gameObjects.get(i);
+            for (int j = i + 1; j < gameObjects.size(); j++) {
+                GameObject obj2 = gameObjects.get(j);
+                // Esta verificação funciona para SÓLIDOS e GATILHOS.
+                if (GameObject.isColliding(obj1, obj2)) {
+                    obj1.onCollision(obj2); // O Player.onCollision(Lifepack) será chamado
+                    obj2.onCollision(obj1);
+                }
+            }
+        }
+   }
     
     private void keyboardEventsUpdate () {
     	if (InputManager.isKeyJustPressed(KeyEvent.VK_9)) {
@@ -194,8 +172,6 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 		    for (GameObject go : gameObjects) {
 		        if (go instanceof Interactable) {
 		            Interactable interactableObject = (Interactable) go;
-		            
-		            // Pega o raio de interação específico deste objeto
 		            int interactionRadius = interactableObject.getInteractionRadius();
 		
 		            int pCenterX = player.getX() + player.getWidth() / 2;
@@ -207,6 +183,7 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 		
 		            if (distance <= interactionRadius) {
 		                interactableObject.onInteract(player);
+		                System.out.println("interagiu");
 		                break;
 		            }
 		        }
@@ -216,81 +193,149 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 
     @Override
     public void render(Graphics g) {
-        world.render(g);
-        for (GameObject go : gameObjects) {
-            go.render(g);
-        }
-        uiManager.render(g);
+        if (world != null) world.render(g);
+        super.render(g); // Desenha todos os GameObjects
+        if (uiManager != null) uiManager.render(g);
     }
     
     @Override
 	public void onObjectFound(String type, int x, int y, int width, int height, JSONObject properties) {
-		String objectName = properties.getString("name");
-		String objectClass = properties.getString("type");
-
-		if (objectName.equals("player_start")) {
-			player.setX(x);
-			player.setY(y);
-		} else if (objectName.equals("enemy")) {
-			Enemy enemy = new Enemy(x, y, width, height, assets.getSprite("enemy"), this.player);
-	        this.addGameObject(enemy);
-		} else if (objectName.equals("lifepack")) {
-			this.addGameObject(new Lifepack(x, y, width, height, PlayingState.assets.getSprite("lifepack")));
-		} else if (objectName.equals("weapon")) {
-			this.addGameObject(new Weapon(x, y, width, height, PlayingState.assets.getSprite("weapon")));
-		} else if (objectName.equals("bullet")) {
-			this.addGameObject(new Bullet(x, y, width, height, PlayingState.assets.getSprite("bullet")));
-		}else if (objectClass.equals("door")) { // Adicione um objeto do tipo "door" no Tiled
-			 boolean startsOpen = properties.has("startsOpen") ? properties.getBoolean("startsOpen") : false;
-			    Door door = new Door(x, y, width, height, startsOpen);
-			    
-			    // --- NOVA LINHA ---
-			    // Dê à porta acesso a todos os objetos para a verificação de obstrução
-			    door.setGameObjects(this.gameObjects);
-			    
-			    this.addGameObject(door);
-	    }else if (objectClass.equals("NPC")) {
-			if(objectName.equals("ferreiro")) {
-				// Cria o NPC com esse diálogo e o adiciona ao jogo
-		        Ferreiro ferreiro = new Ferreiro(x, y, "/ferreiro.json"); // Posição (x, y) de exemplo
-		        this.addGameObject(ferreiro);
-			}
-		}
+	    GameObject newObject = null;
+	    
+	    // O 'type' aqui é a "class" que você define no Tiled
+	    switch (type) {
+	        case "player_start":
+	            player.initialize(properties);
+	            return;
+	
+	        case "enemy":
+	            newObject = new Enemy(this.player, properties);
+	            break;
+	            
+	        case "NPC":
+	             if ("ferreiro".equals(properties.getString("name"))) {
+	                newObject = new Ferreiro(properties);
+	             }
+	            break;
+	            
+	        case "door":
+	        	Door door = new Door(properties);
+	            newObject = door;
+	            
+	            // Adiciona a porta ao mapa de portas usando o seu nome
+	            
+	            System.out.println("porta: " + door.name);
+	            if (!door.name.isEmpty()) {
+	            	System.out.println("o nome da porta nao esta vazia");
+	                this.doors.put(door.name, door);
+	            }
+	            break;
+	            
+	        case "TriggerZone":
+	        	// --- CORREÇÃO DE POSICIONAMENTO ---
+	            // Para a TriggerZone, usamos a coordenada Y original do Tiled, não a ajustada.
+	            int originalY = properties.getInt("y");
+	            
+	            // Cria a zona, mas ajusta manualmente a sua posição Y.
+	            TriggerZone zone = new TriggerZone(properties);
+	            zone.setY(originalY);
+	            newObject = zone;
+	            
+	            // Adiciona a zona à lista para verificação
+	            this.triggerZones.add(zone);
+	        	break;
+	            
+	        case "lifepack":
+	            newObject = new Lifepack(properties);
+	            break;
+	
+	        case "weapon":
+	            newObject = new Weapon(properties);
+	            break;
+	
+	        case "bullet":
+	            newObject = new Bullet(properties);
+	            break;
+	    }
+	    
+	    if (newObject != null) {
+	        if (newObject instanceof Enemy) {
+	            Enemy enemy = (Enemy) newObject;
+	            String expectedPathName = "path_" + enemy.name;
+	            if (loadedPaths.containsKey(expectedPathName)) {
+	                enemy.setPath(loadedPaths.get(expectedPathName), PatrolMode.PING_PONG);
+	            }
+	        }
+	        this.addGameObject(newObject);
+	    }
 	}
 
     @Override
     public Tile onTileFound(String layerName, int tileId, int x, int y) {
-        
-        // 1º NÍVEL DA HIERARQUIA: Filtra pela LAYER
         switch (layerName) {
-            
             case "CamadaDeChao":
-                // 2º NÍVEL DA HIERARQUIA: Filtra pelo TILE ID dentro da layer "Floor"
                 switch (tileId) {
-                    case 31: // ID de teste
+                    case 31:
                         return new FloorTile(x, y, assets.getSprite("floor_2"));
-                    
-                    // Adicione outros 'case' para mais variações de chão aqui...
-
-                    default: // Para qualquer outro tile ID na layer "Floor", usa o padrão
+                    default:
                         return new FloorTile(x, y, assets.getSprite("floor_1"));
                 }
 
             case "CamadaDeParedes":
-                // 2º NÍVEL DA HIERARQUIA: Filtra pelo TILE ID dentro da layer "Walls"
-                switch (tileId) {
-                    case 18: // ID específico para a parede com tocha
-                        return new WallTile(x, y, assets.getSprite("wall_1"));// preguiça de fazer uma nova sprite
-                        
-                    // Adicione outros 'case' para mais variações de parede aqui...
-
-                    default: // Para qualquer outro tile ID na layer "Walls", usa o padrão
-                        return new WallTile(x, y, assets.getSprite("wall_1"));
-                }
+                return new WallTile(x, y, assets.getSprite("wall_1"));
 
             default:
-                // Ignora qualquer outra camada que não seja "Floor" ou "Walls"
                 return null;
         }
     }
+
+    @Override
+    public void onPathFound(String pathName, List<Point> pathPoints) {
+        this.loadedPaths.put(pathName, pathPoints);
+    }
+    
+ // Adicione este novo método ao PlayingState
+    private void guidanceUpdate() {
+        // Itera sobre todos os GameObjects primeiro
+        for (GameObject characterObject : this.gameObjects) {
+            // Verifica se o objeto é um personagem
+            if (characterObject instanceof Character) {
+                
+                // Agora, para este personagem específico, verifica todas as zonas de gatilho
+                for (TriggerZone zone : triggerZones) {
+                    Door targetDoor = doors.get(zone.targetName);
+
+                    // Se a zona tem uma porta válida, a porta está aberta, E o personagem está a colidir com a zona...
+                    if (targetDoor != null && targetDoor.getCollisionType() != CollisionType.SOLID && GameObject.isColliding(characterObject, zone)) {
+                        
+                    	if(!(characterObject instanceof Player)) return;
+                    	
+                        int doorCenterX = targetDoor.getX() + targetDoor.getWidth() / 2;
+                        int doorCenterY = targetDoor.getY() + targetDoor.getHeight() / 2;
+                        
+                        if (characterObject.movement != null) {
+                        	if(characterObject.getX() > targetDoor.getX() && characterObject.movement.getDx() ==+1) {
+                        		return;
+                        	}else if(characterObject.getX() < targetDoor.getX() && characterObject.movement.getDx() ==-1) {
+                        		return;
+                        	}
+                        	if(characterObject.getY() > targetDoor.getY() && characterObject.movement.getDy() ==+1) {
+                        		return;
+                        	}else if(characterObject.getY() < targetDoor.getY() && characterObject.movement.getDy() ==-1) {
+                        		return;
+                        	}
+                            characterObject.movement.applyGuidance(doorCenterX, doorCenterY, 0.1);
+                        }
+                        
+                        // --- CORREÇÃO CRÍTICA AQUI ---
+                        // Assim que encontramos uma zona que afeta o personagem,
+                        // saímos do loop de zonas para evitar que outras zonas apliquem forças conflitantes.
+                        break; 
+                    }
+                }
+            }
+           }
+        }
+       
+    
 }

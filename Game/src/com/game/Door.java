@@ -5,48 +5,52 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.util.List;
 
-import com.JDStudio.Engine.Graphics.Sprite.Sprite;
+import org.json.JSONObject;
+
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animation;
 import com.JDStudio.Engine.Object.GameObject;
 import com.JDStudio.Engine.Object.Interactable;
+import com.JDStudio.Engine.Utils.PropertiesReader;
 @SuppressWarnings("unused")
 public class Door extends GameObject implements Interactable {
 
     private boolean isOpen = false;
     private List<GameObject> allGameObjects;
 
-    public Door(double x, double y, int width, int height, boolean startsOpen) {
-        super(x, y, width, height);
-        this.isOpen = startsOpen;
+    public Door(JSONObject properties) {
+        super(properties);
+    }
+
+    @Override
+    public void initialize(JSONObject properties) {
+        super.initialize(properties);
         
+        PropertiesReader reader = new PropertiesReader(properties);
+        this.isOpen = reader.getBoolean("startsOpen", false);
         setupAnimations();
 
-        if (startsOpen) {
+        if (isOpen) {
             animator.play("idleOpen");
-            this.isSolid = false;
+            
         } else {
             animator.play("idleClosed");
-            this.isSolid = true;
+            setCollisionType(CollisionType.SOLID);
         }
     }
+
     
     private void setupAnimations() {
-        // Pega os frames que carregamos no PlayingState
-        Sprite frame1 = PlayingState.assets.getSprite("door_frame_1"); // Fechada
-        Sprite frame2 = PlayingState.assets.getSprite("door_frame_2"); // Meio-aberta
-        Sprite frame3 = PlayingState.assets.getSprite("door_frame_3"); // Aberta
+        Animation idleClosed = new Animation(1, PlayingState.assets.getSprite("door_frame_1"));
+        Animation idleOpen = new Animation(1, PlayingState.assets.getSprite("door_frame_3"));
+        Animation opening = new Animation(20, false, 
+            PlayingState.assets.getSprite("door_frame_1"), 
+            PlayingState.assets.getSprite("door_frame_2"), 
+            PlayingState.assets.getSprite("door_frame_3"));
+        Animation closing = new Animation(20, false, 
+            PlayingState.assets.getSprite("door_frame_3"), 
+            PlayingState.assets.getSprite("door_frame_2"), 
+            PlayingState.assets.getSprite("door_frame_1"));
 
-        // Cria as animações
-        Animation idleClosed = new Animation(1, frame1); // Animação "parada fechada"
-        Animation idleOpen = new Animation(1, frame3);   // Animação "parada aberta"
-        
-        // Animação de ABERTURA: toca uma vez e para (loop = false)
-        Animation opening = new Animation(10, false, frame1, frame2, frame3);
-        
-        // Animação de FECHAMENTO: toca uma vez e para, na ordem inversa
-        Animation closing = new Animation(10, false, frame3, frame2, frame1);
-
-        // Adiciona ao animator
         animator.addAnimation("idleClosed", idleClosed);
         animator.addAnimation("idleOpen", idleOpen);
         animator.addAnimation("opening", opening);
@@ -59,24 +63,46 @@ public class Door extends GameObject implements Interactable {
 
     @Override
     public void onInteract(GameObject source) {
-        // Só permite interação se a porta estiver "parada" (aberta ou fechada)
         String currentKey = animator.getCurrentAnimationKey();
+        
         if ("idleOpen".equals(currentKey)) {
+            if (isObstructed()) {
+                return;
+            }
+            // Torna-se sólida IMEDIATAMENTE. O novo método já cuida da máscara.
+            this.collisionType = CollisionType.SOLID;
             animator.play("closing");
-            isOpen = false;
-            // A solidez será atualizada no tick() quando a animação terminar
+
         } else if ("idleClosed".equals(currentKey)) {
+            // Ao abrir, ela continua sólida durante a animação
             animator.play("opening");
-            isOpen = true;
-            // A solidez será atualizada no tick()
         }
     }
     
+    @Override
+    public void tick() {
+        super.tick();
+        
+        Animation currentAnimation = animator.getCurrentAnimation();
+        
+        if (currentAnimation != null && currentAnimation.hasFinished()) {
+            String currentKey = animator.getCurrentAnimationKey();
+            
+            if ("opening".equals(currentKey)) {
+                animator.play("idleOpen");
+                setCollisionType(CollisionType.TRIGGER);
+            } else if ("closing".equals(currentKey)) {
+                animator.play("idleClosed");
+                // A porta já foi definida como sólida no onInteract
+            }
+        }
+    }
+
     /**
-     * Verifica se a área da porta está ocupada por outro GameObject.
+     * Implementação completa do método de verificação de obstrução.
      */
-    
     private boolean isObstructed() {
+        // Este método precisa da lista de GameObjects. Vamos garantir que ele a tenha.
         if (allGameObjects == null) return false;
 
         Rectangle doorBounds = new Rectangle(
@@ -87,8 +113,9 @@ public class Door extends GameObject implements Interactable {
         );
 
         for (GameObject other : allGameObjects) {
-            if (other == this) continue; // Não verifica contra si mesmo
+            if (other == this) continue;
 
+            // Verifica colisão com qualquer outro objeto, não apenas o jogador
             Rectangle otherBounds = new Rectangle(
                 other.getX() + other.getMaskX(),
                 other.getY() + other.getMaskY(),
@@ -100,38 +127,11 @@ public class Door extends GameObject implements Interactable {
                 return true; // Encontrou um objeto no caminho!
             }
         }
-        return false; // Caminho livre
-    }
-
-    @Override
-    public void tick() {
-        super.tick(); // Atualiza a animação
-
-        Animation currentAnimation = animator.getCurrentAnimation();
-        
-        if (currentAnimation != null && currentAnimation.hasFinished()) {
-            String currentKey = animator.getCurrentAnimationKey();
-            
-            if ("opening".equals(currentKey)) {
-                animator.play("idleOpen");
-                this.isSolid = false;
-            } 
-            else if ("closing".equals(currentKey)) {
-                // --- VERIFICAÇÃO NO MOMENTO CRÍTICO ---
-                if (isObstructed()) {
-                    // Obstruído! Reverte a animação para abrir novamente.
-                    animator.play("opening"); 
-                    isOpen = true; // Garante que o estado lógico seja "aberta"
-                } else {
-                    // Caminho livre! Pode fechar e se tornar sólida.
-                    animator.play("idleClosed");
-                    this.isSolid = true;
-                }
-            }
-        }
+        return false;
     }
     
-    // (O método render já funciona por herança de GameObject)
+ 
+    
     @Override
     public int getInteractionRadius() { return 24; }
 

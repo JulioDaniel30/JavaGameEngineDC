@@ -1,6 +1,8 @@
 package com.JDStudio.Engine.Object;
 
-import com.JDStudio.Engine.Graphics.Sprite.Sprite;
+import org.json.JSONObject;
+
+import com.JDStudio.Engine.Utils.PropertiesReader;
 
 /**
  * Uma especialização de GameObject que representa um "personagem" no jogo.
@@ -13,11 +15,25 @@ public abstract class Character extends GameObject {
     public double maxLife;
     protected boolean isDead = false;
 
-    public Character(double x, double y, int width, int height) {
+    /*public Character(double x, double y, int width, int height) {
         super(x, y, width, height);
     }
     public Character(double x, double y, int width, int height, Sprite sprite) {
         super(x, y, width, height, sprite);
+    }*/
+    
+    public Character(JSONObject properties) {
+        super(properties); // Passa as propriedades para o construtor pai
+    }
+
+    @Override
+    public void initialize(JSONObject properties) {
+        super.initialize(properties); // MUITO IMPORTANTE: Inicializa a base primeiro
+        
+        PropertiesReader reader = new PropertiesReader(properties);
+        // O Character agora é responsável por ler suas próprias propriedades
+        this.maxLife = reader.getDouble("maxLife", 100);
+        this.life = this.maxLife; // Começa com a vida cheia
     }
 
     /**
