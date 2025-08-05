@@ -1,8 +1,9 @@
-package com.game;
+package com.game.gameObjects;
 
 import org.json.JSONObject;
 
 import com.JDStudio.Engine.Object.GameObject;
+import com.game.States.PlayingState;
 
 public class Bullet extends GameObject {
 	public Bullet(JSONObject properties) {

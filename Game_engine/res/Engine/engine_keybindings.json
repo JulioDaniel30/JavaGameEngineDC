@@ -1,0 +1,47 @@
+{
+	"TOGGLE_DEBUG": [
+        { "key": "F1" }
+    ],
+    "TOGGLE_FPS_COUNTER": [
+        { "key": "F2" }
+    ],
+    "SAVE_GAME": [
+        { "key": "F5" }
+    ],
+    "LOAD_GAME": [
+        { "key": "F9" }
+    ],
+    "PAUSE_GAME": [
+        { "key": "P" }
+    ],
+    "QUIT_GAME": [
+        { "key": "Q", "ctrl": true }
+    ],
+    "TOGGLE_FULLSCREEN": [
+        { "key": "ENTER", "alt": true }
+    ],
+    "CAMERA_ZOOM_IN": [
+        { "key": "EQUALS" },
+        { "key": "ADD" }
+    ],
+    "CAMERA_ZOOM_OUT": [
+        { "key": "MINUS" },
+        { "key": "SUBTRACT" }
+    ],
+    "CAMERA_ZOOM_RESET": [
+        { "key": "0" },
+		{ "key": "NUMPAD0" }
+		    ],
+	"INTERACT":[
+		{"key":"E"}
+	],
+	
+    "SHOOT": [
+        { "key": "F" },
+        { "key": "MOUSE1" }
+    ],
+    "AIM": [
+        { "key": "MOUSE2" }
+    ]
+	
+}

@@ -3,6 +3,7 @@ package com.JDStudio.Engine.Graphics.Sprite.Animations;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.JDStudio.Engine.Components.Component;
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 
 /**
@@ -10,7 +11,7 @@ import com.JDStudio.Engine.Graphics.Sprite.Sprite;
  * Atua como uma máquina de estados para as animações, controlando qual delas
  * está ativa e atualizando sua lógica.
  */
-public class Animator {
+public class Animator extends Component{
 
     /** Mapa que armazena todas as animações disponíveis, associadas a uma chave de texto. */
     private Map<String, Animation> animations;
@@ -71,7 +72,7 @@ public class Animator {
      * Atualiza a lógica da animação ativa, avançando seu quadro se necessário.
      * Deve ser chamado a cada tick do jogo.
      */
-    public void tick() {
+    public void update() {
         if (currentAnimation != null) {
             currentAnimation.tick();
         }

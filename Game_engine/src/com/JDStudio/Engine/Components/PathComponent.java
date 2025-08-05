@@ -1,96 +1,95 @@
 // engine
 package com.JDStudio.Engine.Components;
 
-import java.awt.Graphics;
 import java.awt.Point;
 import java.util.List;
 
 import com.JDStudio.Engine.Object.GameObject;
 
-/**
- * Um componente que permite a um GameObject seguir um caminho pré-definido.
- */
 public class PathComponent {
 
     public enum PatrolMode {
-        LOOP,       // Ao chegar no fim, volta para o primeiro ponto.
-        PING_PONG   // Ao chegar no fim, inverte o caminho e volta.
+        LOOP,
+        PING_PONG
     }
 
     private final List<Point> path;
     private final PatrolMode mode;
     private final GameObject owner;
     private int currentTargetIndex = 0;
-    private int direction = 1; // 1 para frente, -1 para trás (usado no modo PING_PONG)
+    private int direction = 1;
 
-    // Distância para considerar que o alvo foi alcançado
-    private final double arrivalThreshold = 5.0;
+    private double arrivalThreshold = 15.0;
 
-    public PathComponent(GameObject owner, List<Point> path, PatrolMode mode) {
+
+	public PathComponent(GameObject owner, List<Point> path, PatrolMode mode, Double arrivalThreshold) {
         this.owner = owner;
         this.path = path;
         this.mode = mode;
+        this.arrivalThreshold = arrivalThreshold;
     }
 
-    /**
-     * Atualiza a lógica do componente. Deve ser chamado a cada frame.
-     */
     public void update() {
         if (path == null || path.isEmpty()) {
             return;
         }
 
-        // Verifica se o dono do componente chegou perto do ponto alvo atual
+        // --- INÍCIO DA DEPURAÇÃO ---
+        //System.out.println("--- PathComponent Update Frame ---");
+        //System.out.println("Owner: " + owner.name + " | Current Index: " + currentTargetIndex + " | Direction: " + direction);
+        Point targetPos = getTargetPosition();
+        //System.out.println("Current Target Position: " + targetPos);
+        
         if (hasReachedTarget()) {
-            // Se chegou, avança para o próximo ponto na rota
+            //System.out.println(">>>>>> HAS REACHED TARGET! <<<<<<");
             advanceToNextPoint();
+            //System.out.println("++++++ ADVANCED! New Index: " + currentTargetIndex + " | New Direction: " + direction);
+            //System.out.println("++++++ New Target Position: " + getTargetPosition());
+        } else {
+            // Descomente a linha abaixo para ver a distância a cada quadro
+            // System.out.println("Distance to target: " + getDistanceToTarget());
         }
+        //System.out.println("------------------------------------");
+        // --- FIM DA DEPURAÇÃO ---
+    }
+    
+    // Método auxiliar para depuração
+    private double getDistanceToTarget() {
+        Point target = getTargetPosition();
+        if (target == null) return -1;
+        double ownerCenterX = owner.getX() + owner.getWidth() / 2.0;
+        double ownerCenterY = owner.getY() + owner.getHeight() / 2.0;
+        double dx = ownerCenterX - target.x;
+        double dy = ownerCenterY - target.y;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
-    /**
-     * Retorna a coordenada do ponto alvo atual na rota de patrulha.
-     * @return O objeto Point do alvo atual, ou null se não houver caminho.
-     */
     public Point getTargetPosition() {
-        if (path == null || path.isEmpty()) {
+        if (path == null || path.isEmpty() || currentTargetIndex >= path.size() || currentTargetIndex < 0) {
             return null;
         }
         return path.get(currentTargetIndex);
     }
 
     private boolean hasReachedTarget() {
-        Point target = getTargetPosition();
-        if (target == null) return false;
-
-        // Calcula a distância euclidiana entre o dono e o alvo
-        double dx = owner.getX() - target.x;
-        double dy = owner.getY() - target.y;
-        return Math.sqrt(dx * dx + dy * dy) < arrivalThreshold;
+        return getDistanceToTarget() < arrivalThreshold;
     }
 
     private void advanceToNextPoint() {
-        currentTargetIndex += direction;
-
         if (mode == PatrolMode.LOOP) {
+            currentTargetIndex++;
             if (currentTargetIndex >= path.size()) {
-                currentTargetIndex = 0; // Volta para o início
+                currentTargetIndex = 0;
             }
         }
         else if (mode == PatrolMode.PING_PONG) {
-            if (currentTargetIndex >= path.size() || currentTargetIndex < 0) {
-                direction *= -1; // Inverte a direção
-                // Move o índice duas vezes para não ficar parado no mesmo ponto
-                currentTargetIndex += direction;
-                currentTargetIndex += direction;
-
-                // Garante que o índice não saia dos limites após a inversão
-                if (currentTargetIndex >= path.size()) {
-                    currentTargetIndex = path.size() - 1;
-                }
-                if (currentTargetIndex < 0) {
-                    currentTargetIndex = 0;
-                }
+            if (direction == 1 && (currentTargetIndex + direction) >= path.size()) {
+                direction = -1;
             }
+            else if (direction == -1 && (currentTargetIndex + direction) < 0) {
+                direction = 1;
+            }
+            currentTargetIndex += direction;
         }
     }
 

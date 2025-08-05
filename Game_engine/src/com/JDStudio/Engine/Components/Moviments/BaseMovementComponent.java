@@ -3,13 +3,21 @@ package com.JDStudio.Engine.Components.Moviments;
 
 import java.awt.Rectangle;
 import java.util.List;
+
+import com.JDStudio.Engine.Components.Component;
+import com.JDStudio.Engine.Events.EngineEvent;
+import com.JDStudio.Engine.Events.EventManager;
+import com.JDStudio.Engine.Events.WorldLoadedEventData;
+import com.JDStudio.Engine.Object.Character;
 import com.JDStudio.Engine.Object.GameObject;
 import com.JDStudio.Engine.Object.GameObject.CollisionType;
 import com.JDStudio.Engine.World.World;
 
-public abstract class BaseMovementComponent {
+public abstract class BaseMovementComponent extends Component {
 
-    protected GameObject owner;
+    // A linha "protected GameObject owner;" foi REMOVIDA daqui.
+    // Agora, este componente usará a variável "owner" herdada da classe Component, que é a correta.
+    
     protected World world;
     protected List<GameObject> allGameObjects;
     public double speed;
@@ -19,50 +27,47 @@ public abstract class BaseMovementComponent {
     protected double dx = 0;
     protected double dy = 0;
 
-    public BaseMovementComponent(GameObject owner, double speed) {
-        this.owner = owner;
+    public BaseMovementComponent(double speed) {
         this.speed = speed;
+        
+        // --- LÓGICA DE AUTO-CONFIGURAÇÃO ---
+        // O componente se inscreve para ouvir quando o mundo estiver pronto.
+        EventManager.getInstance().subscribe(EngineEvent.WORLD_LOADED, (data) -> {
+            // Apenas configura se ainda não tiver sido configurado
+            if (this.world == null && data instanceof WorldLoadedEventData) {
+                WorldLoadedEventData eventData = (WorldLoadedEventData) data;
+                this.world = eventData.world();
+                this.allGameObjects = eventData.gameObjects();
+                System.out.println("Componente de movimento para '" + owner.name + "' configurado via evento!");
+            }
+        });
     }
 
-    /**
-     * Aplica uma "força" que ajusta a direção do movimento em direção a um ponto de guiamento.
-     * @param targetX A coordenada X do ponto para o qual guiar.
-     * @param targetY A coordenada Y do ponto para o qual guiar.
-     * @param strength A força do guiamento (0.0 a 1.0).
-     */
     public void applyGuidance(double targetX, double targetY, double strength) {
-        // Pega a direção atual do movimento
+        if (owner == null) return;
         double currentMoveX = xRemainder;
         double currentMoveY = yRemainder;
-
-        // Calcula a direção ideal (para o centro da porta)
         double idealDx = targetX - owner.getX();
         double idealDy = targetY - owner.getY();
-
-        // Interpola linearmente entre o movimento atual e o ideal
         xRemainder = currentMoveX * (1.0 - strength) + idealDx * strength;
         yRemainder = currentMoveY * (1.0 - strength) + idealDy * strength;
     }
     
     public void setWorld(World world) { this.world = world; }
+    public World getWorld() { return this.world;}
     public void setGameObjects(List<GameObject> allGameObjects) { this.allGameObjects = allGameObjects; }
 
-    public abstract void tick();
+    public abstract void update();
     
-    /**
-     * Verifica se a próxima posição do objeto está livre,
-     * considerando tanto os tiles do mundo quanto outros objetos sólidos.
-     */
-     protected boolean isPathClear(int nextX, int nextY) {
-        if (world == null) return true;
+	protected boolean isPathClear(int nextX, int nextY) {
+        if (world == null || owner == null) return true;
 
-        // 1. Verifica a colisão com os TILES do cenário (paredes)
+        // 1. Verifica colisão com os tiles do mundo (inalterado)
         if (!world.isFree(nextX, nextY, owner.getMaskX(), owner.getMaskY(), owner.getMaskWidth(), owner.getMaskHeight())) {
-            System.out.println(owner.name + " colidiu com um TILE sólido."); // Descomente para depuração
             return false;
         }
 
-        // 2. Verifica a colisão com outros GAMEOBJECTS sólidos (portas, inimigos, etc.)
+        // 2. Verifica colisão com outros GameObjects
         if (allGameObjects != null) {
             Rectangle futureBounds = new Rectangle(
                 nextX + owner.getMaskX(), 
@@ -72,10 +77,13 @@ public abstract class BaseMovementComponent {
             );
 
             for (GameObject other : allGameObjects) {
-                if (other == owner) continue; // Não colide consigo mesmo
+                if (other == owner) continue;
 
-                // A verificação crucial: o outro objeto é sólido?
-                if (other.collisionType == CollisionType.SOLID) {
+                // --- CORREÇÃO PRINCIPAL E DESACOPLADA AQUI ---
+                // O movimento é bloqueado se o outro objeto for SOLID ou CHARACTER_SOLID.
+                // Esta regra é 100% genérica e não depende do jogo.
+                if (other.collisionType == CollisionType.SOLID || other.collisionType == CollisionType.CHARACTER_SOLID) {
+                    
                     Rectangle otherBounds = new Rectangle(
                         other.getX() + other.getMaskX(),
                         other.getY() + other.getMaskY(),
@@ -83,25 +91,16 @@ public abstract class BaseMovementComponent {
                         other.getMaskHeight()
                     );
                     
-                    // Se as caixas de colisão se intersetam, o caminho está bloqueado.
                     if (futureBounds.intersects(otherBounds)) {
-                         System.out.println(owner.name + " colidiu com o GameObject sólido: " + other.name); // Descomente para depuração
-                        return false;
+                        return false; // Bloqueia o movimento
                     }
                 }
             }
         }
         
-        // Se passou por todas as verificações, o caminho está livre.
-        return true;
+        return true; // Caminho livre
     }
      
-     
-     public double getDx() {
- 		return dx;
- 	}
-
- 	public double getDy() {
- 		return dy;
- 	}
+    public double getDx() { return dx; }
+    public double getDy() { return dy; }
 }

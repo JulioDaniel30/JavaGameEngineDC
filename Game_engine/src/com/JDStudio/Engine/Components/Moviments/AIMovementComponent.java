@@ -13,140 +13,169 @@ import com.JDStudio.Engine.Pathfinding.Pathfinder;
 
 public class AIMovementComponent extends BaseMovementComponent {
 
-    private GameObject target;
-    private Point targetPoint; // Usado para patrulha (movimento direto)
-
-    // --- OPÇÃO CONFIGURÁVEL ---
-    /** * Se true, usará o algoritmo A* para desviar de obstáculos ao seguir um GameObject.
-     * Se false, moverá em linha reta em direção ao alvo.
+    // --- NOVO ENUM PARA A ÂNCORA ---
+    /**
+     * Define o ponto específico no alvo que a IA irá perseguir.
      */
+    public enum TargetAnchor {
+        TOP_LEFT,      // O ponto (x, y) original.
+        CENTER,        // O centro do sprite do alvo.
+        BOTTOM_CENTER  // A base do sprite do alvo (os "pés").
+    }
+
+    private GameObject target;
+    private Point targetPoint;
+
     public boolean useAStarPathfinding = false;
     public boolean avoidOtherActors = false;
+    
+    // --- NOVA PROPRIEDADE CONFIGURÁVEL ---
+    /**
+     * Define qual âncora usar ao perseguir um alvo. O padrão é o centro.
+     */
+    public TargetAnchor targetAnchor = TargetAnchor.CENTER;
 
-    // Atributos para o A*
     private List<Point> currentPath;
     private int currentPathIndex;
     private int pathRecalculateCooldown = 0;
-    private final int pathRecalculateSpeed = 30; // Recalcula o caminho a cada 30 ticks (meio segundo)
-    private final double arrivalThreshold = 5.0; // Distância para considerar que chegou a um ponto do caminho A*
-    
+    private final int pathRecalculateSpeed = 30;
+    private final double arrivalThreshold = 2.0;
 
-    public AIMovementComponent(GameObject owner, double speed) {
-        super(owner, speed);
+    public AIMovementComponent(double speed) {
+        super(speed);
         this.currentPath = new ArrayList<>();
     }
+    
+    // ... (métodos setTarget, getTarget, etc. permanecem iguais) ...
 
     public void setTarget(GameObject target) {
         if (this.target != target) {
             this.target = target;
-            this.pathRecalculateCooldown = 0; // Força recálculo imediato do caminho
+            this.pathRecalculateCooldown = 0;
             this.currentPath.clear();
         }
     }
     
     public GameObject getTarget() {
-    	return this.target;
+        return this.target;
     }
 
     public void setTarget(int x, int y) {
         this.target = null;
         this.targetPoint = new Point(x, y);
     }
-
+    
     @Override
-    public void tick() {
-        // Se não há alvo de nenhum tipo, para.
+    public void update() {
+    	
+    	    
         if (target == null && targetPoint == null) {
             xRemainder = 0;
             yRemainder = 0;
             return;
         }
 
-        // Decide qual lógica de movimento usar
+        Point finalTarget = getFinalTarget();
+        if (finalTarget == null) return;
+        
+        smartMoveTowards(finalTarget.x, finalTarget.y);
+    }
+
+    private Point getFinalTarget() {
         if (useAStarPathfinding && target != null) {
-            tickAStar();
-        } else {
-            tickDirectMovement();
-        }
-    }
-
-    /**
-     * Lógica de movimento usando A* Pathfinding para navegar por obstáculos.
-     */
-    private void tickAStar() {
-        pathRecalculateCooldown--;
-        if (pathRecalculateCooldown <= 0) {
-            pathRecalculateCooldown = pathRecalculateSpeed;
-            Point startPoint = new Point(owner.getX(), owner.getY());
-            Point endPoint = new Point(target.getX(), target.getY());
-            
-            // Pede à engine para encontrar um novo caminho
-            this.currentPath = Pathfinder.findPath(world, startPoint, endPoint);
-            this.currentPathIndex = 0;
-        }
-
-        if (currentPath == null || currentPath.isEmpty()) {
-            // Se não há caminho (ex: alvo inalcançável), não se move
-            return;
-        }
-
-        // Define o próximo ponto do caminho como o alvo imediato
-        Point currentTargetPoint = currentPath.get(currentPathIndex);
-        
-        // Verifica se chegou ao ponto atual do caminho
-        double dxToPoint = currentTargetPoint.x - owner.getX();
-        double dyToPoint = currentTargetPoint.y - owner.getY();
-        if (Math.sqrt(dxToPoint * dxToPoint + dyToPoint * dyToPoint) < arrivalThreshold) {
-            currentPathIndex++; // Se chegou, avança para o próximo ponto
-            if (currentPathIndex >= currentPath.size()) {
-                currentPath.clear(); // Chegou ao fim do caminho
-                return;
+            pathRecalculateCooldown--;
+            if (pathRecalculateCooldown <= 0 || currentPath == null || currentPath.isEmpty()) {
+                pathRecalculateCooldown = pathRecalculateSpeed;
+                Point startPoint = new Point(owner.getX(), owner.getY());
+                
+                // --- MUDANÇA AQUI: Usa o método auxiliar para pegar o ponto da âncora ---
+                Point endPoint = getAnchorPoint(target);
+                if (endPoint == null) return null;
+                
+                this.currentPath = Pathfinder.findPath(world, startPoint, endPoint);
+                this.currentPathIndex = 0;
             }
-        }
-        
-        // Move em direção ao ponto atual do caminho A*
-        moveTowardsPoint(currentTargetPoint.x, currentTargetPoint.y);
-    }
 
-    /**
-     * Lógica de movimento simples e direta, em linha reta.
-     */
-    private void tickDirectMovement() {
-        double targetX, targetY;
-        if (target != null) {
-            targetX = target.getX();
-            targetY = target.getY();
+            if (currentPath == null || currentPath.isEmpty()) return null;
+
+            Point nextWaypoint = currentPath.get(currentPathIndex);
+            
+            double dxToWaypoint = nextWaypoint.x - (owner.getX() + owner.getWidth() / 2.0);
+            double dyToWaypoint = nextWaypoint.y - (owner.getY() + owner.getHeight() / 2.0);
+            if (Math.sqrt(dxToWaypoint * dxToWaypoint + dyToWaypoint * dyToWaypoint) < arrivalThreshold) {
+                currentPathIndex++;
+                if (currentPathIndex >= currentPath.size()) {
+                    currentPath.clear();
+                    return null; 
+                }
+            }
+            return currentPath.get(currentPathIndex);
+
+        } else if (target != null) {
+            // --- MUDANÇA AQUI: Também usa a âncora para movimento direto ---
+            return getAnchorPoint(target);
         } else {
-            targetX = targetPoint.x;
-            targetY = targetPoint.y;
+            return targetPoint;
         }
-        moveTowardsPoint(targetX, targetY);
+    }
+    
+    // --- NOVO MÉTODO AUXILIAR ---
+    /**
+     * Calcula a coordenada exata do alvo com base na âncora selecionada.
+     * @param targetObject O GameObject alvo.
+     * @return Um Point com a coordenada do alvo.
+     */
+    private Point getAnchorPoint(GameObject targetObject) {
+        if (targetObject == null) {
+            return null;
+        }
+        
+        int targetX, targetY;
+
+        switch (this.targetAnchor) {
+            case TOP_LEFT:
+                targetX = targetObject.getX();
+                targetY = targetObject.getY();
+                break;
+            
+            case BOTTOM_CENTER:
+                targetX = targetObject.getX() + targetObject.getWidth() / 2;
+                // --- CORREÇÃO AQUI ---
+                // Usamos getHeight() - 1 para garantir que o ponto esteja na ÚLTIMA
+                // linha de pixels do sprite, e não fora dele.
+                targetY = targetObject.getY() + targetObject.getHeight() - 1;
+                break;
+
+            case CENTER:
+            default:
+                targetX = targetObject.getX() + targetObject.getWidth() / 2;
+                targetY = targetObject.getY() + targetObject.getHeight() / 2;
+                break;
+        }
+        return new Point(targetX, targetY);
     }
 
-    /**
-     * Lógica de baixo nível que move o objeto pixel por pixel em direção a um ponto.
-     * Esta função é usada tanto pelo A* quanto pelo movimento direto.
-     */
-    private void moveTowardsPoint(double targetX, double targetY) {
-        double dx = targetX - owner.getX();
-        double dy = targetY - owner.getY();
-        this.dx = dx;
-        this.dy = dy;
-        double moveX = dx;
-        double moveY = dy;
-        double length = Math.sqrt(moveX * moveX + moveY * moveY);
-        
-        // Evita movimento se já estiver muito perto (para patrulha)
-        if (length < 1.0) return;
+    // ... (O resto da classe: smartMoveTowards, applyIntelligentMovement, isPathClear, etc. permanece o mesmo) ...
+    private void smartMoveTowards(double targetX, double targetY) {
+        // --- CORREÇÃO FINAL AQUI ---
+        // O ponto de partida do movimento AGORA é o CENTRO do inimigo, para ser consistente.
+        double startX = owner.getX() + owner.getWidth() / 2.0;
+        double startY = owner.getY() + owner.getHeight() / 2.0;
 
-        if (length > 0) {
-            moveX = (moveX / length);
-            moveY = (moveY / length);
-        }
-        
-        moveX *= speed;
-        moveY *= speed;
+        // O resto do cálculo agora usa o ponto de partida correto
+        double dx = targetX - startX;
+        double dy = targetY - startY;
+        double length = Math.sqrt(dx * dx + dy * dy);
 
+        if (length < arrivalThreshold) return;
+
+        double moveX = (dx / length) * speed;
+        double moveY = (dy / length) * speed;
+        
+        applyIntelligentMovement(moveX, moveY);
+    }
+
+    private void applyIntelligentMovement(double moveX, double moveY) {
         xRemainder += moveX;
         yRemainder += moveY;
 
@@ -155,9 +184,23 @@ public class AIMovementComponent extends BaseMovementComponent {
 
         xRemainder -= xToMove;
         yRemainder -= yToMove;
+        
+        int signX = Integer.signum(xToMove);
+        int signY = Integer.signum(yToMove);
+
+        if (xToMove != 0 && yToMove != 0) {
+            if (!isPathClear(owner.getX() + signX, owner.getY()) || 
+                !isPathClear(owner.getX(), owner.getY() + signY)) 
+            {
+                if (Math.abs(moveX) > Math.abs(moveY)) {
+                    yToMove = 0;
+                } else {
+                    xToMove = 0;
+                }
+            }
+        }
 
         if (xToMove != 0) {
-            int signX = Integer.signum(xToMove);
             for (int i = 0; i < Math.abs(xToMove); i++) {
                 if (isPathClear(owner.getX() + signX, owner.getY())) {
                     owner.setX(owner.getX() + signX);
@@ -169,7 +212,6 @@ public class AIMovementComponent extends BaseMovementComponent {
         }
 
         if (yToMove != 0) {
-            int signY = Integer.signum(yToMove);
             for (int i = 0; i < Math.abs(yToMove); i++) {
                 if (isPathClear(owner.getX(), owner.getY() + signY)) {
                     owner.setY(owner.getY() + signY);
@@ -180,17 +222,13 @@ public class AIMovementComponent extends BaseMovementComponent {
             }
         }
     }
-
+    
     @Override
     protected boolean isPathClear(int nextX, int nextY) {
-        // A primeira verificação (super.isPathClear) já lida com os tiles
-        // e com TODOS os GameObjects marcados como 'isSolid = true' (como a porta fechada).
         if (!super.isPathClear(nextX, nextY)) {
             return false;
         }
 
-        // A segunda verificação, se ativa, lida com a colisão entre ATORES (Characters)
-        // que não são necessariamente sólidos, para que não se sobreponham.
         if (avoidOtherActors) {
             Rectangle futureBounds = new Rectangle(
                 nextX + owner.getMaskX(), 
@@ -200,11 +238,8 @@ public class AIMovementComponent extends BaseMovementComponent {
             );
 
             for (GameObject other : allGameObjects) {
-                // Não verifica contra si mesmo ou contra o alvo que está a perseguir (para não ficar preso)
                 if (other == owner || other == target) continue;
 
-                // Verifica se o outro objeto é um "Character" e não é um objeto sólido
-                // (pois os sólidos já foram verificados pelo super.isPathClear)
                 if (other instanceof Character && other.getCollisionType() != CollisionType.SOLID) {
                     Rectangle otherBounds = new Rectangle(
                         other.getX() + other.getMaskX(),
@@ -213,18 +248,12 @@ public class AIMovementComponent extends BaseMovementComponent {
                         other.getMaskHeight()
                     );
                     if (futureBounds.intersects(otherBounds)) {
-                        return false; // Colidiria com outro ator, caminho bloqueado!
+                        return false;
                     }
                 }
             }
         }
         
-        return true; // Caminho totalmente livre
+        return true;
     }
-
-	
-    
-    
-    
-    
 }

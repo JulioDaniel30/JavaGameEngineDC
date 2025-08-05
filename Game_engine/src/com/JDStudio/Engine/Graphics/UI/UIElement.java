@@ -39,6 +39,15 @@ public abstract class UIElement {
         this.x = x;
         this.y = y;
     }
+    
+    /**
+     * Atualiza a lógica do elemento de UI.
+     * Chamado a cada quadro para elementos que precisam reagir ao tempo ou input.
+     * As subclasses (como botões) devem sobrescrever este método.
+     */
+    public void tick() {
+        // Deixado em branco na classe base, pois nem todo elemento tem lógica de atualização.
+    }
 
     /**
      * Método abstrato que as subclasses devem implementar para desenhar o elemento.

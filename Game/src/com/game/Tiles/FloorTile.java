@@ -1,4 +1,4 @@
-package com.game;
+package com.game.Tiles;
 
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 import com.JDStudio.Engine.World.Tile;

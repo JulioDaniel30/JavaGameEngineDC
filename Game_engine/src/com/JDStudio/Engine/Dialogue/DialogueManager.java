@@ -88,4 +88,8 @@ public class DialogueManager {
     public DialogueNode getCurrentNode() {
         return currentNode;
     }
+    public void reset() {
+        endDialogue(); // O método endDialogue já limpa o estado.
+        System.out.println("DialogueManager resetado.");
+    }
 }

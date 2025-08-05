@@ -11,29 +11,34 @@ import com.JDStudio.Engine.Utils.PropertiesReader;
  */
 public abstract class Character extends GameObject {
 
-    public double life;
+	public double life;
     public double maxLife;
     protected boolean isDead = false;
 
-    /*public Character(double x, double y, int width, int height) {
-        super(x, y, width, height);
-    }
-    public Character(double x, double y, int width, int height, Sprite sprite) {
-        super(x, y, width, height, sprite);
-    }*/
-    
     public Character(JSONObject properties) {
-        super(properties); // Passa as propriedades para o construtor pai
+        super(properties);
     }
 
     @Override
     public void initialize(JSONObject properties) {
-        super.initialize(properties); // MUITO IMPORTANTE: Inicializa a base primeiro
+        super.initialize(properties);
+        // A lógica de inicialização de vida, etc., pode ficar aqui
+        // se for comum a todos os personagens.
+    }
+
+    protected void die() {
+        this.isDead = true;
+        this.isDestroyed = true; 
+        setCollisionType(CollisionType.NO_COLLISION);
+    }
+    
+    @Override
+    public void tick() {
+        // Primeiro, verifica o estado do personagem.
+        if (isDead || isDestroyed) return;
         
-        PropertiesReader reader = new PropertiesReader(properties);
-        // O Character agora é responsável por ler suas próprias propriedades
-        this.maxLife = reader.getDouble("maxLife", 100);
-        this.life = this.maxLife; // Começa com a vida cheia
+        // Depois, chama o tick do GameObject, que vai atualizar todos os componentes.
+        super.tick();
     }
 
     /**
@@ -41,12 +46,14 @@ public abstract class Character extends GameObject {
      * @param amount A quantidade de dano a ser aplicada.
      */
     public void takeDamage(double amount) {
-        if (isDead) return;
+    	 // --- CORREÇÃO AQUI ---
+        // Um personagem com 0 ou menos de vida não pode mais tomar dano.
+        if (this.life <= 0) return;
 
         this.life -= amount;
         if (this.life <= 0) {
             this.life = 0;
-            die();
+            die(); // Chama o método die() que cuida das bandeiras isDead/isDestroyed
         }
     }
 
@@ -63,28 +70,7 @@ public abstract class Character extends GameObject {
         }
     }
 
-    /**
-     * Chamado quando a vida do personagem chega a zero.
-     * Classes filhas podem sobrescrever este método para adicionar
-     * animações de morte, sons, ou dropar itens.
-     */
-    protected void die() {
-        this.isDead = true;
-        // Por padrão, marca o objeto para ser removido do jogo.
-        this.isDestroyed = true; 
-        System.out.println("Um personagem morreu!");
-    }
-
-    @Override
-    public void tick() {
-        // Se o personagem já está morto, ele não deve fazer mais nada.
-        if (isDead) {
-            // Poderíamos adicionar uma lógica de animação de morte aqui no futuro
-            return;
-        }
-        
-        super.tick(); // Executa a lógica normal de GameObject (movimento, animação)
-    }
+    
 
     public boolean isDead() {
         return isDead;

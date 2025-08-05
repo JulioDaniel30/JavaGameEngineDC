@@ -2,6 +2,7 @@ package com.JDStudio.Engine.States;
 
 
 import java.awt.Graphics;
+
 import com.JDStudio.Engine.Graphics.UI.UIManager;
 
 /**
@@ -20,6 +21,7 @@ public abstract class EngineMenuState extends GameState {
  public void tick() {
      // Menus geralmente não têm lógica de 'tick' complexa,
      // mas as subclasses podem adicionar se necessário.
+	 uiManager.tick();
  }
 
  @Override

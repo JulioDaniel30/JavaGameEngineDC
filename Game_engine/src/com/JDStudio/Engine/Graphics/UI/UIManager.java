@@ -44,6 +44,18 @@ public class UIManager {
     public void removeElement(UIElement element) {
         elements.remove(element);
     }
+    
+    /**
+     * Atualiza a lógica de todos os elementos de UI gerenciados.
+     * É aqui que a cadeia de chamadas continua para cada elemento individual.
+     */
+    public void tick() {
+        for (UIElement element : elements) {
+            if (element.isVisible()) {
+                element.tick();
+            }
+        }
+    }
 
     /**
      * Renderiza todos os elementos de UI visíveis na tela.

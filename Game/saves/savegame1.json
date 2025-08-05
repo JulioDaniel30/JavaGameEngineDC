@@ -1,0 +1,34 @@
+{"gameObjects": [
+    {
+        "name": "player_start",
+        "x": 89,
+        "y": 145,
+        "life": 120
+    },
+    {
+        "isOpen": false,
+        "name": "door_2"
+    },
+    {
+        "isOpen": false,
+        "name": "door_1"
+    },
+    {
+        "isDestroyed": false,
+        "name": "enemy_pp_2",
+        "x": 473,
+        "y": 264,
+        "life": 20
+    },
+    {
+        "isDestroyed": false,
+        "name": "enemy_pp_1",
+        "x": 205,
+        "y": 158,
+        "life": 20
+    },
+    {
+        "isOpen": false,
+        "name": "door_3"
+    }
+]}

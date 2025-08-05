@@ -1,8 +1,9 @@
 // game
-package com.game;
+package com.game.gameObjects;
 
 import org.json.JSONObject;
 import com.JDStudio.Engine.Object.EngineNPC;
+import com.game.States.PlayingState;
 
 /**
  * A classe Ferreiro é uma implementação específica de um EngineNPC.
@@ -31,8 +32,14 @@ public class Ferreiro extends EngineNPC {
     	// TODO Auto-generated method stub
     	super.initialize(properties);
     	
+    	setCollisionType(CollisionType.TRIGGER);
     	
-    	
+    }
+    
+    @Override
+    public void takeDamage(double amount) {
+    	// TODO Auto-generated method stub
+    	//super.takeDamage(amount);
     }
 
     @Override

@@ -3,7 +3,8 @@ package com.JDStudio.Engine.Utils; // Ou com.JDStudio.Engine.Pathfinding
 
 import java.util.Objects;
 
-public class Node {
+// Adicionamos "implements Comparable<Node>"
+public class Node implements Comparable<Node> {
     public int x, y; // Posição do nó no grid de tiles
     
     // Custos usados pelo algoritmo A*
@@ -20,6 +21,19 @@ public class Node {
 
     public void calculateFCost() {
         this.fCost = this.gCost + this.hCost;
+    }
+
+    // Método compareTo para a PriorityQueue saber como ordenar os nós.
+    // Nós com menor fCost têm maior prioridade.
+    @Override
+    public int compareTo(Node other) {
+        // Compara primeiro pelo fCost
+        int compare = Double.compare(this.fCost, other.fCost);
+        if (compare == 0) {
+            // Se fCost for igual, usa o hCost como critério de desempate
+            compare = Double.compare(this.hCost, other.hCost);
+        }
+        return compare;
     }
 
     // Métodos equals e hashCode são importantes para

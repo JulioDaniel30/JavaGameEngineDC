@@ -7,9 +7,14 @@ public class MovementComponent extends BaseMovementComponent {
 
    // private double dx = 0, dy = 0;
 
-    public MovementComponent(GameObject owner, double speed) {
-        super(owner, speed);
+    public MovementComponent(double speed) {
+        super(speed);
     }
+    @Override
+    	public void initialize(GameObject owner) {
+    		// TODO Auto-generated method stub
+    		super.initialize(owner);
+    	}
     
     /**
      * Define a direção do movimento para o próximo tick. Usado para controle direto (jogador).
@@ -22,7 +27,7 @@ public class MovementComponent extends BaseMovementComponent {
     }
 
     @Override
-    public void tick() {
+    public void update() {
         if (dx == 0 && dy == 0) {
             xRemainder = 0;
             yRemainder = 0;
@@ -73,4 +78,6 @@ public class MovementComponent extends BaseMovementComponent {
             }
         }
     }
+
+	
 }

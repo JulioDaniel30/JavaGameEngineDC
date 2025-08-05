@@ -45,12 +45,12 @@ public abstract class EnginePlayingState extends GameState {
             gameObjects.get(i).tick();
         }
 
-        // Remove objetos marcados para destruição
+       /* // Remove objetos marcados para destruição
         for (int i = gameObjects.size() - 1; i >= 0; i--) {
             if (gameObjects.get(i).isDestroyed) {
                 gameObjects.remove(i);
             }
-        }
+        }*/
     }
 
     @Override

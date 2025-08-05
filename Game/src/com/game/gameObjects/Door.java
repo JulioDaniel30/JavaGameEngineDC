@@ -1,5 +1,5 @@
 // game
-package com.game;
+package com.game.gameObjects;
 
 import java.awt.Graphics;
 import java.awt.Rectangle;
@@ -7,15 +7,20 @@ import java.util.List;
 
 import org.json.JSONObject;
 
+import com.JDStudio.Engine.Core.ISavable;
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animation;
+import com.JDStudio.Engine.Graphics.Sprite.Animations.Animator;
 import com.JDStudio.Engine.Object.GameObject;
 import com.JDStudio.Engine.Object.Interactable;
 import com.JDStudio.Engine.Utils.PropertiesReader;
+import com.game.States.PlayingState;
 @SuppressWarnings("unused")
-public class Door extends GameObject implements Interactable {
+public class Door extends GameObject implements Interactable, ISavable {
 
     private boolean isOpen = false;
     private List<GameObject> allGameObjects;
+
+	Animator animator;
 
     public Door(JSONObject properties) {
         super(properties);
@@ -27,8 +32,13 @@ public class Door extends GameObject implements Interactable {
         
         PropertiesReader reader = new PropertiesReader(properties);
         this.isOpen = reader.getBoolean("startsOpen", false);
-        setupAnimations();
 
+		animator = new Animator();
+		System.out.println("door");
+		this.addComponent(animator);
+        
+        setupAnimations();
+        setCollisionType(CollisionType.SOLID);
         if (isOpen) {
             animator.play("idleOpen");
             
@@ -72,10 +82,13 @@ public class Door extends GameObject implements Interactable {
             // Torna-se sólida IMEDIATAMENTE. O novo método já cuida da máscara.
             this.collisionType = CollisionType.SOLID;
             animator.play("closing");
+            isOpen = false;
 
         } else if ("idleClosed".equals(currentKey)) {
             // Ao abrir, ela continua sólida durante a animação
             animator.play("opening");
+            isOpen = true;
+            
         }
     }
     
@@ -91,8 +104,10 @@ public class Door extends GameObject implements Interactable {
             if ("opening".equals(currentKey)) {
                 animator.play("idleOpen");
                 setCollisionType(CollisionType.TRIGGER);
+                isOpen = true;
             } else if ("closing".equals(currentKey)) {
                 animator.play("idleClosed");
+                isOpen = false;
                 // A porta já foi definida como sólida no onInteract
             }
         }
@@ -140,4 +155,26 @@ public class Door extends GameObject implements Interactable {
         super.render(g);
         renderDebugInteractionArea(g);
     }
+    
+    @Override
+    public JSONObject saveState() {
+        JSONObject state = new JSONObject();
+        state.put("name", this.name);
+        state.put("isOpen", this.isOpen);
+        return state;
+    }
+
+    @Override
+    public void loadState(JSONObject state) {
+        this.isOpen = state.getBoolean("isOpen");
+        // Atualiza a aparência e colisão da porta com base no estado carregado
+        if (isOpen) {
+            animator.play("idleOpen");
+            setCollisionType(CollisionType.TRIGGER);
+        } else {
+            animator.play("idleClosed");
+            setCollisionType(CollisionType.SOLID);
+        }
+    }
+    
 }

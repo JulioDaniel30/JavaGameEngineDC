@@ -13,6 +13,7 @@
  <tile id="17" type="enemy">
   <properties>
    <property name="speed" type="float" value="0.8"/>
+   <property name="useAStar" type="bool" value="false"/>
    <property name="visionRadius" type="int" value="40"/>
   </properties>
  </tile>
