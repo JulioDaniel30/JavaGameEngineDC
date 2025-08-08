@@ -42,6 +42,11 @@
     ],
     "AIM": [
         { "key": "MOUSE2" }
-    ]
+    ],
+	"TOGGLE_INVENTORY":[{"key":"I"}],
+	"UI_UP":[{"key":"UP"},{"key":"W"}],
+	"UI_DOWN":[{"key":"DOWN"},{"key":"S"}],
+	"UI_LEFT":[{"key":"LEFT"},{"key":"L"}],
+	"UI_RIGHT":[{"key":"RIGHT"},{"key":"R"}]
 	
 }

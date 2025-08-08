@@ -7,6 +7,7 @@
     "SAVE_GAME": [
         { "key": "F5"}
     ],
+	"PAUSE_GAME":[{"key": "F2"}],
     "RUN": [
         { "key": "W", "shift": true }
     ]

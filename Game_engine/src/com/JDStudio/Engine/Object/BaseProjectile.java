@@ -1,5 +1,6 @@
 package com.JDStudio.Engine.Object;
 
+import com.JDStudio.Engine.Graphics.Layers.RenderManager;
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 
 public abstract class BaseProjectile extends GameObject {
@@ -8,8 +9,9 @@ public abstract class BaseProjectile extends GameObject {
     protected double directionX, directionY;
     protected double speed;
     protected double damage;
-    protected int lifeTime;
+    protected int lifeTime = 60;
     protected GameObject owner;
+    private boolean justSpawned = false;
 
     // Construtor protegido, pois não pode ser instanciado diretamente
     protected BaseProjectile() {
@@ -29,6 +31,8 @@ public abstract class BaseProjectile extends GameObject {
         this.lifeTime = lifeTime;
         this.sprite = sprite;
         this.isActive = true;
+        this.justSpawned = true; 
+        this.isDestroyed = false;
 
         if (sprite != null) {
             setCollisionMask(0, 0, sprite.getWidth(), sprite.getHeight());
@@ -47,9 +51,22 @@ public abstract class BaseProjectile extends GameObject {
             deactivate();
         }
     }
+    
+    /**
+     * Chamado pelo ProjectileManager para sinalizar que o primeiro frame do projétil passou.
+     */
+    public void onFramePassed() {
+        this.justSpawned = false;
+    }
+
+    public boolean hasJustSpawned() {
+        return this.justSpawned;
+    }
 
     public void deactivate() {
         this.isActive = false;
+        RenderManager.getInstance().unregister(this);
+        this.isDestroyed = true;
     }
     
     public GameObject getOwner() { return this.owner; }

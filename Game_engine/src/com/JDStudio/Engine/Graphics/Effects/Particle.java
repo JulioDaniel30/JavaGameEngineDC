@@ -1,9 +1,8 @@
-package com.JDStudio.Engine.Graphics;
+package com.JDStudio.Engine.Graphics.Effects;
 
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.geom.Point2D;
-import java.util.Random;
 
 public class Particle {
 
@@ -17,7 +16,7 @@ public class Particle {
     
     private int life, maxLife;
     
-    private static final Random random = new Random();
+    //private static final Random random = new Random();
 
     public Particle() {
         this.position = new Point2D.Double();

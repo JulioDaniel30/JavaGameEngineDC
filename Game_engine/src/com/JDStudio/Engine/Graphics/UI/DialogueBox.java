@@ -13,8 +13,8 @@ import java.util.List;
 import com.JDStudio.Engine.Dialogue.DialogueChoice;
 import com.JDStudio.Engine.Dialogue.DialogueManager;
 import com.JDStudio.Engine.Dialogue.DialogueNode;
+import com.JDStudio.Engine.Graphics.UI.Elements.UIElement;
 import com.JDStudio.Engine.Input.InputManager;
-import com.JDStudio.Engine.Engine;
 
 public class DialogueBox extends UIElement {
 

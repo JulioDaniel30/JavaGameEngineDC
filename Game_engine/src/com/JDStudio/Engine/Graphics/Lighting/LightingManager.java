@@ -20,7 +20,7 @@ public class LightingManager {
     private static final LightingManager instance = new LightingManager();
     private final List<Light> lights = new ArrayList<>();
     private BufferedImage lightmap;
-    private Color ambientColor = new Color(0, 0, 0, 20);
+    private Color ambientColor = new Color(0, 0, 0, 5);
 
     private LightingManager() {}
 

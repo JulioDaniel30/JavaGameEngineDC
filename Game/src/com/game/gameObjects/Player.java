@@ -18,8 +18,10 @@ import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.Object.Character;
 import com.JDStudio.Engine.Object.GameObject;
 import com.JDStudio.Engine.Sound.Sound;
+import com.JDStudio.Engine.Sound.Sound.SoundChannel;
 import com.JDStudio.Engine.Utils.PropertiesReader; // Importa o nosso leitor
 import com.game.manegers.GameEvent;
+import com.JDStudio.Engine.Components.InventoryComponent;
 
 public class Player extends Character implements ISavable {
 	
@@ -42,7 +44,7 @@ public class Player extends Character implements ISavable {
 		@Override
 		public void initialize(JSONObject properties) {
 			super.initialize(properties);
-			
+			this.isProtectedFromCleanup = true;
 			PropertiesReader reader = new PropertiesReader(properties);
 			double speed = reader.getDouble("speed", 1.4);
 			
@@ -66,6 +68,7 @@ public class Player extends Character implements ISavable {
 			this.energy = maxEnergy;
 			// Chama o método para configurar as animações, passando as propriedades
 			setupAnimations(properties);
+			this.addComponent(new InventoryComponent(18));
 		}
 
 		/**
@@ -96,7 +99,7 @@ public class Player extends Character implements ISavable {
 		super.onCollision(other);
 		if (other instanceof Lifepack) {
 			this.heal(25); // Usa o método heal() herdado de Character
-			Sound.play("/hurt.wav", 0.5f);
+			Sound.play("/hurt.wav",SoundChannel.SFX, 0.5f);
 			other.isDestroyed = true;
 			// Passamos a quantidade de vida curada como dado do evento.
 	        EventManager.getInstance().trigger(GameEvent.PLAYER_HEALED, 25.0);

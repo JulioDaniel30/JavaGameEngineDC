@@ -70,7 +70,7 @@ public class Weapon extends GameObject {
         double dirY = 0;//player.lastDy;
         
         double startX = this.x + (this.width / 2.0);
-        double startY = this.y + (this.height / 2.0) - 10;
+        double startY = this.y + (this.height / 2.0) - 8;
 
         // Lógica simples para ajustar a posição da bala
         if (dirX > 0) startX += 8;

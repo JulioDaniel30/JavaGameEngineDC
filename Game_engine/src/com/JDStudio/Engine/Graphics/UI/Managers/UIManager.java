@@ -1,8 +1,11 @@
-package com.JDStudio.Engine.Graphics.UI;
+package com.JDStudio.Engine.Graphics.UI.Managers;
 
 import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.JDStudio.Engine.Graphics.Layers.RenderManager;
+import com.JDStudio.Engine.Graphics.UI.Elements.UIElement;
 
 /**
  * Gerencia uma coleção de elementos de UI ({@link UIElement}).
@@ -33,6 +36,7 @@ public class UIManager {
      */
     public void addElement(UIElement element) {
         elements.add(element);
+        RenderManager.getInstance().register(element);
     }
 
     /**
@@ -43,14 +47,29 @@ public class UIManager {
      */
     public void removeElement(UIElement element) {
         elements.remove(element);
+        RenderManager.getInstance().unregister(element);
+    }
+    
+    /**
+     * Desregista todos os elementos de UI do RenderManager e limpa a lista interna.
+     * Essencial para ser chamado quando um estado de menu é fechado.
+     */
+    public void unregisterAllElements() {
+        for (UIElement element : elements) {
+            RenderManager.getInstance().unregister(element);
+        }
+        elements.clear();
     }
     
     /**
      * Atualiza a lógica de todos os elementos de UI gerenciados.
-     * É aqui que a cadeia de chamadas continua para cada elemento individual.
+     * Agora, itera sobre uma cópia da lista para evitar ConcurrentModificationException.
      */
     public void tick() {
-        for (UIElement element : elements) {
+        // --- A CORREÇÃO ESTÁ AQUI ---
+        // Cria uma cópia da lista de elementos para iterar sobre ela.
+        // A lista original (this.elements) pode agora ser modificada com segurança.
+        for (UIElement element : new ArrayList<>(this.elements)) {
             if (element.isVisible()) {
                 element.tick();
             }

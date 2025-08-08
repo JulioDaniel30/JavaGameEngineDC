@@ -1,10 +1,12 @@
-package com.JDStudio.Engine.Graphics.UI;
+package com.JDStudio.Engine.Graphics.UI.Elements;
 
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.util.function.Consumer;
 
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
+import com.JDStudio.Engine.Graphics.UI.UISpriteKey;
+import com.JDStudio.Engine.Graphics.UI.Managers.ThemeManager;
 import com.JDStudio.Engine.Input.InputManager;
 
 
@@ -21,6 +23,24 @@ public class UISlider extends UIElement {
         super(x, y);
         this.trackSprite = trackSprite;
         this.handleSprite = handleSprite;
+        this.minValue = min;
+        this.maxValue = max;
+        this.currentValue = initialValue;
+        this.onValueChanged = onValueChanged;
+
+        if (trackSprite != null) {
+            this.width = trackSprite.getWidth();
+            this.height = trackSprite.getHeight();
+        }
+        if (handleSprite != null) {
+            this.handleWidth = handleSprite.getWidth();
+            this.handleHeight = handleSprite.getHeight();
+        }
+    }
+    public UISlider(int x, int y, float min, float max, float initialValue, Consumer<Float> onValueChanged) {
+        super(x, y);
+        this.trackSprite = ThemeManager.getInstance().get(UISpriteKey.SLIDER_TRACK);
+        this.handleSprite = ThemeManager.getInstance().get(UISpriteKey.SLIDER_HANDLE);
         this.minValue = min;
         this.maxValue = max;
         this.currentValue = initialValue;

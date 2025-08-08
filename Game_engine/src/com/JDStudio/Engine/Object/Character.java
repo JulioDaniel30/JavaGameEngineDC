@@ -2,6 +2,12 @@ package com.JDStudio.Engine.Object;
 
 import org.json.JSONObject;
 
+import com.JDStudio.Engine.Events.CharacterSpokeEventData;
+import com.JDStudio.Engine.Events.EngineEvent;
+import com.JDStudio.Engine.Events.EventManager;
+import com.JDStudio.Engine.Graphics.Layers.RenderLayer;
+import com.JDStudio.Engine.Graphics.Layers.RenderManager;
+import com.JDStudio.Engine.Graphics.Layers.StandardLayers;
 import com.JDStudio.Engine.Utils.PropertiesReader;
 
 /**
@@ -14,7 +20,7 @@ public abstract class Character extends GameObject {
 	public double life;
     public double maxLife;
     protected boolean isDead = false;
-
+    
     public Character(JSONObject properties) {
         super(properties);
     }
@@ -22,8 +28,22 @@ public abstract class Character extends GameObject {
     @Override
     public void initialize(JSONObject properties) {
         super.initialize(properties);
-        // A lógica de inicialização de vida, etc., pode ficar aqui
-        // se for comum a todos os personagens.
+        setCollisionType(CollisionType.CHARACTER_TRIGGER);
+        PropertiesReader reader = new PropertiesReader(properties);
+        String layerName = reader.getString("renderLayer", "CHARACTERS");
+        
+        // 2. Pede ao RenderManager para encontrar a camada com esse nome.
+        RenderLayer layer = RenderManager.getInstance().getLayerByName(layerName);
+        
+        // 3. Define a camada de renderização do GameObject.
+        if (layer != null) {
+            this.setRenderLayer(layer);
+        } else {
+            // Se o nome da camada no Tiled for inválido ou não estiver registado,
+            // usa o padrão da engine e avisa no console.
+            System.err.println("Aviso: RenderLayer '" + layerName + "' inválida ou não registada para o objeto '" + this.name + "'. Usando a camada padrão.");
+            this.setRenderLayer(StandardLayers.CHARACTERS);
+        }
     }
 
     protected void die() {
@@ -32,6 +52,18 @@ public abstract class Character extends GameObject {
         setCollisionType(CollisionType.NO_COLLISION);
     }
     
+    /**
+     * Faz este personagem "dizer" algo, disparando um evento para que o jogo possa reagir.
+     * @param message A mensagem a ser exibida.
+     * @param durationInSeconds A duração em segundos.
+     */
+    public void say(String message, float durationInSeconds) {
+        // A engine apenas anuncia o evento, sem saber como ele será renderizado.
+        EventManager.getInstance().trigger(
+            EngineEvent.CHARACTER_SPOKE, 
+            new CharacterSpokeEventData(this, message, durationInSeconds)
+        );
+    }
     @Override
     public void tick() {
         // Primeiro, verifica o estado do personagem.

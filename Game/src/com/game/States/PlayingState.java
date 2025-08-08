@@ -16,6 +16,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.JDStudio.Engine.Engine;
+import com.JDStudio.Engine.Components.HealthComponent;
+import com.JDStudio.Engine.Components.InventoryComponent;
 import com.JDStudio.Engine.Components.PathComponent.PatrolMode;
 import com.JDStudio.Engine.Components.Moviments.BaseMovementComponent;
 import com.JDStudio.Engine.Components.Moviments.MovementComponent;
@@ -23,26 +25,36 @@ import com.JDStudio.Engine.Core.ISavable;
 import com.JDStudio.Engine.Core.SaveManager;
 import com.JDStudio.Engine.Dialogue.ActionManager;
 import com.JDStudio.Engine.Dialogue.DialogueManager;
+import com.JDStudio.Engine.Events.CharacterSpokeEventData;
 import com.JDStudio.Engine.Events.EngineEvent;
 import com.JDStudio.Engine.Events.EventListener;
 import com.JDStudio.Engine.Events.EventManager;
 import com.JDStudio.Engine.Events.WorldLoadedEventData;
 import com.JDStudio.Engine.Graphics.AssetManager;
-import com.JDStudio.Engine.Graphics.ParticleManager;
+import com.JDStudio.Engine.Graphics.Effects.ParticleManager;
+import com.JDStudio.Engine.Graphics.Layers.IRenderable;
+import com.JDStudio.Engine.Graphics.Layers.RenderLayer;
+import com.JDStudio.Engine.Graphics.Layers.RenderManager;
+import com.JDStudio.Engine.Graphics.Layers.StandardLayers;
 import com.JDStudio.Engine.Graphics.Lighting.ConeLight;
 import com.JDStudio.Engine.Graphics.Lighting.Light;
 import com.JDStudio.Engine.Graphics.Lighting.LightingManager;
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 import com.JDStudio.Engine.Graphics.Sprite.Spritesheet;
 import com.JDStudio.Engine.Graphics.UI.DialogueBox;
-import com.JDStudio.Engine.Graphics.UI.ThemeManager;
-import com.JDStudio.Engine.Graphics.UI.UIImage;
-import com.JDStudio.Engine.Graphics.UI.UIManager;
 import com.JDStudio.Engine.Graphics.UI.UISpriteKey;
-import com.JDStudio.Engine.Graphics.UI.UIText;
 import com.JDStudio.Engine.Graphics.UI.UITheme;
+import com.JDStudio.Engine.Graphics.UI.Elements.UIImage;
+import com.JDStudio.Engine.Graphics.UI.Elements.UIText;
+import com.JDStudio.Engine.Graphics.UI.Managers.PopupManager;
+import com.JDStudio.Engine.Graphics.UI.Managers.ThemeManager;
+import com.JDStudio.Engine.Graphics.UI.Managers.UIManager;
+import com.JDStudio.Engine.Graphics.WSUI.UIChatBubble;
+import com.JDStudio.Engine.Graphics.WSUI.UIHealthBar;
+import com.JDStudio.Engine.Graphics.WSUI.UINameplate;
 import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.Object.Character;
+import com.JDStudio.Engine.Object.EngineNPC;
 import com.JDStudio.Engine.Object.GameObject;
 import com.JDStudio.Engine.Object.GameObject.CollisionType;
 import com.JDStudio.Engine.Object.Interactable;
@@ -54,6 +66,7 @@ import com.JDStudio.Engine.Utils.ImageUtils;
 import com.JDStudio.Engine.World.IMapLoaderListener;
 import com.JDStudio.Engine.World.Tile;
 import com.JDStudio.Engine.World.World;
+import com.game.Items.HealthPotion;
 import com.game.Tiles.FloorTile;
 import com.game.Tiles.LightTile;
 import com.game.Tiles.WallTile;
@@ -84,14 +97,19 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 	private ProjectileManager projectileManager;
 	private ParticleManager particleManager;
 	private LightingManager lightingManager;
+	private PopupManager popupManager;
 	// private Light playerLight;
 	private ConeLight playerFlashlight;
 	private UIText ammoUiText; // <-- Guarde uma referência ao texto da vida
 	private List<UIImage> heartIcons = new ArrayList<>();
 	private EventListener playerHealListener; // <-- Guarde uma referência ao listener
 	private EventListener playerDiedListener;
+	private EventListener characterSpokeListener;
 
 	public PlayingState() {
+		
+		RenderManager.getInstance().clear();
+		
 		assets = new AssetManager();
 		loadAssets();
 
@@ -100,21 +118,28 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 		uiManager.addElement(dialogueBox);
 		registerDialogueActions();
 		projectileManager = ProjectileManager.getInstance();
-		projectileManager.init(() -> new Projectile());
+		
 		particleManager = ParticleManager.getInstance();
 
 		particleManager = ParticleManager.getInstance();
-		lightingManager = LightingManager.getInstance(); // <-- ADICIONE ESTA LINHA
-
+		lightingManager = LightingManager.getInstance();
+		popupManager = PopupManager.getInstance();
 		ThemeManager.getInstance().setTheme(UITheme.MEDIEVAL);
 
 		this.loadedPaths = new HashMap<>();
 		this.triggerZones = new ArrayList<>();
 		this.doors = new HashMap<>();
-
+		 
 		// A engine agora lida com a ordem de carregamento internamente.
 		world = new World("/map1.json", this);
-
+		projectileManager.init(() -> new Projectile(),world,gameObjects);
+		registerRenderSystems();
+		
+		InventoryComponent inv = player.getComponent(InventoryComponent.class);
+        if (inv != null) {
+            inv.inventory.addItem(new HealthPotion(), 5);
+        }
+		
 		System.out.println("Disparando evento WORLD_LOADED...");
 		EventManager.getInstance().trigger(EngineEvent.WORLD_LOADED,
 				new WorldLoadedEventData(world, this.getGameObjects()));
@@ -175,17 +200,117 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 	 */
 	private void setupEventListeners() {
 		playerDiedListener = (data) -> {
-			Engine.setGameState(new GameOverState());
+			//Engine.setGameState(new GameOverState());
+			Engine.pushState(new GameOverState());
 		};
 		EventManager.getInstance().subscribe(GameEvent.PLAYER_DIED, playerDiedListener);
 
 		// Listener para a UI de vida
-		EventListener healthChangedListener = (data) -> updateHealthUI();
-		EventManager.getInstance().subscribe(GameEvent.PLAYER_HEALED, healthChangedListener);
-		EventManager.getInstance().subscribe(GameEvent.PLAYER_TOOK_DAMAGE, healthChangedListener);
+		EventListener playerTookDamageListener = (data) ->{
+			updateHealthUI();
+			if (data instanceof Double) { // Supondo que o dano seja um inteiro
+                double damageAmount = (Double) data;
+                
+                // Cria um popup de texto vermelho sobre o jogador
+                PopupManager.getInstance().createPopup(
+                    player,                              // Alvo
+                    String.valueOf(damageAmount),        // Texto
+                    new Font("Arial", Font.BOLD, 12),    // Fonte
+                    Color.RED,                           // Cor
+                    60                                   // Duração (60 frames = 1 segundo)
+                );
+            }
+			};
+			
+			EventListener playerHealListener = (data) ->{
+				updateHealthUI();
+				if (data instanceof Double) { // Supondo que o dano seja um inteiro
+	                double damageAmount = (Double) data;
+	                
+	                // Cria um popup de texto vermelho sobre o jogador
+	                PopupManager.getInstance().createPopup(
+	                    player,                              // Alvo
+	                    String.valueOf(damageAmount),        // Texto
+	                    new Font("Arial", Font.BOLD, 12),    // Fonte
+	                    Color.BLUE,                           // Cor
+	                    60                                   // Duração (60 frames = 1 segundo)
+	                );
+	            }
+				};
+			
+			
+		EventManager.getInstance().subscribe(GameEvent.PLAYER_HEALED, playerHealListener);
+		EventManager.getInstance().subscribe(GameEvent.PLAYER_TOOK_DAMAGE, playerTookDamageListener);
 
+		// --- LISTENER PARA O BALÃO DE FALA ---
+        characterSpokeListener = (data) -> {
+            if (data instanceof CharacterSpokeEventData) {
+                CharacterSpokeEventData eventData = (CharacterSpokeEventData) data;
+                
+                // O Jogo é quem decide como renderizar o evento: criando um UIChatBubble.
+                int durationInFrames = (int) (eventData.durationInSeconds() * 60);
+                UIChatBubble bubble = new UIChatBubble(eventData.speaker(), eventData.message(), durationInFrames);
+                
+                // Adiciona o balão criado à UI
+                uiManager.addElement(bubble);
+            }
+        };
+        
+        EventManager.getInstance().subscribe(EngineEvent.CHARACTER_SPOKE, characterSpokeListener);
+		
 		updateHealthUI(); // Chama uma vez para o estado inicial
 	}
+	
+	/**
+     * Regista todos os sistemas de renderização que não são GameObjects ou UIElements
+     * no RenderManager central. Cada sistema é envolvido num "IRenderable" anónimo
+     * que o associa à sua camada de renderização correta.
+     */
+    private void registerRenderSystems() {
+        RenderManager renderManager = RenderManager.getInstance();
+
+        
+        // 3. Regista o renderizador de partículas
+        renderManager.register(new IRenderable() {
+            @Override
+            public void render(Graphics g) {
+                particleManager.render(g);
+            }
+            @Override
+            public RenderLayer getRenderLayer() {
+                return StandardLayers.PARTICLES;
+            }
+            @Override
+            public boolean isVisible() { return true; }
+        });
+
+        // 4. Regista o renderizador de iluminação
+        renderManager.register(new IRenderable() {
+            @Override
+            public void render(Graphics g) {
+                lightingManager.render(g);
+            }
+            @Override
+            public RenderLayer getRenderLayer() {
+                return StandardLayers.LIGHTING;
+            }
+            @Override
+            public boolean isVisible() { return true; }
+        });
+        renderManager.register(new IRenderable() {
+            @Override
+            public void render(Graphics g) {
+                popupManager.render(g);
+            }
+            @Override
+            public RenderLayer getRenderLayer() {
+                // Usa a nova camada dedicada aos popups
+                return StandardLayers.POPUPS;
+            }
+            @Override
+            public boolean isVisible() { return true; }
+        });
+    }
 
 	private void loadAssets() {
 		Spritesheet worldSheet = new Spritesheet("/spritesheet.png");
@@ -225,8 +350,8 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 		assets.registerSprite("heart_half", heartsSpritesheet.getSprite(16, 0, 16, 16));
 		assets.registerSprite("heart_empty", heartsSpritesheet.getSprite(32, 0, 16, 16));
 
-		assets.loadSprite("slider_handle", "/Engine/UI/SlideBarPoint.png");
-		assets.loadSprite("slider_track", "/Engine/UI/slider_track.png");
+		assets.loadSprite("slider_handle", "/Engine/UI/medieval/slider_handle.png");
+		assets.loadSprite("slider_track", "/Engine/UI/medieval/slider_track.png");
 	}
 
 	public void updateHealthUI() {
@@ -251,6 +376,7 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 	public void onExit() { // Adicione este método ao seu GameState se quiser
 		EventManager.getInstance().unsubscribe(GameEvent.PLAYER_HEALED, playerHealListener);
 		EventManager.getInstance().unsubscribe(GameEvent.PLAYER_DIED, playerDiedListener);
+		EventManager.getInstance().unsubscribe(EngineEvent.CHARACTER_SPOKE, characterSpokeListener);
 	}
 
 	private void createDialogueBox() {
@@ -284,7 +410,8 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 			// eventsActionsUpdate();
 			keyboardEventsUpdate();
 			particleManager.update();
-			projectileManager.update(this.gameObjects, world);
+			projectileManager.update();
+			popupManager.update();
 			collisionsUpdate();
 
 			/*
@@ -400,22 +527,31 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 		}
 		
 		if(InputManager.isKeyJustPressed(KeyEvent.VK_L)) {
-			Engine.setGameState(new GameOverState());
+			Engine.pushState(new GameOverState());
 		}
+		if (InputManager.isActionJustPressed("PAUSE_GAME")) {
+            // "Empilha" o estado de pausa por cima do estado de jogo
+            Engine.pushState(new PauseState());
+        }
+		
+		 if (InputManager.isActionJustPressed("TOGGLE_INVENTORY")) {
+	            // "Empilha" o estado de inventário por cima do jogo
+	            Engine.pushState(new InventoryState());
+	        }
 
 		if (InputManager.isLeftMouseButtonJustPressed()) {
 			// Posição do mouse na JANELA
-			int mouseX = InputManager.getMouseX();
-			int mouseY = InputManager.getMouseY();
+			/*int mouseX = InputManager.getMouseX();
+			int mouseY = InputManager.getMouseY();*/
 
 			// IMPORTANTE: Converte a coordenada da tela para a coordenada do MUNDO,
 			// somando a posição da câmera e ajustando pela escala.
 			/*
-			 * int worldX = (mouseX / Engine.SCALE) + Engine.camera.getX(); int worldY =
-			 * (mouseY / Engine.SCALE) + Engine.camera.getY();
+			 * int worldX = (mouseX / Engine.SCALE) + Engine.camera.getX();
+			 * int worldY = (mouseY / Engine.SCALE) + Engine.camera.getY();
 			 */
 
-			int[] mouseWorldPos = InputManager.covertMousePositionToWorld(mouseX, mouseY);
+			int[] mouseWorldPos = InputManager.covertMousePositionToWorld();
 			int worldX = mouseWorldPos[0];
 			int worldY = mouseWorldPos[1];
 			// System.out.println("Clique do mouse no mundo em: " + worldX + ", " + worldY);
@@ -429,14 +565,16 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 
 	@Override
 	public void render(Graphics g) {
-		if (world != null)
+		
+		RenderManager.getInstance().render(g);
+		/*if (world != null)
 			world.render(g);
 		super.render(g); // Desenha todos os GameObjects
 		particleManager.render(g);
 		projectileManager.render(g);
 		lightingManager.render(g);
 		if (uiManager != null)
-			uiManager.render(g);
+			uiManager.render(g);*/
 	}
 
 	@Override
@@ -514,35 +652,60 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 				}
 			}
 			this.addGameObject(newObject);
+			if (newObject.hasComponent(HealthComponent.class)) {
+                UIHealthBar healthBar = new UIHealthBar(newObject, -8, 20, 4); // yOffset=-8 (acima), 20px de largura, 4px de altura
+                uiManager.addElement(healthBar);
+            }
+			 if (newObject instanceof EngineNPC) {
+	                // Cria uma placa de identificação para este NPC e a adiciona à UI
+	                UINameplate nameplate = new UINameplate(newObject, -5, new Font("Arial", Font.BOLD, 10), Color.CYAN);
+	                uiManager.addElement(nameplate);
+	            }
 		}
 	}
 
 	@Override
 	public Tile onTileFound(String layerName, int tileId, int x, int y) {
+		Tile createdTile = null;
 		switch (layerName) {
 		case "CamadaDeChao":
 			switch (tileId) {
 			case 31:
-				return new FloorTile(x, y, assets.getSprite("floor_2"));
-			case 41:
-				Sprite torchSprite = assets.getSprite("grass_torch");
-
-				// 2. Defina as propriedades da luz que este tile vai emitir
-				// (posição x e y são temporárias, o LightTile vai corrigir)
-				Light torchLight = new Light(0, 0, 48, new Color(255, 0, 0, 150));
-
-				// 3. Crie o LightTile. Ele cuidará de adicionar a luz ao manager.
-				return new LightTile(x, y, torchSprite, torchLight);
+				createdTile = new FloorTile(x, y, assets.getSprite("floor_2"));
+				break;
 			default:
-				return new FloorTile(x, y, assets.getSprite("floor_1"));
+				createdTile = new FloorTile(x, y, assets.getSprite("floor_1"));
+				break;
 			}
+			break;
 
 		case "CamadaDeParedes":
-			return new WallTile(x, y, assets.getSprite("wall_1"));
+			createdTile = new WallTile(x, y, assets.getSprite("wall_1"));
+			break;
+			
+		case "CamadaDeLuz":
+			Sprite torchSprite = assets.getSprite("grass_torch");
+
+			// 2. Defina as propriedades da luz que este tile vai emitir
+			// (posição x e y são temporárias, o LightTile vai corrigir)
+			Light torchLight = new Light(0, 0, 48, new Color(255, 0, 0, 150));
+
+			// 3. Crie o LightTile. Ele cuidará de adicionar a luz ao manager.
+			createdTile = new LightTile(x, y, torchSprite, torchLight);
+			break;
 
 		default:
-			return null;
+			createdTile = null;
+			break;
 		}
+		
+		if (createdTile != null) {
+            // ...nós o registamos no RenderManager para que ele seja desenhado.
+            RenderManager.getInstance().register(createdTile);
+        }
+        
+        // Retorna o tile para ser adicionado ao array 'tiles' do World (para colisões)
+        return createdTile;
 	}
 
 	@Override

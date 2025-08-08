@@ -1,4 +1,4 @@
-package com.JDStudio.Engine.Graphics;
+package com.JDStudio.Engine.Graphics.Effects;
 
 import java.awt.Color;
 import java.awt.Graphics;

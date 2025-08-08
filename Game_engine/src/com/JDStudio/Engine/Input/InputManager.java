@@ -264,6 +264,17 @@ public class InputManager implements  KeyListener, MouseListener, MouseMotionLis
     	int[] numeros = {worldX,worldY};
     	return numeros ;
     }
+    /**
+     * @return [int worldX , int worldY]
+     * */
+    public static int[] covertMousePositionToWorld() {
+    	
+    	int worldX = (getMouseX() / Engine.SCALE) + Engine.camera.getX();
+        int worldY = (getMouseY() / Engine.SCALE) + Engine.camera.getY();
+    	
+    	int[] numeros = {worldX,worldY};
+    	return numeros ;
+    }
 
     @Override
     public void keyPressed(KeyEvent e) {

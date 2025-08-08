@@ -1,4 +1,4 @@
-package com.JDStudio.Engine.Graphics.UI;
+package com.JDStudio.Engine.Graphics.UI.Managers;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.imageio.ImageIO;
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
+import com.JDStudio.Engine.Graphics.UI.UISpriteKey;
+import com.JDStudio.Engine.Graphics.UI.UITheme;
 
 public class ThemeManager {
     

@@ -1,10 +1,12 @@
-package com.JDStudio.Engine.Graphics.UI;
+package com.JDStudio.Engine.Graphics.UI.Elements;
 
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
+import com.JDStudio.Engine.Graphics.UI.UISpriteKey;
+import com.JDStudio.Engine.Graphics.UI.Managers.ThemeManager;
 import com.JDStudio.Engine.Input.InputManager;
 
 

@@ -1,5 +1,6 @@
 package com.game.Tiles;
 
+import com.JDStudio.Engine.Graphics.Layers.StandardLayers;
 import com.JDStudio.Engine.Graphics.Lighting.Light;
 import com.JDStudio.Engine.Graphics.Lighting.LightingManager;
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
@@ -22,6 +23,7 @@ public class LightTile extends Tile {
 	 */
 	public LightTile(int x, int y, Sprite sprite, Light light) {
 		super(x, y, sprite);
+		setRenderLayer(StandardLayers.LIGHTING);
 		this.associatedLight = light;
 		this.isSolid = false;
 		// Define a posição da luz para o centro do tile
@@ -45,6 +47,7 @@ public class LightTile extends Tile {
 	public LightTile(int x, int y, Sprite sprite, Light light, boolean isSolid) {
 		super(x, y, sprite);
 
+		setRenderLayer(StandardLayers.LIGHTING);
 		// --- A LÓGICA DE COLISÃO ESTÁ AQUI ---
 		this.isSolid = isSolid;
 
@@ -56,6 +59,7 @@ public class LightTile extends Tile {
 		LightingManager.getInstance().addLight(this.associatedLight);
 	}
 
+	
 	/**
 	 * (Funcionalidade futura) Se o tile for destruído, remove a luz associada.
 	 */

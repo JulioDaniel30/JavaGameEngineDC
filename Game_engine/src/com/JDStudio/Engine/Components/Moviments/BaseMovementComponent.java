@@ -8,7 +8,6 @@ import com.JDStudio.Engine.Components.Component;
 import com.JDStudio.Engine.Events.EngineEvent;
 import com.JDStudio.Engine.Events.EventManager;
 import com.JDStudio.Engine.Events.WorldLoadedEventData;
-import com.JDStudio.Engine.Object.Character;
 import com.JDStudio.Engine.Object.GameObject;
 import com.JDStudio.Engine.Object.GameObject.CollisionType;
 import com.JDStudio.Engine.World.World;

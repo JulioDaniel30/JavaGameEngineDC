@@ -51,6 +51,8 @@ public abstract class EnginePlayingState extends GameState {
                 gameObjects.remove(i);
             }
         }*/
+        gameObjects.removeIf(go -> go.isDestroyed && !go.isProtectedFromCleanup); // Remove tudo o que está destruído, exceto o jogador
+        
     }
 
     @Override

@@ -15,17 +15,20 @@ import org.json.JSONObject;
 
 import com.JDStudio.Engine.Engine;
 import com.JDStudio.Engine.Components.Component;
+import com.JDStudio.Engine.Graphics.Layers.IRenderable;
+import com.JDStudio.Engine.Graphics.Layers.RenderLayer;
+import com.JDStudio.Engine.Graphics.Layers.RenderManager;
+import com.JDStudio.Engine.Graphics.Layers.StandardLayers;
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animator;
 import com.JDStudio.Engine.Utils.PropertiesReader;
-import com.JDStudio.Engine.World.World;
 
 /**
  * Class GameObject
  * @author JDStudio
  * @since 1.0
  */
-public abstract class GameObject {
+public abstract class GameObject implements IRenderable  {
 
     protected double x;
     protected double y;
@@ -52,21 +55,31 @@ public abstract class GameObject {
 
     // --- FIM DO SISTEMA DE ATTACHMENT ---
     
+    protected RenderLayer renderLayer = StandardLayers.GAMEPLAY_BELOW;
 
     public enum CollisionType {
         NO_COLLISION, // Não tem colisão de nenhum tipo.
         SOLID,        // Sólido para tudo (paredes, portas fechadas).
         TRIGGER,      // Atravessável, mas pode acionar eventos (itens, jogador).
-        CHARACTER_SOLID //Sólido para outros personagens, mas atravessável por projéteis.
+        CHARACTER_SOLID, //Sólido para outros personagens, mas atravessável por projéteis.
+        CHARACTER_TRIGGER
     }
     
     public CollisionType collisionType = CollisionType.TRIGGER;
+    
+    /**
+     * Se verdadeiro, este objeto não será removido automaticamente pelo loop de limpeza
+     * do EnginePlayingState, mesmo que 'isDestroyed' seja verdadeiro.
+     * Ideal para o jogador, que deve gerir o seu próprio estado de "game over".
+     */
+    public boolean isProtectedFromCleanup = false;
     
  // --- O NOVO SISTEMA DE COMPONENTES ---
     private final Map<Class<? extends Component>, Component> components = new HashMap<>();
 
     public GameObject(JSONObject properties) {
         initialize(properties);
+        RenderManager.getInstance().register(this);
     }
 
     public void initialize(JSONObject properties) {
@@ -80,6 +93,20 @@ public abstract class GameObject {
         this.maskY = 0;
         this.maskWidth = this.width;
         this.maskHeight = this.height;
+        String layerName = reader.getString("renderLayer", "GAMEPLAY_BELOW");
+        
+        // 2. Pede ao RenderManager para encontrar a camada com esse nome.
+        RenderLayer layer = RenderManager.getInstance().getLayerByName(layerName);
+        
+        // 3. Define a camada de renderização do GameObject.
+        if (layer != null) {
+            this.setRenderLayer(layer);
+        } else {
+            // Se o nome da camada no Tiled for inválido ou não estiver registado,
+            // usa o padrão da engine e avisa no console.
+            System.err.println("Aviso: RenderLayer '" + layerName + "' inválida ou não registada para o objeto '" + this.name + "'. Usando a camada padrão.");
+            this.setRenderLayer(StandardLayers.GAMEPLAY_BELOW);
+        }
     }
     
   
@@ -271,6 +298,25 @@ public abstract class GameObject {
         }
         updateAllChildrenPositions();
     }
+    
+ // Implemente os métodos da interface
+    @Override
+    public RenderLayer getRenderLayer() { return this.renderLayer; }
+
+    @Override
+    public int getZOrder() {
+        // Usa a posição Y para a ordenação Z: objetos mais abaixo são desenhados por cima.
+        return getY() + getHeight();
+    }
+    
+    @Override
+    public boolean isVisible() { return !isDestroyed; }
+    
+    public void setRenderLayer(RenderLayer layer) {
+        RenderManager.getInstance().unregister(this);
+        this.renderLayer = layer;
+        RenderManager.getInstance().register(this);
+    }
 
     /**
      * O render do GameObject agora é mais robusto.
@@ -317,6 +363,11 @@ public abstract class GameObject {
         for (Component component : components.values()) {
             component.render(g);
         }
+    }
+    
+    public void destroy() { // Um novo método para destruir objetos
+        this.isDestroyed = true;
+        RenderManager.getInstance().unregister(this);
     }
     
     public void setSprite(Sprite newSprite) {

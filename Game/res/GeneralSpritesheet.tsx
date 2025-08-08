@@ -3,6 +3,7 @@
  <image source="spritesheet.png" width="160" height="160"/>
  <tile id="2">
   <properties>
+   <property name="renderLayer" value="CHARACTERS"/>
    <property name="sprite_idle" value="player_idle"/>
    <property name="sprite_walk_right_1" value="player_walk_right_1&quot;"/>
    <property name="sprite_walk_right_2" value="player_walk_right_2&quot;"/>
@@ -12,6 +13,7 @@
  <tile id="6" type="lifepack"/>
  <tile id="17" type="enemy">
   <properties>
+   <property name="renderLayer" value="CHARACTERS"/>
    <property name="speed" type="float" value="0.8"/>
    <property name="useAStar" type="bool" value="false"/>
    <property name="visionRadius" type="int" value="40"/>

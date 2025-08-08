@@ -6,12 +6,12 @@ import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 
 import com.JDStudio.Engine.Engine;
-import com.JDStudio.Engine.Graphics.UI.ThemeManager;
-import com.JDStudio.Engine.Graphics.UI.UIButton;
 import com.JDStudio.Engine.Graphics.UI.UISpriteKey;
-import com.JDStudio.Engine.Graphics.UI.UIText;
 import com.JDStudio.Engine.States.EngineMenuState;
 import com.JDStudio.Engine.Graphics.UI.UITheme;
+import com.JDStudio.Engine.Graphics.UI.Elements.UIButton;
+import com.JDStudio.Engine.Graphics.UI.Elements.UIText;
+import com.JDStudio.Engine.Graphics.UI.Managers.ThemeManager;
 import com.JDStudio.Engine.Input.InputManager;
 
 /**
@@ -21,6 +21,10 @@ public class MenuState extends EngineMenuState {
 
 	public MenuState() {
 		super(); // Chama o construtor de EngineMenuState, que cria o uiManager
+	}
+	
+	@Override
+	protected void buildUI() {
 
 		// Define o tema que o menu usará (pode ser diferente do jogo se você quiser)
 		ThemeManager.getInstance().setTheme(UITheme.MEDIEVAL);
@@ -39,10 +43,7 @@ public class MenuState extends EngineMenuState {
 		int button_width = (int) ThemeManager.getInstance().get(UISpriteKey.BUTTON_NORMAL).getWidth();
 		int button_centerX_Position = Engine.WIDTH / 2 - button_width / 2;
 
-		UIButton startButton = new UIButton(button_centerX_Position, 60, // Posição centralizada
-				ThemeManager.getInstance().get(UISpriteKey.BUTTON_NORMAL),
-				ThemeManager.getInstance().get(UISpriteKey.BUTTON_HOVER),
-				ThemeManager.getInstance().get(UISpriteKey.BUTTON_PRESSED), "Iniciar", new Font("Arial", Font.BOLD, 12),
+		UIButton startButton = new UIButton(button_centerX_Position, 60, "Iniciar", new Font("Arial", Font.BOLD, 12),
 				startGameAction);
 		uiManager.addElement(startButton);
 
@@ -53,10 +54,21 @@ public class MenuState extends EngineMenuState {
 			Engine.transitionToState(pState);
 		};
 
+		@SuppressWarnings("unused")
 		UIButton loadButton = new UIButton(button_centerX_Position, 90, "Load",
 				new Font("Arial", Font.BOLD, 12), loadActionRunnable);
 
-		uiManager.addElement(loadButton);
+		//uiManager.addElement(loadButton);
+		
+		// --- BOTÃO DE OPÇÕES ---
+        UIButton optionsButton = new UIButton(
+            button_centerX_Position, 90,
+            "Opções",
+            new Font("Arial", Font.BOLD, 12),
+            () -> Engine.pushState(new OptionsState()) // Abre a nova tela de opções
+        );
+        uiManager.addElement(optionsButton);
+
 
 		// --- BOTÃO DE SAIR ---
 		Runnable quitAction = () -> System.exit(0);
@@ -64,7 +76,6 @@ public class MenuState extends EngineMenuState {
 		UIButton quitButton = new UIButton(button_centerX_Position, 120, "Sair",
 				new Font("Arial", Font.BOLD, 12), quitAction);
 		uiManager.addElement(quitButton);
-
 	}
 
 	@Override

@@ -9,14 +9,17 @@ import java.util.List;
 import org.json.JSONObject;
 
 import com.JDStudio.Engine.Engine;
+import com.JDStudio.Engine.Components.HealthComponent;
 import com.JDStudio.Engine.Components.PathComponent;
 import com.JDStudio.Engine.Components.PathComponent.PatrolMode;
 import com.JDStudio.Engine.Components.Moviments.AIMovementComponent;
 import com.JDStudio.Engine.Core.ISavable;
-import com.JDStudio.Engine.Graphics.ParticleManager;
+import com.JDStudio.Engine.Graphics.Effects.ParticleManager;
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animator;
 import com.JDStudio.Engine.Object.Character;
 import com.JDStudio.Engine.Object.GameObject;
+import com.JDStudio.Engine.Sound.Sound;
+import com.JDStudio.Engine.Sound.Sound.SoundChannel;
 import com.JDStudio.Engine.Utils.PropertiesReader;
 import com.game.States.PlayingState;
 
@@ -77,6 +80,7 @@ public class Enemy extends Character implements ISavable{
         this.life = reader.getInt("life", 20);
         this.maxLife = reader.getInt("maxLife", 20);
         this.patrolArrivalThreshold = reader.getDouble("patrolArrivalThreshold", 8.0);
+        this.addComponent(new HealthComponent((int)this.maxLife));
     }
 
     private void setupAnimations(Animator animator) {
@@ -92,6 +96,13 @@ public class Enemy extends Character implements ISavable{
     }
     
     @Override
+    public void takeDamage(double amount) {
+    	
+    	super.takeDamage(amount);
+    	getComponent(HealthComponent.class).takeDamage((int)amount);
+    }
+    
+    @Override
     protected void die() {
     	super.die();
     	ParticleManager.getInstance().createExplosion(
@@ -104,49 +115,77 @@ public class Enemy extends Character implements ISavable{
                 0.5, 2.5,                          // Velocidade entre 0.5 e 2.5 pixels/frame
                 8, 0                               // Tamanho começa em 8 e termina em 0
             );
+    	Sound.play("/hurt.wav",SoundChannel.SFX, this.getX(), this.getY() );
     }
     
-    @Override
+   @Override
     public void tick() {
         if (isDestroyed || isDead) return;
         
-        super.tick(); // ATUALIZA TODOS OS COMPONENTES (Animator e AIMovement)
+        super.tick(); // ATUALIZA TODOS OS COMPONENTES
 
 	    if (attackCooldown > 0) attackCooldown--;
 	
 	    double distanceToPlayer = calculateDistance(this, player);
 	
+        // A máquina de estados agora controla toda a lógica de transição.
 	    switch (currentState) {
 	        case IDLE:
 	            aiMovement.setTarget(null);
-	            if (distanceToPlayer < visionRadius) currentState = AIState.CHASING;
+	            // Se detetar o jogador...
+	            if (distanceToPlayer < visionRadius) {
+	                currentState = AIState.CHASING; // ...e muda de estado.
+	            }
 	            break;
+
 	        case PATROLLING:
 	            if (pathComponent != null) {
 	                pathComponent.update();
 	                Point targetPoint = pathComponent.getTargetPosition();
 	                if (targetPoint != null) aiMovement.setTarget(targetPoint.x, targetPoint.y);
 	            }
-	            if (distanceToPlayer < visionRadius) currentState = AIState.CHASING;
+	            // Se detetar o jogador...
+	            if (distanceToPlayer < visionRadius) {
+                   this.say("Onde pensa que vai?", 2.0f); // ...fala...
+	                currentState = AIState.CHASING; // ...e muda de estado.
+	            }
 	            break;
+
 	        case CHASING:
 	            aiMovement.setTarget(player);
-	            if (distanceToPlayer > visionRadius) currentState = (pathComponent != null) ? AIState.PATROLLING : AIState.IDLE;
-	            else if (distanceToPlayer < attackRadius) currentState = AIState.ATTACKING;
+	            if (distanceToPlayer > visionRadius) {
+	                // Se perder o jogador de vista, volta a patrulhar ou fica parado.
+	                currentState = (pathComponent != null) ? AIState.PATROLLING : AIState.IDLE;
+	            } else if (distanceToPlayer < attackRadius) {
+	                currentState = AIState.ATTACKING;
+	            }
 	            break;
+
 	        case ATTACKING:
-	            aiMovement.setTarget(null);
+	            aiMovement.setTarget(null); // Para de se mover para atacar
 	            if (attackCooldown <= 0) {
 	                player.takeDamage(player.maxLife/6);
 	                attackCooldown = attackSpeed;
 	            }
-	            if (distanceToPlayer > attackRadius) currentState = AIState.CHASING;
+	            if (distanceToPlayer > attackRadius) { 
+	            	currentState = AIState.CHASING;
+	            }
 	            break;
 	    }
+        
 	}
     private double calculateDistance(GameObject obj1, GameObject obj2) {
-        int dx = obj1.getX() - obj2.getX();
-        int dy = obj1.getY() - obj2.getY();
+        
+        double obj1CenterX = obj1.getX() + obj1.getWidth() / 2.0;
+        double obj1CenterY = obj1.getY() + obj1.getHeight() / 2.0;
+
+        // Calcula o ponto central do obj2
+        double obj2CenterX = obj2.getX() + obj2.getWidth() / 2.0;
+        double obj2CenterY = obj2.getY() + obj2.getHeight() / 2.0;
+
+        // Calcula a distância entre os centros
+        double dx = obj1CenterX - obj2CenterX;
+        double dy = obj1CenterY - obj2CenterY;
         return Math.sqrt(dx * dx + dy * dy);
     }
     

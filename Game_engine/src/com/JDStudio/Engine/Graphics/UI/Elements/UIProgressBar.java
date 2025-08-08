@@ -1,4 +1,4 @@
-package com.JDStudio.Engine.Graphics.UI;
+package com.JDStudio.Engine.Graphics.UI.Elements;
 
 import java.awt.Color;
 import java.awt.Graphics;

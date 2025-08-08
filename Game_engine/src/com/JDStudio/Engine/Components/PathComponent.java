@@ -37,7 +37,7 @@ public class PathComponent {
         // --- INÍCIO DA DEPURAÇÃO ---
         //System.out.println("--- PathComponent Update Frame ---");
         //System.out.println("Owner: " + owner.name + " | Current Index: " + currentTargetIndex + " | Direction: " + direction);
-        Point targetPos = getTargetPosition();
+        //Point targetPos = getTargetPosition();
         //System.out.println("Current Target Position: " + targetPos);
         
         if (hasReachedTarget()) {

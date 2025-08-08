@@ -1,6 +1,10 @@
-package com.JDStudio.Engine.Graphics.UI;
+package com.JDStudio.Engine.Graphics.UI.Elements;
 
 import java.awt.Graphics;
+
+import com.JDStudio.Engine.Graphics.Layers.IRenderable;
+import com.JDStudio.Engine.Graphics.Layers.RenderLayer;
+import com.JDStudio.Engine.Graphics.Layers.StandardLayers;
 
 /**
  * Representa a base abstrata para todos os elementos de interface de usuário (UI).
@@ -12,7 +16,7 @@ import java.awt.Graphics;
  * @author JDStudio
  * @since 1.0
  */
-public abstract class UIElement {
+public abstract class UIElement implements IRenderable{
 
     /** A coordenada horizontal do elemento (eixo X). */
     protected int x;
@@ -39,6 +43,11 @@ public abstract class UIElement {
         this.x = x;
         this.y = y;
     }
+    
+    @Override
+    public RenderLayer getRenderLayer() { return StandardLayers.UI; }
+    
+    
     
     /**
      * Atualiza a lógica do elemento de UI.
