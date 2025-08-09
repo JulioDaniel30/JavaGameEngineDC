@@ -8,21 +8,23 @@ import java.util.List;
 import org.json.JSONObject;
 
 import com.JDStudio.Engine.Engine;
-import com.JDStudio.Engine.Events.EventListener;
+import com.JDStudio.Engine.Events.EngineEvent;
 import com.JDStudio.Engine.Events.EventManager;
+import com.JDStudio.Engine.Events.WorldLoadedEventData;
 import com.JDStudio.Engine.Graphics.AssetManager;
 import com.JDStudio.Engine.Graphics.Layers.IRenderable;
 import com.JDStudio.Engine.Graphics.Layers.RenderLayer;
 import com.JDStudio.Engine.Graphics.Layers.RenderManager;
 import com.JDStudio.Engine.Graphics.Layers.StandardLayers;
+import com.JDStudio.Engine.Graphics.Sprite.Spritesheet;
 import com.JDStudio.Engine.Graphics.UI.Managers.UIManager;
 import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.States.EnginePlayingState;
 import com.JDStudio.Engine.World.IMapLoaderListener;
 import com.JDStudio.Engine.World.Tile;
 import com.JDStudio.Engine.World.World;
-//Adicione outras importações necessárias (AssetManager, etc.)
 
+@SuppressWarnings("static-access")
 public class PlayingState extends EnginePlayingState implements IMapLoaderListener {
 
 	// Referências estáticas para fácil acesso
@@ -55,6 +57,8 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 		// onTileFound serão chamados, criando e registando os objetos e tiles.
 		// (Pode criar um "empty_map.json" para o template)
 		world = new World("/maps/empty_map.json", this);
+		
+		EventManager.getInstance().trigger(EngineEvent.WORLD_LOADED, new WorldLoadedEventData(world,this.getGameObjects()));
 
 		// 5. Regista os sistemas de renderização que não são GameObjects (fundo,
 		// iluminação, etc.)
@@ -67,6 +71,8 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 
 	private void loadAssets() {
 		// Carregue aqui os sprites necessários para o seu jogo (jogador, tiles, etc.)
+		Spritesheet spritesheet = new Spritesheet("spritesheet.png");
+		assets.registerSprite("Player", spritesheet.getSprite(0, 0, 16, 16));
 	}
 
 	private void setupUI() {

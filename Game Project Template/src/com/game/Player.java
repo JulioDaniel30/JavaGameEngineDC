@@ -7,6 +7,7 @@ import com.JDStudio.Engine.Events.EventManager;
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animator;
 import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.Object.Character;
+import com.JDStudio.Engine.Utils.PropertiesReader;
 
 public class Player extends Character {
 
@@ -17,8 +18,10 @@ public class Player extends Character {
 	@Override
 	public void initialize(JSONObject properties) {
 		super.initialize(properties);
-
-		this.name = "Player";
+		PropertiesReader reader = new PropertiesReader(properties);
+		//pega o nome diretamente das propriedates/atributos do Tiled
+		this.name = reader.getString("name", "Player");
+		
 		this.addComponent(new Animator());
 		this.addComponent(new MovementComponent(1.5));
 
