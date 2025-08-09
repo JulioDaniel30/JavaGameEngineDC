@@ -39,6 +39,8 @@ public abstract class GameObject implements IRenderable  {
     public int maskY;
     protected int maskWidth;
     protected int maskHeight;
+    public double velocityY = 0; // Para a lógica de ONE_WAY
+    public boolean onGround = false;
     public boolean isDestroyed = false;
     public String name = "";
 

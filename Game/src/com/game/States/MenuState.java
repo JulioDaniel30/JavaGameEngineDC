@@ -30,7 +30,7 @@ public class MenuState extends EngineMenuState {
 		ThemeManager.getInstance().setTheme(UITheme.MEDIEVAL);
 
 		// --- TÍTULO DO JOGO ---
-		uiManager.addElement(new UIText(Engine.WIDTH / 2 - 50, 40, // Posição (x, y)
+		uiManager.addElement(new UIText(Engine.getWIDTH() / 2 - 50, 40, // Posição (x, y)
 				new Font("Serif", Font.BOLD, 24), Color.WHITE, "Meu Jogo"));
 
 		// --- BOTÃO DE INICIAR JOGO ---
@@ -41,7 +41,7 @@ public class MenuState extends EngineMenuState {
 		};
 
 		int button_width = (int) ThemeManager.getInstance().get(UISpriteKey.BUTTON_NORMAL).getWidth();
-		int button_centerX_Position = Engine.WIDTH / 2 - button_width / 2;
+		int button_centerX_Position = Engine.getWIDTH() / 2 - button_width / 2;
 
 		UIButton startButton = new UIButton(button_centerX_Position, 60, "Iniciar", new Font("Arial", Font.BOLD, 12),
 				startGameAction);
@@ -90,7 +90,7 @@ public class MenuState extends EngineMenuState {
 	public void render(Graphics g) {
 		// Desenha um fundo simples para o menu
 		g.setColor(new Color(20, 20, 80)); // Azul escuro
-		g.fillRect(0, 0, Engine.WIDTH, Engine.HEIGHT);
+		g.fillRect(0, 0, Engine.getWIDTH(), Engine.getHEIGHT());
 
 		// Chama o render da classe pai para desenhar todos os elementos da UI (botões,
 		// texto)

@@ -35,7 +35,7 @@ public class InventoryState extends EngineMenuState {
  public void render(Graphics g) {
      // Desenha um fundo semitransparente
      g.setColor(new Color(0, 0, 0, 200));
-     g.fillRect(0, 0, Engine.WIDTH, Engine.HEIGHT);
+     g.fillRect(0, 0, Engine.getWIDTH(), Engine.getHEIGHT());
      
      super.render(g);
  }

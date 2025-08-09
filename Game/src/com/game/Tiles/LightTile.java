@@ -25,11 +25,11 @@ public class LightTile extends Tile {
 		super(x, y, sprite);
 		setRenderLayer(StandardLayers.LIGHTING);
 		this.associatedLight = light;
-		this.isSolid = false;
+		tileType = TileType.PASSABLE;
 		// Define a posição da luz para o centro do tile
 		// (Sua classe Tile tem um typo 'heigth', estou mantendo para ser compatível)
 		this.associatedLight.x = x + (this.width / 2.0);
-		this.associatedLight.y = y + (this.heigth / 2.0);
+		this.associatedLight.y = y + (this.height / 2.0);
 
 		// A mágica acontece aqui: adiciona a luz ao sistema de iluminação
 		LightingManager.getInstance().addLight(this.associatedLight);
@@ -49,12 +49,12 @@ public class LightTile extends Tile {
 
 		setRenderLayer(StandardLayers.LIGHTING);
 		// --- A LÓGICA DE COLISÃO ESTÁ AQUI ---
-		this.isSolid = isSolid;
+		tileType = TileType.PASSABLE;
 
 		this.associatedLight = light;
 
 		this.associatedLight.x = x + (this.width / 2.0);
-		this.associatedLight.y = y + (this.heigth / 2.0);
+		this.associatedLight.y = y + (this.height / 2.0);
 
 		LightingManager.getInstance().addLight(this.associatedLight);
 	}

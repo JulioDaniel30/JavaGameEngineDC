@@ -13,7 +13,13 @@ public class Main {
         manager.loadAndMergeBindings("/keybindings.json");
         RenderManager.getInstance().registerLayer(GameLayers.WATER_EFFECTS);
 		
-		Engine engine = new Engine(60.0);
+        int gameWidth = 240;
+        int gameHeight = 160;
+        int gameScale = 3;
+        boolean isResizable = false; 
+        String gameTitle = "A Aventura Mágica";
+        
+		Engine engine = new Engine(gameWidth,gameHeight,gameScale,isResizable,gameTitle,60.0);
 		engine.requestFocusInWindow();
 		//Engine.setGameState(new PlayingState()); // Define a cena inicial
 		//Engine.setGameState(new MenuState());// Define a cena inicial

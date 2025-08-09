@@ -60,8 +60,8 @@ public class UIButton extends UIElement {
             return;
         }
 
-        int mouseX = InputManager.getMouseX()/ com.JDStudio.Engine.Engine.SCALE;
-        int mouseY = InputManager.getMouseY() / com.JDStudio.Engine.Engine.SCALE;
+        int mouseX = InputManager.getMouseX()/ com.JDStudio.Engine.Engine.getSCALE();
+        int mouseY = InputManager.getMouseY() / com.JDStudio.Engine.Engine.getSCALE();
 
         Rectangle bounds = new Rectangle(this.x, this.y, this.width, this.height);
         isHovering = bounds.contains(mouseX, mouseY);

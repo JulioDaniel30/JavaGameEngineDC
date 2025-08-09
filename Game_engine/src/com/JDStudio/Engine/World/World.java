@@ -13,6 +13,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.JDStudio.Engine.Engine;
+import com.JDStudio.Engine.Object.GameObject;
+import com.JDStudio.Engine.World.Tile.TileType;
 
 public class World {
 
@@ -117,8 +119,8 @@ public class World {
     public void render(Graphics g) {
         int xstart = Engine.camera.getX() / this.tileWidth;
         int ystart = Engine.camera.getY() / this.tileHeight;
-        int xfinal = xstart + (Engine.WIDTH / this.tileWidth) + 2;
-        int yfinal = ystart + (Engine.HEIGHT / this.tileHeight) + 2;
+        int xfinal = xstart + (Engine.getWIDTH() / this.tileWidth) + 2;
+        int yfinal = ystart + (Engine.getHEIGHT() / this.tileHeight) + 2;
         
         for (int xx = xstart; xx <= xfinal; xx++) {
             for (int yy = ystart; yy <= yfinal; yy++) {
@@ -136,7 +138,7 @@ public class World {
 
     public Tile getTile(int x, int y) {
         if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
-            return new Tile(x * this.tileWidth, y * this.tileHeight, this.tileWidth, this.tileHeight, null) {{ isSolid = true; }};
+            return new Tile(x * this.tileWidth, y * this.tileHeight, this.tileWidth, this.tileHeight, null);
         }
         return tiles[x + (y * WIDTH)];
     }
@@ -152,7 +154,50 @@ public class World {
         for (int iy = tileY1; iy <= tileY2; iy++) {
             for (int ix = tileX1; ix <= tileX2; ix++) {
                 Tile tile = getTile(ix, iy);
-                if (tile != null && tile.isSolid) return false;
+                if (tile != null && tile.getTileType() == TileType.SOLID) return false;
+            }
+        }
+        return true;
+    }
+    /**
+     * Verifica se uma área retangular no mundo está livre de tiles sólidos.
+     * Agora inclui a lógica para plataformas "pula-através".
+     * @param movingObject O GameObject que está a tentar mover-se.
+     * @return true se a área estiver livre, false caso contrário.
+     */
+    public boolean isFree(GameObject movingObject) {
+        int startX = movingObject.getX() + movingObject.getMaskX();
+        int startY = movingObject.getY() + movingObject.getMaskY();
+        int maskWidth = movingObject.getMaskWidth();
+        int maskHeight = movingObject.getMaskHeight();
+
+        int tileX1 = startX / this.tileWidth;
+        int tileY1 = startY / this.tileHeight;
+        int tileX2 = (startX + maskWidth - 1) / this.tileWidth;
+        int tileY2 = (startY + maskHeight - 1) / this.tileHeight;
+
+        for (int iy = tileY1; iy <= tileY2; iy++) {
+            for (int ix = tileX1; ix <= tileX2; ix++) {
+                Tile tile = getTile(ix, iy);
+                if (tile != null) {
+                    if (tile.tileType == Tile.TileType.SOLID) {
+                        return false; // Colisão com parede sólida
+                    }
+                    if (tile.tileType == Tile.TileType.ONE_WAY) {
+                        // LÓGICA DA PLATAFORMA "PULA-ATRAVÉS"
+                        // Verifica se o pé do personagem está acima do topo do tile
+                        // e se o personagem está a mover-se para baixo.
+                        if ((startY + maskHeight) <= tile.getY() + 4 && movingObject.velocityY >= 0) {
+                            
+                            // Ajusta a posição Y do jogador para o topo do tile e para a sua velocidade
+                            movingObject.setY(tile.getY() - maskHeight);
+                            movingObject.velocityY = 0;
+                            movingObject.onGround = true; // Informa ao componente de física que está no chão
+
+                            // Continua a verificar outros tiles, mas a colisão vertical foi resolvida.
+                        }
+                    }
+                }
             }
         }
         return true;

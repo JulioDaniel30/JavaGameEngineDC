@@ -33,15 +33,15 @@ public class LightingManager {
         Graphics2D g2d = (Graphics2D) g;
         
         // --- PASSO 1: DESENHAR A MÁSCARA DE ESCURIDÃO---
-        if (lightmap == null || lightmap.getWidth() != Engine.WIDTH || lightmap.getHeight() != Engine.HEIGHT) {
-            lightmap = new BufferedImage(Engine.WIDTH, Engine.HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        if (lightmap == null || lightmap.getWidth() != Engine.getWIDTH() || lightmap.getHeight() != Engine.getHEIGHT()) {
+            lightmap = new BufferedImage(Engine.getWIDTH(), Engine.getHEIGHT(), BufferedImage.TYPE_INT_ARGB);
         }
         Graphics2D g2d_lightmap = (Graphics2D) lightmap.getGraphics();
         g2d_lightmap.setComposite(AlphaComposite.Clear);
-        g2d_lightmap.fillRect(0, 0, Engine.WIDTH, Engine.HEIGHT);
+        g2d_lightmap.fillRect(0, 0, Engine.getWIDTH(), Engine.getHEIGHT());
         g2d_lightmap.setComposite(AlphaComposite.SrcOver);
         g2d_lightmap.setColor(ambientColor);
-        g2d_lightmap.fillRect(0, 0, Engine.WIDTH, Engine.HEIGHT);
+        g2d_lightmap.fillRect(0, 0, Engine.getWIDTH(), Engine.getHEIGHT());
         g2d_lightmap.setComposite(AlphaComposite.DstOut);
         g2d_lightmap.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         for (Light light : lights) {

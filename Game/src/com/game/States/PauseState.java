@@ -21,10 +21,10 @@ public class PauseState extends EngineMenuState {
     }
     @Override
     protected void buildUI() {
-    	uiManager.addElement(new UIText(Engine.WIDTH / 2 - 40, 40, new Font("Serif", Font.BOLD, 20), Color.WHITE, "Pausado"));
+    	uiManager.addElement(new UIText(Engine.getWIDTH() / 2 - 40, 40, new Font("Serif", Font.BOLD, 20), Color.WHITE, "Pausado"));
 
         int button_width = (int) ThemeManager.getInstance().get(UISpriteKey.BUTTON_NORMAL).getWidth();
-		int button_centerX_Position = Engine.WIDTH / 2 - button_width / 2;
+		int button_centerX_Position = Engine.getWIDTH() / 2 - button_width / 2;
         
         // BOTÃO DE CONTINUAR
         UIButton continueButton = new UIButton(
@@ -67,7 +67,7 @@ public class PauseState extends EngineMenuState {
     public void render(Graphics g) {
         // Desenha uma sobreposição escura e semitransparente
         g.setColor(new Color(0, 0, 0, 150));
-        g.fillRect(0, 0, Engine.WIDTH, Engine.HEIGHT);
+        g.fillRect(0, 0, Engine.getWIDTH(), Engine.getHEIGHT());
         
         // Desenha os botões e texto por cima
         super.render(g);

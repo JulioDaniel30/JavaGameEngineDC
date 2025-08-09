@@ -9,6 +9,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import com.JDStudio.Engine.Utils.Node;
+import com.JDStudio.Engine.World.Tile.TileType;
 import com.JDStudio.Engine.World.World;
 
 public class Pathfinder {
@@ -55,7 +56,7 @@ public class Pathfinder {
 
                     Node neighbourNode = new Node(currentNode.x + xOffset, currentNode.y + yOffset);
 
-                    if (closedList.contains(neighbourNode) || world.getTile(neighbourNode.x, neighbourNode.y).isSolid) {
+                    if (closedList.contains(neighbourNode) || world.getTile(neighbourNode.x, neighbourNode.y).getTileType() == TileType.SOLID) {
                         continue;
                     }
                     
@@ -66,7 +67,7 @@ public class Pathfinder {
                     for (int nx = -1; nx <= 1 && !isNearWall; nx++) {
                         for (int ny = -1; ny <= 1; ny++) {
                             if (nx == 0 && ny == 0) continue;
-                            if (world.getTile(neighbourNode.x + nx, neighbourNode.y + ny).isSolid) {
+                            if (world.getTile(neighbourNode.x + nx, neighbourNode.y + ny).getTileType() == TileType.SOLID) {
                                 isNearWall = true;
                                 break; 
                             }

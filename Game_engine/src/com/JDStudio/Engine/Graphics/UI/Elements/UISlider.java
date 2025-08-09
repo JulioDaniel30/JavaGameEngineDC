@@ -63,13 +63,13 @@ public class UISlider extends UIElement {
             return;
         }
 
-        int mouseX = InputManager.getMouseX() / com.JDStudio.Engine.Engine.SCALE;
+        int mouseX = InputManager.getMouseX() / com.JDStudio.Engine.Engine.getSCALE();
 
         int handleX = getHandleX();
         int handleY = y + (height - handleHeight) / 2;
         Rectangle handleBounds = new Rectangle(handleX, handleY, handleWidth, handleHeight);
 
-        if (InputManager.isLeftMouseButtonJustPressed() && handleBounds.contains(mouseX, InputManager.getMouseY() / com.JDStudio.Engine.Engine.SCALE)) {
+        if (InputManager.isLeftMouseButtonJustPressed() && handleBounds.contains(mouseX, InputManager.getMouseY() / com.JDStudio.Engine.Engine.getSCALE())) {
             isDragging = true;
         }
 

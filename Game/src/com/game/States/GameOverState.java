@@ -24,14 +24,14 @@ public class GameOverState extends EngineMenuState {
 	protected void buildUI() {
 		// TÍTULO "FIM DE JOGO"
 				uiManager.addElement(
-						new UIText(Engine.WIDTH / 2 - 70, 40, new Font("Serif", Font.BOLD, 28), Color.RED, "Fim de Jogo"));
+						new UIText(Engine.getWIDTH() / 2 - 70, 40, new Font("Serif", Font.BOLD, 28), Color.RED, "Fim de Jogo"));
 
 				// BOTÃO PARA VOLTAR AO MENU
 				Runnable backToMenuAction = () -> {
 					Engine.setGameState(new MenuState());
 				};
 				int button_width = (int) ThemeManager.getInstance().get(UISpriteKey.BUTTON_NORMAL).getWidth();
-				int button_centerX_Position = Engine.WIDTH / 2 - button_width / 2;
+				int button_centerX_Position = Engine.getWIDTH() / 2 - button_width / 2;
 
 				UIButton menuButton = new UIButton(button_centerX_Position, 60, "Menu", new Font("Arial", Font.BOLD, 12),
 						backToMenuAction);
@@ -52,7 +52,7 @@ public class GameOverState extends EngineMenuState {
 	public void render(Graphics g) {
 		// Desenha um fundo preto
 		g.setColor(Color.BLACK);
-		g.fillRect(0, 0, Engine.WIDTH, Engine.HEIGHT);
+		g.fillRect(0, 0, Engine.getWIDTH(), Engine.getHEIGHT());
 
 		// Desenha a UI por cima
 		super.render(g);

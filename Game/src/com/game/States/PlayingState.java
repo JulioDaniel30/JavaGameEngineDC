@@ -63,6 +63,8 @@ import com.JDStudio.Engine.Object.TriggerZone;
 import com.JDStudio.Engine.Sound.Sound;
 import com.JDStudio.Engine.States.EnginePlayingState;
 import com.JDStudio.Engine.Utils.ImageUtils;
+import com.JDStudio.Engine.World.Camera.CameraProfile;
+import com.JDStudio.Engine.World.Camera.FollowStyle;
 import com.JDStudio.Engine.World.IMapLoaderListener;
 import com.JDStudio.Engine.World.Tile;
 import com.JDStudio.Engine.World.World;
@@ -105,6 +107,13 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 	private EventListener playerHealListener; // <-- Guarde uma referência ao listener
 	private EventListener playerDiedListener;
 	private EventListener characterSpokeListener;
+	
+	// Perfil padrão para jogabilidade normal
+    private final CameraProfile PROFILE_GAMEPLAY = new CameraProfile(FollowStyle.SMOOTH_FOLLOW, 0.1, 1.0);
+    // Perfil para um momento de "foco", com mais zoom e mais rápido
+    private final CameraProfile PROFILE_FOCUS = new CameraProfile(FollowStyle.SMOOTH_FOLLOW, 0.2, 1.2);
+    // Perfil para mostrar uma área do mapa, sem seguir o jogador
+    private final CameraProfile PROFILE_STATIC_VIEW = new CameraProfile(FollowStyle.STATIC, 0, 1.0);
 
 	public PlayingState() {
 		
@@ -132,6 +141,7 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 		 
 		// A engine agora lida com a ordem de carregamento internamente.
 		world = new World("/map1.json", this);
+		Engine.camera.applyProfile(PROFILE_GAMEPLAY, player);
 		projectileManager.init(() -> new Projectile(),world,gameObjects);
 		registerRenderSystems();
 		
@@ -380,7 +390,7 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 	}
 
 	private void createDialogueBox() {
-		dialogueBox = new DialogueBox(10, 85, Engine.WIDTH - 20, 70);
+		dialogueBox = new DialogueBox(10, 85, Engine.getWIDTH() - 20, 70);
 		// Configurações de aparência
 		dialogueBox.setFonts(new Font("Courier New", Font.BOLD, 12), new Font("Courier New", Font.PLAIN, 10));
 		dialogueBox.setColors(new Color(20, 20, 80, 230), Color.WHITE, Color.YELLOW, Color.CYAN);
@@ -436,7 +446,7 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 			}
 
 			if (player != null && world != null) {
-				Engine.camera.update(player, world);
+				Engine.camera.update(world);
 			}
 		}
 		// InputManager.instance.update();

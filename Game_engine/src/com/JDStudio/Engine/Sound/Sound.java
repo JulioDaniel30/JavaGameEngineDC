@@ -180,8 +180,8 @@ public final class Sound {
          float pan = 0.0f;
 
          if (isSpatial) {
-             int listenerX = Engine.camera.getX() + Engine.WIDTH / 2;
-             int listenerY = Engine.camera.getY() + Engine.HEIGHT / 2;
+             int listenerX = Engine.camera.getX() + Engine.getWIDTH() / 2;
+             int listenerY = Engine.camera.getY() + Engine.getHEIGHT() / 2;
              
              double distance = Math.sqrt(Math.pow(emitterX - listenerX, 2) + Math.pow(emitterY - listenerY, 2));
              double maxHearingDistance = 200.0;
@@ -190,7 +190,7 @@ public final class Sound {
              finalVolume *= spatialVolume; // Aplica a atenuação da distância
 
              double horizontalOffset = emitterX - listenerX;
-             double panWidth = Engine.WIDTH * 1.5;
+             double panWidth = Engine.getWIDTH() * 1.5;
              pan = (float) Math.max(-1.0, Math.min(1.0, horizontalOffset / panWidth));
          }
          

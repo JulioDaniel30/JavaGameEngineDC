@@ -258,8 +258,8 @@ public class InputManager implements  KeyListener, MouseListener, MouseMotionLis
      * */
     public static int[] covertMousePositionToWorld(int mouseX, int mouseY) {
     	
-    	int worldX = (mouseX / Engine.SCALE) + Engine.camera.getX();
-        int worldY = (mouseY / Engine.SCALE) + Engine.camera.getY();
+    	int worldX = (mouseX / Engine.getSCALE()) + Engine.camera.getX();
+        int worldY = (mouseY / Engine.getSCALE()) + Engine.camera.getY();
     	
     	int[] numeros = {worldX,worldY};
     	return numeros ;
@@ -269,8 +269,8 @@ public class InputManager implements  KeyListener, MouseListener, MouseMotionLis
      * */
     public static int[] covertMousePositionToWorld() {
     	
-    	int worldX = (getMouseX() / Engine.SCALE) + Engine.camera.getX();
-        int worldY = (getMouseY() / Engine.SCALE) + Engine.camera.getY();
+    	int worldX = (getMouseX() / Engine.getSCALE()) + Engine.camera.getX();
+        int worldY = (getMouseY() / Engine.getSCALE()) + Engine.camera.getY();
     	
     	int[] numeros = {worldX,worldY};
     	return numeros ;

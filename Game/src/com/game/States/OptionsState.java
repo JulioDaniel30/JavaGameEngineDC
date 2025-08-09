@@ -30,7 +30,7 @@ public class OptionsState extends EngineMenuState {
     @Override
     protected void buildUI() {
     	// --- TÍTULO ---
-        uiManager.addElement(new UIText(Engine.WIDTH / 2 - 30, 30, new Font("Serif", Font.BOLD, 20), Color.WHITE, "Opções"));
+        uiManager.addElement(new UIText(Engine.getWIDTH() / 2 - 30, 30, new Font("Serif", Font.BOLD, 20), Color.WHITE, "Opções"));
 
         // --- SLIDER DE VOLUME DA MÚSICA ---
         uiManager.addElement(new UIText(20, 60, new Font("Arial", Font.PLAIN, 12), Color.WHITE, "Música:"));
@@ -41,7 +41,7 @@ public class OptionsState extends EngineMenuState {
         };
         
         int button_width = (int) ThemeManager.getInstance().get(UISpriteKey.SLIDER_TRACK).getWidth();
-		int button_centerX_Position = Engine.WIDTH / 2 - button_width / 2;
+		int button_centerX_Position = Engine.getWIDTH() / 2 - button_width / 2;
         
         UISlider musicSlider = new UISlider(
             button_centerX_Position, 50,
@@ -70,7 +70,7 @@ public class OptionsState extends EngineMenuState {
 
         // --- BOTÃO DE VOLTAR ---
         UIButton backButton = new UIButton(
-                Engine.WIDTH / 2 - 40, 120,
+                Engine.getWIDTH() / 2 - 40, 120,
                 "Voltar",
                 new Font("Arial", Font.BOLD, 12),
                 () -> Engine.popState() // Volta para o estado que o abriu (Menu ou Pausa)
@@ -81,7 +81,7 @@ public class OptionsState extends EngineMenuState {
     @Override
     public void render(Graphics g) {
         g.setColor(new Color(20, 20, 80));
-        g.fillRect(0, 0, Engine.WIDTH, Engine.HEIGHT);
+        g.fillRect(0, 0, Engine.getWIDTH(), Engine.getHEIGHT());
         super.render(g);
     }
 }
