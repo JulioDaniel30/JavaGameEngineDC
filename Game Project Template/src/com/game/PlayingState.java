@@ -33,6 +33,7 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 	public static World world;
 
 	// Managers específicos deste estado
+	@SuppressWarnings("unused")
 	private UIManager uiManager;
 	// Adicione aqui outros managers que você usa, como ProjectileManager,
 	// LightingManager, etc.

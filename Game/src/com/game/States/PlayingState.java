@@ -111,9 +111,11 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 	// Perfil padrão para jogabilidade normal
     private final CameraProfile PROFILE_GAMEPLAY = new CameraProfile(FollowStyle.SMOOTH_FOLLOW, 0.1, 1.0);
     // Perfil para um momento de "foco", com mais zoom e mais rápido
-    private final CameraProfile PROFILE_FOCUS = new CameraProfile(FollowStyle.SMOOTH_FOLLOW, 0.2, 1.2);
+    @SuppressWarnings("unused")
+	private final CameraProfile PROFILE_FOCUS = new CameraProfile(FollowStyle.SMOOTH_FOLLOW, 0.2, 1.2);
     // Perfil para mostrar uma área do mapa, sem seguir o jogador
-    private final CameraProfile PROFILE_STATIC_VIEW = new CameraProfile(FollowStyle.STATIC, 0, 1.0);
+    @SuppressWarnings("unused")
+	private final CameraProfile PROFILE_STATIC_VIEW = new CameraProfile(FollowStyle.STATIC, 0, 1.0);
 
 	public PlayingState() {
 		

@@ -12,7 +12,7 @@ Aqui está uma lista de sugestões de funcionalidades e melhorias para  engine
 - [x] **Sistema de Componentes Genérico:** Refatorar o `GameObject` para ser um contêiner mais flexível, permitindo adicionar/remover componentes (`addComponent`, `getComponent`) dinamicamente, em vez de ter campos fixos como `movement` e `animator`.
 
 - [ ] **Finalizar e Refinar o A\* Pathfinding:** Reintegrar o `Pathfinder` ao `AIMovementComponent`, resolvendo os bugs de movimento para criar uma IA de navegação verdadeiramente inteligente que desvia de labirintos.
-- [ ] **Física Simples:** Adicionar conceitos como gravidade e força de pulo ao `MovementComponent` para habilitar a criação de jogos de plataforma.
+- [x] **Física Simples:** Adicionar conceitos como gravidade e força de pulo ao `MovementComponent` para habilitar a criação de jogos de plataforma.
 ---
 ## Para Gráficos e Efeitos Visuais
 
@@ -28,26 +28,26 @@ Aqui está uma lista de sugestões de funcionalidades e melhorias para  engine
 ----
 ## Áudio e Imersão
 
-- [ ] **Áudio Espacial (2D):** Fazer com que o volume e o balanço estéreo (esquerda/direita) dos efeitos sonoros mudem com base na sua posição em relação à câmera.
-- [ ] **Mixer de Áudio:** Criar um sistema para gerenciar diferentes canais de áudio (Música, Efeitos Sonoros, UI) com controles de volume separados.
+- [x] **Áudio Espacial (2D):** Fazer com que o volume e o balanço estéreo (esquerda/direita) dos efeitos sonoros mudem com base na sua posição em relação à câmera.
+- [x] **Mixer de Áudio:** Criar um sistema para gerenciar diferentes canais de áudio (Música, Efeitos Sonoros, UI) com controles de volume separados.
 
 
 ----
 ## Para Jogos De Plataforma
 
-- [ ] **Sistema de Física**
+- [x] **Sistema de Física**
 
-   - [ ] Adicionar velocity e acceleration ao componente de movimento.
+   - [x] Adicionar velocity e acceleration ao componente de movimento.
 
-   - [ ] Mudar o loop de tick para usar posicao += velocidade.
+   - [x] Mudar o loop de tick para usar posicao += velocidade.
 
-   - [ ] Implementar uma resposta à colisão que diferencia chão, parede e teto.
+   - [x] Implementar uma resposta à colisão que diferencia chão, parede e teto.
 
-- [ ] **Sistema de Tiles Avançado**
+- [x] **Sistema de Tiles Avançado**
 
-   - [ ] Criar um enum para tipos de tile (SOLID, ONE_WAY, etc.).
+   - [x] Criar um enum para tipos de tile (SOLID, ONE_WAY, etc.).
 
-   - [ ] Implementar a lógica para plataformas "pula-através" (ONE_WAY).
+   - [x] Implementar a lógica para plataformas "pula-através" (ONE_WAY).
 
 - [ ] **Máquina de Estados do Player**
 
