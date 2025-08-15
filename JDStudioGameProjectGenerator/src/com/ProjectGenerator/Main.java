@@ -7,41 +7,58 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.swing.JOptionPane;
 
+import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-
 public class Main {
 	
 	private static final String REPO_URL = "https://github.com/JulioDaniel30/JavaGameEngineDC.git";
 	private static final String OLD_PACKAGE_NAME = "com.game";
 	
 	public static void main(String[] args) {
-		String sourcePath = "";
-		Object[] sourceOptions = { "Clonar do GitHub", "Usar Pasta Local" };
-		int sourceChoice = JOptionPane.showOptionDialog(null, "De onde virão os arquivos da engine e template?", "Fonte dos Arquivos", 
-				JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, sourceOptions, sourceOptions[0]);
+		String sourcePath = ""; // Esta variável guardará o caminho da fonte, seja ela local ou clonada.
 
-		if (sourceChoice == 0) { // Clonar do GitHub
-			String cloneDest = JOptionPane.showInputDialog(null, "Onde deseja salvar os arquivos da engine (pasta será criada)?", "Local para Clonar", JOptionPane.PLAIN_MESSAGE);
+		// --- ETAPA DE ESCOLHA DA FONTE ---
+		Object[] sourceOptions = { "Clonar do GitHub", "Usar Pasta Local" };
+		int sourceChoice = JOptionPane.showOptionDialog(null, 
+				"De onde virão os arquivos da engine e template?", 
+				"Fonte dos Arquivos", 
+				JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, 
+				null, sourceOptions, sourceOptions[0]);
+
+		if (sourceChoice == 0) { // Opção: Clonar do GitHub
+			String cloneDest = JOptionPane.showInputDialog(null, 
+					"Escolha uma pasta onde os arquivos da engine serão baixados.\nUma nova pasta 'JavaGameEngineDC' será criada dentro dela.", 
+					"Local para Baixar a Engine", JOptionPane.PLAIN_MESSAGE);
 			if (cloneDest == null || cloneDest.trim().isEmpty()) return;
 			
 			File cloneDir = new File(cloneDest, "JavaGameEngineDC");
-			if (!cloneRepository(REPO_URL, cloneDir)) {
-				return; // Falha na clonagem, termina a execução
+			
+			List<String> foldersToCheckout = Arrays.asList("com.JDStudio.Engine", "Game_Project_Template", "Documentaçao");
+			
+			if (!cloneRepositoryWithSparseCheckout(REPO_URL, cloneDir, foldersToCheckout)) {
+				return; // A clonagem falhou, o programa termina.
 			}
-			sourcePath = cloneDir.getAbsolutePath();
-		} else if (sourceChoice == 1) { // Usar Pasta Local
-			sourcePath = JOptionPane.showInputDialog(null, "Diretório fonte (contém a Engine e o Template):", "Fonte Local", JOptionPane.PLAIN_MESSAGE);
+			sourcePath = cloneDir.getAbsolutePath(); // A fonte agora é a pasta recém-clonada.
+			
+		} else if (sourceChoice == 1) { // Opção: Usar Pasta Local
+			sourcePath = JOptionPane.showInputDialog(null, 
+					"Indique o caminho para a sua pasta local do repositório\n(a pasta que contém 'com.JDStudio.Engine', etc.):", 
+					"Fonte Local", JOptionPane.PLAIN_MESSAGE);
 			if (sourcePath == null || sourcePath.trim().isEmpty()) return;
+			
 		} else {
-			return; // Usuário fechou
+			return; // Usuário fechou a janela de opção.
 		}
+		
+		// --- O RESTO DO PROCESSO CONTINUA IGUAL ---
 		
 		String newProjectName = JOptionPane.showInputDialog(null, "Nome do novo projeto:", "Gerador de Projetos", JOptionPane.PLAIN_MESSAGE);
 		if (newProjectName == null || newProjectName.trim().isEmpty()) return;
@@ -54,10 +71,10 @@ public class Main {
 		if (renameChoice == JOptionPane.YES_OPTION) {
 			newPackageName = JOptionPane.showInputDialog(null, "Digite o novo nome do pacote (ex: com.meuestudio.meujogo):", "Novo Pacote", JOptionPane.PLAIN_MESSAGE);
 			if (newPackageName == null || newPackageName.trim().isEmpty()) {
-				newPackageName = OLD_PACKAGE_NAME; // Se cancelar, usa o padrão
+				newPackageName = OLD_PACKAGE_NAME;
 			}
 		} else {
-			newPackageName = OLD_PACKAGE_NAME; // Se não quiser, usa o padrão
+			newPackageName = OLD_PACKAGE_NAME;
 		}
 
 		Object[] engineOptions = { "Copiar Engine (Autocontido)", "Linkar com Engine (Workspace)" };
@@ -77,7 +94,44 @@ public class Main {
 		
 		JOptionPane.showMessageDialog(null, "Projeto gerado com sucesso em:\n" + newProjectDir.getAbsolutePath(), "Sucesso", JOptionPane.INFORMATION_MESSAGE);
 	}
+	
+	/**
+	 * Clona um repositório Git baixando apenas as pastas especificadas,
+	 * usando o método addPath da API JGit.
+	 */
+	public static boolean cloneRepositoryWithSparseCheckout(String repoUrl, File destination, List<String> foldersToCheckout) {
+	    System.out.println("Clonando repositório de " + repoUrl + " (apenas pastas selecionadas)...");
+	    
+	    try (Git git = Git.cloneRepository()
+	            .setURI(repoUrl)
+	            .setDirectory(destination)
+	            .setNoCheckout(true) // Clona apenas o .git, deixa a pasta de trabalho vazia
+	            .call()) {
 
+	        System.out.println("Repositório base clonado. Fazendo checkout das pastas especificadas...");
+
+	        // --- A NOVA LÓGICA ESTÁ AQUI ---
+	        // 1. Cria um comando de checkout focado no branch 'master'
+	        CheckoutCommand checkout = git.checkout().setStartPoint("master");
+
+	        // 2. Adiciona cada pasta que queremos baixar ao comando
+	        for (String folder : foldersToCheckout) {
+	            checkout.addPath(folder);
+	        }
+
+	        // 3. Executa o comando de checkout. Agora ele sabe exatamente quais pastas baixar.
+	        checkout.call();
+
+	        System.out.println("Checkout das pastas selecionadas concluído.");
+	        System.out.println("Repositório clonado com sucesso para: " + destination.getAbsolutePath());
+	        return true;
+	        
+	    } catch (GitAPIException e) {
+	        JOptionPane.showMessageDialog(null, "Falha ao clonar o repositório:\n" + e.getMessage(), "Erro de Git", JOptionPane.ERROR_MESSAGE);
+	        e.printStackTrace();
+	        return false;
+	    }
+	}
 	public static void copyDirectory(Path source, Path destination) throws IOException {
 		Files.walk(source).forEach(sourcePath -> {
 			try {
@@ -157,7 +211,7 @@ public class Main {
 	            .setURI(repoUrl)
 	            .setDirectory(destination)
 	            .setCloneAllBranches(false) // Otimização: clona apenas o branch principal
-	            .setBranch("main") // Ou "master", dependendo do seu repositório
+	            .setBranch("master") // Ou "master", dependendo do seu repositório
 	            .call()) {
 	        System.out.println("Repositório clonado com sucesso para: " + result.getRepository().getDirectory());
 	        return true;

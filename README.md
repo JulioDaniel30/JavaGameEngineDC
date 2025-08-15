@@ -79,6 +79,7 @@ O código está organizado em pacotes, cada um responsável por uma parte espec�
 
 ---
 
+
 ## Como Começar (Configuração do Ambiente Eclipse)
 
 **1. Clonar o Repositório**
@@ -110,18 +111,50 @@ git clone https://github.com/JulioDaniel30/JavaGameEngineDC.git
 
 ---
 
-## Como Criar um Novo Jogo (Método Rápido)
+## Como Criar um Novo Jogo (Método Rápido com o Gerador)
 
-A forma mais fácil de começar é usando a ferramenta geradora de projetos incluída:
+A maneira mais fácil e recomendada de começar um novo projeto é usando a ferramenta **JDStudioGameProjectGenerator**, incluída neste repositório. Ela automatiza todo o processo de configuração.
 
-1. Após clonar o repositório, navegue até a pasta `Executaveis/`.
-2. Dê um duplo clique no arquivo executável `JDStudioGameProjectGenerator.jar`.
-3. Uma série de janelas irá aparecer, pedindo as informações para o seu novo projeto:
-   - **Nome do novo projeto**: O nome que seu jogo terá (ex: `MeuSuperJogo`).
-   - **Diretório de destino**: A pasta onde o projeto será criado (ex: `C:/MeusJogos`).
-   - **Diretório fonte**: Aponte para a pasta principal clonada do Git, que contém as pastas `com.JDStudio.Engine` e `Game_Project_Template`.
-   - **Opção da Engine**: Escolha entre linkar com a engine (recomendado para desenvolvimento) ou copiar a engine para o novo projeto.
-4. Após o gerador terminar, importe o seu novo projeto para o Eclipse da mesma forma que fez no passo 2.
+### Passo 1: Baixar e Executar a Ferramenta
+
+1. Navegue até a pasta `Executaveis/` deste repositório e baixe o arquivo **`JDStudioGameProjectGenerator.jar`** para o seu computador.
+2. Dê um duplo clique no arquivo para iniciar o gerador.
+
+### Passo 2: Descrição das Janelas do Assistente Gráfico
+
+Durante o processo, o gerador apresenta uma sequência de janelas para configurar seu novo projeto:
+
+#### Janela 1: Fonte dos Arquivos
+- Escolha entre **clonar o essencial do repositório** (baixa automaticamente os arquivos necessários para uma pasta escolhida) ou **usar uma pasta local** (caso já tenha o repositório no computador).
+
+#### Janela 2: Nome do Novo Projeto
+- Digite o nome do seu jogo (exemplo: `MeuSuperJogo`). Este será o nome da pasta e do projeto no Eclipse.
+
+#### Janela 3: Renomear Pacote
+- O gerador pergunta se deseja **renomear o pacote padrão** (`com.game`).
+  - **Sim**: Digite um nome de pacote personalizado (ex: `com.meuestudio.meusuperjogo`).
+  - **Não**: O projeto será criado com o pacote padrão.
+
+#### Janela 4: Diretório de Destino
+- Escolha a pasta onde o projeto será criado (exemplo: `C:/MeusJogos`). O gerador criará uma nova pasta com o nome do projeto dentro desse diretório.
+
+#### Janela 5: Opção da Engine
+- Escolha como a engine será tratada:
+  - **Copiar Engine (Autocontido)**: O projeto e a engine ficam juntos, tornando o projeto independente.
+  - **Linkar com Engine (Workspace)**: O projeto do jogo é criado e vinculado à engine do workspace. Atualizações na engine são refletidas automaticamente no jogo.
+
+#### Janela 6: Sucesso
+- Ao final, uma janela informa que o **projeto foi gerado com sucesso**, mostrando o caminho onde ele foi criado.
+
+### Passo 3: Importar o Projeto Gerado no Eclipse
+
+1. Abra o Eclipse.
+2. Vá em `File` > `Import...`.
+3. Selecione **`Existing Projects into Workspace`**.
+4. Clique em `Browse...` e selecione a pasta de destino escolhida.
+5. Marque os projetos encontrados e clique em `Finish`.
+
+Pronto! Seu novo projeto estará configurado e pronto para desenvolvimento.
 
 ## Documentação Completa
 
