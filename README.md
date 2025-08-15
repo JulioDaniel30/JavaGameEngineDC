@@ -114,7 +114,7 @@ git clone https://github.com/JulioDaniel30/JavaGameEngineDC.git
 
 A forma mais fácil de começar é usando a ferramenta geradora de projetos incluída:
 
-1. Após clonar o repositório, navegue até a pasta `JDStudioGameProjectGenerator/bin/`.
+1. Após clonar o repositório, navegue até a pasta `Executaveis/`.
 2. Dê um duplo clique no arquivo executável `JDStudioGameProjectGenerator.jar`.
 3. Uma série de janelas irá aparecer, pedindo as informações para o seu novo projeto:
    - **Nome do novo projeto**: O nome que seu jogo terá (ex: `MeuSuperJogo`).
