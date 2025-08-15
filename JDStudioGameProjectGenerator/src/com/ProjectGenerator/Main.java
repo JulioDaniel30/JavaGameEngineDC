@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -23,6 +24,7 @@ public class Main {
 	private static final String OLD_PACKAGE_NAME = "com.game";
 	
 	public static void main(String[] args) {
+
 		String sourcePath = ""; // Esta variável guardará o caminho da fonte, seja ela local ou clonada.
 
 		// --- ETAPA DE ESCOLHA DA FONTE ---
@@ -34,37 +36,63 @@ public class Main {
 				null, sourceOptions, sourceOptions[0]);
 
 		if (sourceChoice == 0) { // Opção: Clonar do GitHub
-			String cloneDest = JOptionPane.showInputDialog(null, 
-					"Escolha uma pasta onde os arquivos da engine serão baixados.\nUma nova pasta 'JavaGameEngineDC' será criada dentro dela.", 
-					"Local para Baixar a Engine", JOptionPane.PLAIN_MESSAGE);
-			if (cloneDest == null || cloneDest.trim().isEmpty()) return;
 			
-			File cloneDir = new File(cloneDest, "JavaGameEngineDC");
-			
-			List<String> foldersToCheckout = Arrays.asList("com.JDStudio.Engine", "Game_Project_Template", "Documentaçao");
-			
-			if (!cloneRepositoryWithSparseCheckout(REPO_URL, cloneDir, foldersToCheckout)) {
-				return; // A clonagem falhou, o programa termina.
+			// Usando JFileChooser para escolher a pasta de destino do clone
+			JOptionPane.showMessageDialog(null, "A seguir, escolha uma pasta onde o repositório da engine será baixado.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+			JFileChooser cloneChooser = new JFileChooser();
+			cloneChooser.setDialogTitle("Escolha onde salvar o repositório");
+			cloneChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			cloneChooser.setAcceptAllFileFilterUsed(false);
+
+			if (cloneChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+				File cloneDest = cloneChooser.getSelectedFile();
+				File cloneDir = new File(cloneDest, "JavaGameEngineDC");
+				
+				List<String> foldersToCheckout = Arrays.asList("com.JDStudio.Engine", "Game_Project_Template", "Documentaçao");
+				
+				if (!cloneRepositoryWithSparseCheckout(REPO_URL, cloneDir, foldersToCheckout)) {
+					return; // A clonagem falhou, o programa termina.
+				}
+				sourcePath = cloneDir.getAbsolutePath(); // A fonte agora é a pasta recém-clonada.
+			} else {
+				return; // Usuário cancelou o seletor de pastas
 			}
-			sourcePath = cloneDir.getAbsolutePath(); // A fonte agora é a pasta recém-clonada.
 			
 		} else if (sourceChoice == 1) { // Opção: Usar Pasta Local
-			sourcePath = JOptionPane.showInputDialog(null, 
-					"Indique o caminho para a sua pasta local do repositório\n(a pasta que contém 'com.JDStudio.Engine', etc.):", 
-					"Fonte Local", JOptionPane.PLAIN_MESSAGE);
-			if (sourcePath == null || sourcePath.trim().isEmpty()) return;
+			
+			// Usando JFileChooser para escolher a pasta local existente
+			JOptionPane.showMessageDialog(null, "A seguir, escolha a sua pasta local do repositório.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+			JFileChooser sourceChooser = new JFileChooser();
+			sourceChooser.setDialogTitle("Escolha a pasta fonte do repositório");
+			sourceChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			
+			if (sourceChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+				sourcePath = sourceChooser.getSelectedFile().getAbsolutePath();
+			} else {
+				return; // Usuário cancelou
+			}
 			
 		} else {
-			return; // Usuário fechou a janela de opção.
+			return; // Usuário fechou a janela de opção inicial.
 		}
 		
-		// --- O RESTO DO PROCESSO CONTINUA IGUAL ---
+		// --- O RESTO DO PROCESSO PARA CRIAR O PROJETO ---
 		
 		String newProjectName = JOptionPane.showInputDialog(null, "Nome do novo projeto:", "Gerador de Projetos", JOptionPane.PLAIN_MESSAGE);
 		if (newProjectName == null || newProjectName.trim().isEmpty()) return;
 
-		String destPath = JOptionPane.showInputDialog(null, "Diretório de destino (onde o projeto será criado):", "Gerador de Projetos", JOptionPane.PLAIN_MESSAGE);
-		if (destPath == null || destPath.trim().isEmpty()) return;
+		// Usando JFileChooser para o diretório de destino do novo projeto
+		JOptionPane.showMessageDialog(null, "A seguir, escolha a pasta onde seu novo projeto será criado.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+		JFileChooser destChooser = new JFileChooser();
+		destChooser.setDialogTitle("Escolha onde salvar o novo projeto");
+		destChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		
+		String destPath = "";
+		if (destChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+			destPath = destChooser.getSelectedFile().getAbsolutePath();
+		} else {
+			return; // Usuário cancelou
+		}
 		
 		String newPackageName = "";
 		int renameChoice = JOptionPane.showConfirmDialog(null, "Deseja renomear o pacote padrão ('" + OLD_PACKAGE_NAME + "')?", "Renomear Pacote", JOptionPane.YES_NO_OPTION);
