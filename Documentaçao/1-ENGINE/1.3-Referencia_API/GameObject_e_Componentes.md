@@ -226,3 +226,5 @@ public void someLogicMethod(GameObject player) {
 - `avoidOtherActors = true`: Tenta desviar de outros Characters.
 
 - `targetAnchor`: Enum (`CENTER`, `BOTTOM_CENTER`, `TOP_LEFT`) para definir qual ponto do alvo a IA deve perseguir.
+---
+[⬅️ Voltar para o Referencia API](./README.md)

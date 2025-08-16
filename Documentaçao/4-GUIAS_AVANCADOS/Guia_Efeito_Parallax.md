@@ -68,3 +68,5 @@ private void renderParallaxBackground(Graphics g) {
 }
 ```
 Com isso, seu jogo terá um fundo **parallax** funcional. Você pode adicionar quantas camadas quiser e ajustar os valores de `scrollFactor` para obter o efeito desejado.
+---
+[⬅️ Voltar para o Guias Avançados](./README.md)

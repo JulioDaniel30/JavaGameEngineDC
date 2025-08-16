@@ -71,3 +71,5 @@ No **Tiled**, em uma camada de objetos, desenhe um retângulo onde será a saíd
         }
     }
     ```
+---
+[⬅️ Voltar para o Guias Avançados](./README.md)

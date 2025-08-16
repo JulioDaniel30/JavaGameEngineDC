@@ -132,3 +132,5 @@ Sound.play("/sfx/enemy_alert.wav", Sound.SoundChannel.SFX, enemyX, enemyY);
 // Se o jogador estiver longe do inimigo, o som será mais baixo.
 // Se o inimigo estiver à direita do centro da câmera, o som tocará mais no alto-falante direito.
 ```
+---
+[⬅️ Voltar para o Referencia API](./README.md)

@@ -3,9 +3,15 @@ package com.JDStudio.Engine.Graphics;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.imageio.ImageIO;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 
@@ -30,6 +36,34 @@ public class AssetManager {
      */
     public AssetManager() {
         this.spriteCache = new HashMap<>();
+    }
+    
+    /**
+     * Carrega vários sprites a partir de um arquivo JSON de configuração.
+     * O JSON deve conter um array "sprites" com objetos { "key", "path" }.
+     *
+     * @param jsonPath Caminho do arquivo JSON no classpath (ex: "/configs/sprites.json")
+     */
+    public void loadSpritesFromJson(String jsonPath) {
+        try (InputStream is = getClass().getResourceAsStream(jsonPath)) {
+            if (is == null) {
+                System.err.println("Falha ao encontrar o arquivo de configuração de sprites: " + jsonPath);
+                return;
+            }
+            String jsonText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            JSONObject config = new JSONObject(jsonText);
+            JSONArray spritesArray = config.getJSONArray("sprites");
+            for (int i = 0; i < spritesArray.length(); i++) {
+                JSONObject spriteData = spritesArray.getJSONObject(i);
+                String key = spriteData.getString("key");
+                String path = spriteData.getString("path");
+                loadSprite(key, path);
+            }
+            System.out.println(spritesArray.length() + " sprites carregados com sucesso de: " + jsonPath);
+        } catch (Exception e) {
+            System.err.println("Erro ao processar o arquivo de configuração de sprites '" + jsonPath + "'.");
+            e.printStackTrace();
+        }
     }
 
     /**

@@ -179,3 +179,5 @@ public void render(Graphics g) {
     // O ideal é registrar um objeto anônimo no RenderManager para isso.
 }
 ```
+---
+[⬅️ Voltar para o Referencia API](./README.md)

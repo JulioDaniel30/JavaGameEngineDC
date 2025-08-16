@@ -89,3 +89,6 @@ O `PlayingState` também gerencia a UI do jogo.
 As classes `Player`, `Enemy` e `Door` implementam a interface `ISavable`.
 -   **`saveGame()`**: O `PlayingState` percorre sua lista de `GameObject`s. Se um objeto é `ISavable` e tem um nome, seu estado (`saveState()`) é adicionado a um `JSONArray`, que é salvo em um arquivo pelo `SaveManager`.
 -   **`loadGame()`**: Carrega o JSON do arquivo. Para cada objeto salvo, ele procura o `GameObject` com o mesmo nome na lista atual do jogo e chama `loadState()` para restaurar sua posição, vida, etc.
+
+---
+[⬅️ Voltar para o README](../README.md)
