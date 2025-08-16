@@ -158,7 +158,7 @@ Pronto! Seu novo projeto estará configurado e pronto para desenvolvimento.
 
 ## Documentação Completa
 
-Consulte a documentação incluída para detalhes de cada sistema, exemplos e tutoriais.
+Consulte a [documentação](./Documentaçao/README.md) incluída para detalhes de cada sistema, exemplos e tutoriais.
 
 ## Autor
 
