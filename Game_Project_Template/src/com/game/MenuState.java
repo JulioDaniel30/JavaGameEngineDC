@@ -22,9 +22,10 @@ public class MenuState extends EngineMenuState {
 		// Título
 		uiManager.addElement(
 				new UIText(Engine.WIDTH / 2 - 50, 40, new Font("Serif", Font.BOLD, 24), Color.WHITE, "Meu Jogo"));
-
+		int button_width = (int) ThemeManager.getInstance().get(UISpriteKey.BUTTON_NORMAL).getWidth();
+		int button_centerX_Position = Engine.getWIDTH() / 2 - button_width / 2;
 		// Botão de Iniciar Jogo
-		UIButton startButton = new UIButton(Engine.WIDTH / 2 - 40, 80,
+		UIButton startButton = new UIButton(button_centerX_Position, 80,
 				ThemeManager.getInstance().get(UISpriteKey.BUTTON_NORMAL),
 				ThemeManager.getInstance().get(UISpriteKey.BUTTON_HOVER),
 				ThemeManager.getInstance().get(UISpriteKey.BUTTON_PRESSED), "Iniciar", new Font("Arial", Font.BOLD, 12),
@@ -33,7 +34,7 @@ public class MenuState extends EngineMenuState {
 		uiManager.addElement(startButton);
 
 		// Botão de Sair
-		UIButton quitButton = new UIButton(Engine.WIDTH / 2 - 40, 110,
+		UIButton quitButton = new UIButton(button_centerX_Position, 110,
 				ThemeManager.getInstance().get(UISpriteKey.BUTTON_NORMAL),
 				ThemeManager.getInstance().get(UISpriteKey.BUTTON_HOVER),
 				ThemeManager.getInstance().get(UISpriteKey.BUTTON_PRESSED), "Sair", new Font("Arial", Font.BOLD, 12),

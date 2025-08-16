@@ -226,5 +226,78 @@ public void someLogicMethod(GameObject player) {
 - `avoidOtherActors = true`: Tenta desviar de outros Characters.
 
 - `targetAnchor`: Enum (`CENTER`, `BOTTOM_CENTER`, `TOP_LEFT`) para definir qual ponto do alvo a IA deve perseguir.
+
+#### ShadowComponent
+
+Este componente adiciona uma sombra dinâmica a um `GameObject`, que o segue automaticamente. A sombra é desenhada na camada `GAMEPLAY_BELOW`, garantindo que apareça sob o personagem, mas acima do chão. Isso ajuda a "ancorar" as entidades ao cenário, dando uma melhor sensação de profundidade.
+
+Existem duas formas de criar uma sombra:
+
+### 1. Sombra Procedural (Oval)
+
+Esta abordagem desenha uma elipse suave e com gradiente, ideal para a maioria dos personagens e objetos. É flexível, pois o tamanho e a opacidade são definidos por código.
+
+**Como Usar:**
+
+```java
+// No construtor ou método initialize de um GameObject
+
+// Adiciona uma sombra procedural oval.
+// Parâmetros: (largura, altura, opacidade, deslocamento Y da base)
+this.addComponent(new ShadowComponent(12, 6, 0.4f, 0));
+```
+
+- **largura, altura:** Tamanho da elipse da sombra.
+- **opacidade:** Valor entre 0.0f (invisível) e 1.0f (preto total).
+- **deslocamento Y:** Quantos pixels abaixo da base do personagem a sombra aparece.
+
+### 2. Sombra Baseada em Sprite
+
+Permite usar uma imagem customizada para a sombra, dando total controle artístico.
+
+**Como Usar:**
+
+1. **Carregue o Sprite:** Primeiro, carregue a imagem da sombra no `AssetManager`.
+
+```java
+// Em um método de carregamento de assets
+assets.loadSprite("sombra_circular", "/sprites/efeitos/sombra.png");
+```
+
+2. **Crie o Componente:** Passe o Sprite carregado para o construtor do componente.
+
+```java
+// No construtor do GameObject
+Sprite sombraSprite = PlayingState.assets.getSprite("sombra_circular");
+
+// Adiciona uma sombra baseada em sprite.
+// Parâmetros: (sprite, deslocamento Y da base)
+this.addComponent(new ShadowComponent(sombraSprite, 0));
+```
+
+A opacidade pode ser ajustada no próprio arquivo de imagem ou via código, alterando o `alpha` do `Sprite` da sombra.
+
+#### Como desativar a sombra sem remover o componente
+
+Se você quiser desativar temporariamente a sombra de um `GameObject` sem remover o `ShadowComponent`, basta usar o método `setActive(false)`:
+
+```java
+// Desativa a sombra do GameObject
+this.getComponent(ShadowComponent.class).setActive(false);
+```
+
+Para reativar, utilize `setActive(true)`. Isso é útil para situações em que a sombra não deve ser exibida, como durante animações específicas
+
+#### Como verificar se a sombra está ativa
+
+Para saber se a sombra está ativa, utilize o método `isActive()` do componente:
+
+```java
+// Verifica se a sombra está ativa
+boolean sombraAtiva = this.getComponent(ShadowComponent.class).isActive();
+```
+
+Se retornar `true`, a sombra está sendo exibida; se `false`, está
+
 ---
 [⬅️ Voltar para o Referencia API](./README.md)

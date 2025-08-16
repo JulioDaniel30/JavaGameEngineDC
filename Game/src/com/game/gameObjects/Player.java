@@ -7,6 +7,8 @@ import java.util.Map;
 import org.json.JSONObject; // Importação necessária
 
 import com.JDStudio.Engine.Engine;
+import com.JDStudio.Engine.Components.InventoryComponent;
+import com.JDStudio.Engine.Components.ShadowComponent;
 import com.JDStudio.Engine.Components.Moviments.MovementComponent;
 import com.JDStudio.Engine.Core.ISavable;
 import com.JDStudio.Engine.Events.EventManager;
@@ -21,7 +23,6 @@ import com.JDStudio.Engine.Sound.Sound;
 import com.JDStudio.Engine.Sound.Sound.SoundChannel;
 import com.JDStudio.Engine.Utils.PropertiesReader; // Importa o nosso leitor
 import com.game.manegers.GameEvent;
-import com.JDStudio.Engine.Components.InventoryComponent;
 
 public class Player extends Character implements ISavable {
 	
@@ -69,6 +70,8 @@ public class Player extends Character implements ISavable {
 			// Chama o método para configurar as animações, passando as propriedades
 			setupAnimations(properties);
 			this.addComponent(new InventoryComponent(18));
+			this.addComponent(new ShadowComponent(12, 6, 0.7f, 0));
+			
 		}
 
 		/**

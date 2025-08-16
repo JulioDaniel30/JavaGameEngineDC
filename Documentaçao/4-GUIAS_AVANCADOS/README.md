@@ -13,6 +13,9 @@ Este diretório reúne tutoriais e guias avançados para quem deseja explorar re
 * **[Assets e Animações](./Guia_Assets_e_Animacao.md)**
 * **[Efeito Parallax](./Guia_Efeito_Parallax.md)**
 * **[Mudança de Nivel](Guia_Mudanca_de_Nivel.md)**
+* **[Sombras Dinamicas](./Guia_Sombras_Dinamicas.md)**
+* **[Fluxo De Estados/Menus](Guia_Fluxo_de_Estados.md)**
+* **[UIs Avançadas](./Guia_Avancado_UI.md)**
 
 ## Como usar
 

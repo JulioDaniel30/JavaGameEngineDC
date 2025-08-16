@@ -218,5 +218,6 @@ ActionManager.getInstance().registerAction("buy_sword", (interactor, source) -> 
 });
 ```
 Com isso, o sistema de diálogo permanece genérico, e toda a lógica específica do seu jogo fica centralizada no seu próprio código.
+
 ---
 [⬅️ Voltar para o Referencia API](./README.md)

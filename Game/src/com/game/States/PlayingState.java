@@ -136,6 +136,7 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 		lightingManager = LightingManager.getInstance();
 		popupManager = PopupManager.getInstance();
 		ThemeManager.getInstance().setTheme(UITheme.MEDIEVAL);
+		
 
 		this.loadedPaths = new HashMap<>();
 		this.triggerZones = new ArrayList<>();
