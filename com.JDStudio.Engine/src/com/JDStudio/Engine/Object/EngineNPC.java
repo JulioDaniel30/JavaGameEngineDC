@@ -6,12 +6,13 @@ import java.awt.Graphics;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.JDStudio.Engine.Components.InteractionComponent;
+import com.JDStudio.Engine.Components.InteractionZone;
 import com.JDStudio.Engine.Dialogue.Dialogue;
-import com.JDStudio.Engine.Dialogue.DialogueManager;
 import com.JDStudio.Engine.Dialogue.DialogueParser;
 import com.JDStudio.Engine.Utils.PropertiesReader;
 
-public abstract class EngineNPC extends Character implements Interactable {
+public abstract class EngineNPC extends Character{
 
     protected Dialogue dialogue;
     protected int interactionRadius;
@@ -36,13 +37,23 @@ public abstract class EngineNPC extends Character implements Interactable {
                 // Adicionamos cada propriedade a um novo JSONObject para fácil acesso
                 customProperties.put(prop.getString("name"), prop.get("value"));
             }
-        }
+            }
         
         // Agora, usamos o nosso reader neste novo objeto de propriedades customizadas
         PropertiesReader reader = new PropertiesReader(customProperties);
         
         this.interactionRadius = reader.getInt("interactionRadius", 24);
         
+        
+        InteractionComponent interaction = new InteractionComponent();
+
+        // 2. Cria uma zona de interação circular com o TIPO "DIALOGUE" e o mesmo raio de antes
+        interaction.addZone(new InteractionZone(this, InteractionZone.TYPE_DIALOGUE, interactionRadius));
+
+        // 3. Adiciona o componente ao GameObject
+        this.addComponent(interaction);
+           
+       
         String dialoguePath = reader.getString("dialogueFile", null);
         if (dialoguePath != null && !dialoguePath.isEmpty()) {
             System.out.println("NPC '" + this.name + "' tentando carregar diálogo de: " + dialoguePath);
@@ -55,22 +66,9 @@ public abstract class EngineNPC extends Character implements Interactable {
         }
     }
 
-    @Override
-    public void onInteract(GameObject source) {
-        System.out.println("Interação com '" + this.name + "' detectada."); // Debug
-        if (dialogue != null) {
-            if (!DialogueManager.getInstance().isActive()) {
-                System.out.println("Iniciando diálogo..."); // Debug
-                DialogueManager.getInstance().startDialogue(dialogue, this, source);
-            }
-        } else {
-            System.err.println("ERRO: Interação falhou porque o diálogo do NPC '" + this.name + "' é nulo.");
-        }
-    }
-
-    @Override
-    public int getInteractionRadius() {
-        return this.interactionRadius;
+ // Método para o EventListener poder aceder ao diálogo
+    public Dialogue getDialogue() {
+        return this.dialogue;
     }
 
     @Override
@@ -83,7 +81,6 @@ public abstract class EngineNPC extends Character implements Interactable {
     public void renderDebug(Graphics g) {
     	// TODO Auto-generated method stub
     	super.renderDebug(g);
-    	renderDebugInteractionArea(g);
     }
     
 }

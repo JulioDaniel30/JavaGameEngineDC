@@ -1,7 +1,5 @@
 package com.JDStudio.Engine.Components;
 
-import com.JDStudio.Engine.Object.GameObject;
-
 public class HealthComponent extends Component {
     
     public int currentHealth;

@@ -336,4 +336,4 @@ public void render(Graphics g) {
 A `DialogueBox` é "inteligente": ela só irá se desenhar e processar o input se `DialogueManager.getInstance().isActive()` for verdadeiro. É seguro chamá-la a cada `tick` e `render` do seu estado.
 
 ---
-[⬅️ Voltar para o Referencia API](./README.md)
+[⬅️ Voltar para o Guias Avançados](./README.md)

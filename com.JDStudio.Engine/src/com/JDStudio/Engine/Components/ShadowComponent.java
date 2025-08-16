@@ -6,7 +6,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RadialGradientPaint;
 import java.awt.geom.Point2D;
-import java.time.chrono.IsoChronology;
 
 import com.JDStudio.Engine.Engine;
 import com.JDStudio.Engine.Graphics.Layers.IRenderable;

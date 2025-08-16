@@ -16,6 +16,9 @@ Este diretório reúne tutoriais e guias avançados para quem deseja explorar re
 * **[Sombras Dinamicas](./Guia_Sombras_Dinamicas.md)**
 * **[Fluxo De Estados/Menus](Guia_Fluxo_de_Estados.md)**
 * **[UIs Avançadas](./Guia_Avancado_UI.md)**
+* **[Movimentos](./Guia_Avancado_Movimento.md)**
+* **[Interações Avançadas](./Guia_Interacoes_Avancadas.md)**
+* **[Criação de Inimigos com IA](./Guia_Criacao_de_Inimigos_IA.md)**
 
 ## Como usar
 

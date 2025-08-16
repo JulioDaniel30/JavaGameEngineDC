@@ -6,5 +6,8 @@ public enum EngineEvent {
      * objetos foram criados. O dado do evento é um objeto WorldLoadedEventData.
      */
     WORLD_LOADED,
-	CHARACTER_SPOKE;
+	CHARACTER_SPOKE,
+	TARGET_ENTERED_ZONE,
+    TARGET_EXITED_ZONE,
+    INTERACTION_TRIGGERED;
 }

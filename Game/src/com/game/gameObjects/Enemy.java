@@ -4,16 +4,23 @@ package com.game.gameObjects;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.util.Collections;
 import java.util.List;
 
 import org.json.JSONObject;
 
 import com.JDStudio.Engine.Engine;
 import com.JDStudio.Engine.Components.HealthComponent;
+import com.JDStudio.Engine.Components.InteractionComponent;
+import com.JDStudio.Engine.Components.InteractionZone;
 import com.JDStudio.Engine.Components.PathComponent;
 import com.JDStudio.Engine.Components.PathComponent.PatrolMode;
 import com.JDStudio.Engine.Components.Moviments.AIMovementComponent;
 import com.JDStudio.Engine.Core.ISavable;
+import com.JDStudio.Engine.Events.EngineEvent;
+import com.JDStudio.Engine.Events.EventListener;
+import com.JDStudio.Engine.Events.EventManager;
+import com.JDStudio.Engine.Events.InteractionEventData;
 import com.JDStudio.Engine.Graphics.Effects.ParticleManager;
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animator;
 import com.JDStudio.Engine.Object.Character;
@@ -29,6 +36,9 @@ public class Enemy extends Character implements ISavable{
 	// Referências para acesso rápido (estilo híbrido)
     private Animator animator;
     private AIMovementComponent aiMovement;
+    
+    private EventListener onEnterZoneListener;
+    private EventListener onExitZoneListener;
 
     // Estado do Inimigo
     private Player player;
@@ -48,40 +58,105 @@ public class Enemy extends Character implements ISavable{
     }
 
     @Override
-    public void initialize(JSONObject properties) {
-        super.initialize(properties);
-        System.out.println(">>> [LOG Enemy] Initialize do Inimigo '" + this.name + "' (ID: " + this.hashCode() + ") começando...");
-        
-        
-        PropertiesReader reader = new PropertiesReader(properties);
-        double speed = reader.getDouble("speed", 0.8);
-        
-        // 1. CRIA as instâncias dos componentes
-        this.animator = new Animator();
-        this.aiMovement = new AIMovementComponent(speed);
-        System.out.println(">>> [LOG Enemy] Componentes criados. PRESTES A ADICIONAR...");
-        
-        // 2. ADICIONA os componentes ao sistema (O PASSO MAIS IMPORTANTE)
-        // É esta parte que define o "owner" e corrige o erro.
-        System.out.println("enemy");
-        this.addComponent(this.animator);
-        this.addComponent(this.aiMovement);
-        System.out.println(">>> [LOG Enemy] Componentes ADICIONADOS.");
-        // 3. CONFIGURA os componentes que acabaram de ser adicionados
-        this.aiMovement.useAStarPathfinding = reader.getBoolean("useAStar", false);
-        this.aiMovement.setTarget(this.player);
-        setupAnimations(this.animator);
-        setCollisionMask(2, 2, 12, 13);
-        
-        // Lê o resto das propriedades
-        this.visionRadius = reader.getInt("visionRadius", 80);
-        this.attackRadius = reader.getInt("attackRadius", 16);
-        this.attackSpeed = reader.getDouble("attackSpeed", 60);
-        this.life = reader.getInt("life", 20);
-        this.maxLife = reader.getInt("maxLife", 20);
-        this.patrolArrivalThreshold = reader.getDouble("patrolArrivalThreshold", 8.0);
-        this.addComponent(new HealthComponent((int)this.maxLife));
+public void initialize(JSONObject properties) {
+    super.initialize(properties);
+    System.out.println(">>> [LOG Enemy] Initialize do Inimigo '" + this.name + "' (ID: " + this.hashCode() + ") começando...");
+    
+    PropertiesReader reader = new PropertiesReader(properties);
+    double speed = reader.getDouble("speed", 0.8);
+    
+    // 1. CRIA e ADICIONA os componentes
+    this.animator = new Animator();
+    this.aiMovement = new AIMovementComponent(speed);
+    this.addComponent(this.animator);
+    this.addComponent(this.aiMovement);
+    this.addComponent(new HealthComponent((int)reader.getInt("maxLife", 20)));
+    
+    // 2. CONFIGURA os componentes
+    this.aiMovement.useAStarPathfinding = reader.getBoolean("useAStar", false);
+    // Não defina o alvo aqui, deixe os eventos controlarem isso.
+    // this.aiMovement.setTarget(this.player); 
+    setupAnimations(this.animator);
+    setCollisionMask(2, 2, 12, 13);
+    
+    // 3. LÊ as propriedades para a IA e INTERAÇÃO
+    this.visionRadius = reader.getInt("visionRadius", 0); // Default de 80
+    this.attackRadius = reader.getInt("attackRadius", 14); // Default de 16
+    this.attackSpeed = reader.getDouble("attackSpeed", 60);
+    this.patrolArrivalThreshold = reader.getDouble("patrolArrivalThreshold", 8.0);
+    
+    // 4. CRIA e CONFIGURA o InteractionComponent com os valores corretos
+    InteractionComponent interaction = new InteractionComponent();
+    
+ // **A LÓGICA DE CONTROLO ESTÁ AQUI**
+    // Só adiciona a zona de perseguição se o raio de visão for positivo.
+    if (this.visionRadius > 0) {
+        interaction.addZone(new InteractionZone(this, InteractionZone.TYPE_AGGRO, this.visionRadius));
     }
+    interaction.addZone(new InteractionZone(this, InteractionZone.TYPE_ATTACK, this.attackRadius));
+    
+    this.addComponent(interaction);
+
+    // 5. INSCREVE os listeners
+    setupEventListeners();
+}
+    
+     /**
+     /**
+     * Configura os listeners para que o inimigo reaja aos seus próprios eventos de zona.
+     */
+    private void setupEventListeners() {
+        final Enemy self = this; 
+
+        this.onEnterZoneListener = (data) -> {
+            InteractionEventData event = (InteractionEventData) data;
+            if (event.zoneOwner() != self) return;
+
+            String zoneType = event.zone().type;
+            switch (zoneType) {
+                case "AGGRO":
+                    self.say("Onde pensa que vai?", 2.0f);
+                    self.currentState = AIState.CHASING;
+                    self.aiMovement.setTarget(self.player);
+                    break;
+                case "ATTACK":
+                    self.currentState = AIState.ATTACKING;
+                    self.aiMovement.setTarget(null); 
+                    break;
+            }
+        };
+
+        this.onExitZoneListener = (data) -> {
+            InteractionEventData event = (InteractionEventData) data;
+            if (event.zoneOwner() != self) return;
+
+            String zoneType = event.zone().type;
+            switch (zoneType) {
+                case "AGGRO":
+                    // Se saiu da área de aggro, volta ao estado padrão (patrulha ou idle).
+                    self.currentState = (self.hasPathComponent()) ? AIState.PATROLLING : AIState.IDLE;
+                    self.aiMovement.setTarget(null);
+                    break;
+                case "ATTACK":
+                    // --- A LÓGICA CORRIGIDA ESTÁ AQUI ---
+                    // Verifica se este inimigo tem uma zona de perseguição.
+                    if (self.visionRadius > 0) {
+                        // Se SIM, ele volta a perseguir.
+                        self.currentState = AIState.CHASING;
+                        self.aiMovement.setTarget(self.player);
+                    } else {
+                        // Se NÃO, ele volta ao seu estado padrão.
+                        self.currentState = (self.hasPathComponent()) ? AIState.PATROLLING : AIState.IDLE;
+                        self.aiMovement.setTarget(null);
+                    }
+                    break;
+            }
+        };
+
+        EventManager.getInstance().subscribe(EngineEvent.TARGET_ENTERED_ZONE, onEnterZoneListener);
+        EventManager.getInstance().subscribe(EngineEvent.TARGET_EXITED_ZONE, onExitZoneListener);
+    }
+
 
     private void setupAnimations(Animator animator) {
         animator.addAnimation("idle", new com.JDStudio.Engine.Graphics.Sprite.Animations.Animation(10, PlayingState.assets.getSprite("enemy")));
@@ -102,6 +177,14 @@ public class Enemy extends Character implements ISavable{
     	getComponent(HealthComponent.class).takeDamage((int)amount);
     }
     
+    /**
+     * Verifica se este inimigo tem um componente de patrulha configurado.
+     * @return true se o inimigo tiver uma rota para patrulhar, false caso contrário.
+     */
+    public boolean hasPathComponent() {
+        return this.pathComponent != null;
+    }
+    
     @Override
     protected void die() {
     	super.die();
@@ -116,64 +199,58 @@ public class Enemy extends Character implements ISavable{
                 8, 0                               // Tamanho começa em 8 e termina em 0
             );
     	Sound.play("/hurt.wav",SoundChannel.SFX, this.getX(), this.getY() );
+    	EventManager.getInstance().unsubscribe(EngineEvent.TARGET_ENTERED_ZONE, onEnterZoneListener);
+        EventManager.getInstance().unsubscribe(EngineEvent.TARGET_EXITED_ZONE, onExitZoneListener);
     }
     
    @Override
-    public void tick() {
-        if (isDestroyed || isDead) return;
-        
-        super.tick(); // ATUALIZA TODOS OS COMPONENTES
+public void tick() {
+    // 1. Verificações iniciais
+    if (isDestroyed || isDead) return;
+    
+    // 2. Atualiza todos os componentes (movimento, animação, etc.)
+    super.tick(); 
+    
+    // 3. Pede ao InteractionComponent para verificar as zonas e disparar eventos.
+    // É esta linha que, indiretamente, irá acionar a mudança de estado nos listeners.
+    getComponent(InteractionComponent.class).checkInteractions(Collections.singletonList(player));
 
-	    if (attackCooldown > 0) attackCooldown--;
-	
-	    double distanceToPlayer = calculateDistance(this, player);
-	
-        // A máquina de estados agora controla toda a lógica de transição.
-	    switch (currentState) {
-	        case IDLE:
-	            aiMovement.setTarget(null);
-	            // Se detetar o jogador...
-	            if (distanceToPlayer < visionRadius) {
-	                currentState = AIState.CHASING; // ...e muda de estado.
-	            }
-	            break;
+    // 4. O 'switch' agora apenas EXECUTA o comportamento do estado atual.
+    // Ele já não tem 'if's para mudar de estado.
+    switch (currentState) {
+        case IDLE:
+            // O comportamento de IDLE já foi definido pelo EventListener (alvo nulo).
+            // Não precisa de fazer nada aqui.
+            break;
 
-	        case PATROLLING:
-	            if (pathComponent != null) {
-	                pathComponent.update();
-	                Point targetPoint = pathComponent.getTargetPosition();
-	                if (targetPoint != null) aiMovement.setTarget(targetPoint.x, targetPoint.y);
-	            }
-	            // Se detetar o jogador...
-	            if (distanceToPlayer < visionRadius) {
-                   this.say("Onde pensa que vai?", 2.0f); // ...fala...
-	                currentState = AIState.CHASING; // ...e muda de estado.
-	            }
-	            break;
+        case PATROLLING:
+            // Comportamento: Seguir o caminho de patrulha.
+            if (pathComponent != null) {
+                pathComponent.update();
+                Point targetPoint = pathComponent.getTargetPosition();
+                if (targetPoint != null) aiMovement.setTarget(targetPoint.x, targetPoint.y);
+            }
+            break;
 
-	        case CHASING:
-	            aiMovement.setTarget(player);
-	            if (distanceToPlayer > visionRadius) {
-	                // Se perder o jogador de vista, volta a patrulhar ou fica parado.
-	                currentState = (pathComponent != null) ? AIState.PATROLLING : AIState.IDLE;
-	            } else if (distanceToPlayer < attackRadius) {
-	                currentState = AIState.ATTACKING;
-	            }
-	            break;
+        case CHASING:
+            // O comportamento de CHASING já foi definido pelo EventListener (alvo = jogador).
+            // Não precisa de fazer nada aqui.
+            break;
 
-	        case ATTACKING:
-	            aiMovement.setTarget(null); // Para de se mover para atacar
-	            if (attackCooldown <= 0) {
-	                player.takeDamage(player.maxLife/6);
-	                attackCooldown = attackSpeed;
-	            }
-	            if (distanceToPlayer > attackRadius) { 
-	            	currentState = AIState.CHASING;
-	            }
-	            break;
-	    }
-        
-	}
+        case ATTACKING:
+            // Comportamento: Executar a lógica de ataque.
+            if (attackCooldown <= 0) {
+                player.takeDamage(10); // Dano de exemplo
+                attackCooldown = attackSpeed;
+            }
+            break;
+    }
+    
+    // 5. Atualiza o cooldown de ataque, independentemente do estado.
+    if (attackCooldown > 0) {
+        attackCooldown--;
+    }
+}
     private double calculateDistance(GameObject obj1, GameObject obj2) {
         
         double obj1CenterX = obj1.getX() + obj1.getWidth() / 2.0;
@@ -199,19 +276,6 @@ public class Enemy extends Character implements ISavable{
     public void renderDebug(Graphics g) {
     	super.renderDebug(g);
         
-    	
-    	// --- DESENHA O RAIO DE VISÃO ---
-        g.setColor(Color.ORANGE); // Uma cor para a detecção
-        int centerX = getX() + getWidth() / 2;
-        int centerY = getY() + getHeight() / 2;
-        
-        // Desenha um círculo representando o raio de visão
-        g.drawOval(
-            centerX - visionRadius - Engine.camera.getX(),
-            centerY - visionRadius - Engine.camera.getY(),
-            visionRadius * 2,
-            visionRadius * 2
-        );
     	
         /*g.setColor(Color.GREEN);
         g.drawRect(

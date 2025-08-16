@@ -1,7 +1,13 @@
 // game
 package com.game.gameObjects;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.json.JSONObject;
+
+import com.JDStudio.Engine.Components.InteractionComponent;
+import com.JDStudio.Engine.Components.InteractionZone;
 import com.JDStudio.Engine.Object.EngineNPC;
 import com.game.States.PlayingState;
 
@@ -33,7 +39,7 @@ public class Ferreiro extends EngineNPC {
     	super.initialize(properties);
     	
     	setCollisionType(CollisionType.TRIGGER);
-    	
+    	getComponent(InteractionComponent.class).addZone(new InteractionZone(this, "", maskWidth, height, x, y));
     }
     
     @Override
@@ -45,6 +51,7 @@ public class Ferreiro extends EngineNPC {
     @Override
     public void tick() {
         super.tick();
+        this.getComponent(InteractionComponent.class).checkInteractions(Collections.singletonList(PlayingState.player));
         // A lógica de tick do EngineNPC já é chamada.
         // Adicione aqui qualquer comportamento único do Ferreiro,
         // como tocar um som de martelada periodicamente.

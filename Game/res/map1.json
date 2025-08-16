@@ -295,7 +295,7 @@
                         {
                          "name":"visionRadius",
                          "type":"int",
-                         "value":6
+                         "value":0
                         }],
                  "rotation":0,
                  "type":"enemy",

@@ -5,7 +5,6 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 
-import com.JDStudio.Engine.Engine;
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
 import com.JDStudio.Engine.Graphics.UI.Elements.UIElement;
 import com.JDStudio.Engine.Input.InputManager;
@@ -20,7 +19,8 @@ public class UIInventorySlot extends UIElement {
     private boolean isHovering = false;
     private boolean isSelected = false;
     private boolean wasClicked = false;
-    private GameObject inventoryOwner;
+    @SuppressWarnings("unused")
+	private GameObject inventoryOwner;
 
     public UIInventorySlot(int x, int y, Sprite backgroundSprite, GameObject owner) {
         super(x, y);

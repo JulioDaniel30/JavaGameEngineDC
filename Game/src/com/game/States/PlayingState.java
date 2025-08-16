@@ -17,6 +17,7 @@ import org.json.JSONObject;
 
 import com.JDStudio.Engine.Engine;
 import com.JDStudio.Engine.Components.HealthComponent;
+import com.JDStudio.Engine.Components.InteractionZone;
 import com.JDStudio.Engine.Components.InventoryComponent;
 import com.JDStudio.Engine.Components.PathComponent.PatrolMode;
 import com.JDStudio.Engine.Components.Moviments.BaseMovementComponent;
@@ -24,11 +25,13 @@ import com.JDStudio.Engine.Components.Moviments.MovementComponent;
 import com.JDStudio.Engine.Core.ISavable;
 import com.JDStudio.Engine.Core.SaveManager;
 import com.JDStudio.Engine.Dialogue.ActionManager;
+import com.JDStudio.Engine.Dialogue.Dialogue;
 import com.JDStudio.Engine.Dialogue.DialogueManager;
 import com.JDStudio.Engine.Events.CharacterSpokeEventData;
 import com.JDStudio.Engine.Events.EngineEvent;
 import com.JDStudio.Engine.Events.EventListener;
 import com.JDStudio.Engine.Events.EventManager;
+import com.JDStudio.Engine.Events.InteractionEventData;
 import com.JDStudio.Engine.Events.WorldLoadedEventData;
 import com.JDStudio.Engine.Graphics.AssetManager;
 import com.JDStudio.Engine.Graphics.Effects.ParticleManager;
@@ -116,7 +119,7 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
     // Perfil para mostrar uma área do mapa, sem seguir o jogador
     @SuppressWarnings("unused")
 	private final CameraProfile PROFILE_STATIC_VIEW = new CameraProfile(FollowStyle.STATIC, 0, 1.0);
-
+    private GameObject interactableObjectInRange = null;
 	public PlayingState() {
 		
 		RenderManager.getInstance().clear();
@@ -271,6 +274,28 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
         
         EventManager.getInstance().subscribe(EngineEvent.CHARACTER_SPOKE, characterSpokeListener);
 		
+        EventManager.getInstance().subscribe(EngineEvent.TARGET_ENTERED_ZONE, (data) -> {
+            InteractionEventData event = (InteractionEventData) data;
+            
+            if (event.zone().type.equals(InteractionZone.TYPE_DIALOGUE)) {
+            	this.interactableObjectInRange = event.zoneOwner();
+            }
+        
+        });
+        
+     // Ouve o evento para quando o jogador SAI de uma zona
+        EventManager.getInstance().subscribe(EngineEvent.TARGET_EXITED_ZONE, (data) -> {
+            InteractionEventData event = (InteractionEventData) data;
+
+            // Se o objeto de que estamos a sair for o mesmo que está guardado, limpamos a referência
+            if (event.zoneOwner() == this.interactableObjectInRange) {
+                this.interactableObjectInRange = null;
+
+                // Opcional: Esconder a dica da UI
+                // showInteractPrompt(false);
+            }
+        });
+        
 		updateHealthUI(); // Chama uma vez para o estado inicial
 	}
 	
@@ -485,25 +510,33 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 		}
 
 		if (InputManager.isActionJustPressed("INTERACT")) {
+			
+			// A verificação agora é uma única e simples condição:
+		    // Se a nossa variável de estado não for nula, significa que o jogador
+		    // está perto de algo e pressionou a tecla.
+		    if (this.interactableObjectInRange != null) {
+		        
+		        // Agora, aqui dentro, colocamos a lógica que antes estava no EventListener.
+		        // Podemos verificar que tipo de objeto é para decidir o que fazer.
+		        
+		        if (this.interactableObjectInRange instanceof Ferreiro) {
+		            Ferreiro ferreiro = (Ferreiro) this.interactableObjectInRange;
+		            GameObject interactor = this.player; // O jogador
+		            
+		            Dialogue dialogue = ferreiro.getDialogue(); 
+		            if (dialogue != null && !DialogueManager.getInstance().isActive()) {
+		                DialogueManager.getInstance().startDialogue(dialogue, ferreiro, interactor);
+		            }
+		        }
+		        
+		        // Você poderia adicionar outros tipos de interação aqui
+		        // else if (this.interactableObjectInRange instanceof Bau) {
+		        //     ((Bau) this.interactableObjectInRange).abrir(this.player);
+		        // }
+		    }
+			
 			for (GameObject go : gameObjects) {
-				if (go instanceof Interactable) {
-					Interactable interactableObject = (Interactable) go;
-					int interactionRadius = interactableObject.getInteractionRadius();
-
-					int pCenterX = player.getX() + player.getWidth() / 2;
-					int pCenterY = player.getY() + player.getHeight() / 2;
-					int goCenterX = go.getX() + go.getWidth() / 2;
-					int goCenterY = go.getY() + go.getHeight() / 2;
-
-					double distance = Math.sqrt(Math.pow(pCenterX - goCenterX, 2) + Math.pow(pCenterY - goCenterY, 2));
-
-					if (distance <= interactionRadius) {
-						interactableObject.onInteract(player);
-						System.out.println("interagiu");
-						break;
-					}
-				}
-
+				
 				if (go instanceof Weapon) {
 					if (player.isColliding(player, go)) {
 						player.attach(go, 0, 0);
@@ -511,6 +544,8 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 				}
 			}
 		}
+		
+		
 
 		if (InputManager.isKeyJustPressed(KeyEvent.VK_P)) {
 			ParticleManager.getInstance().createExplosion(player.getX() + player.getWidth() / 2.0,
