@@ -4,6 +4,8 @@ package com.JDStudio.Engine.World;
 import java.util.Random;
 import com.JDStudio.Engine.Engine;
 import com.JDStudio.Engine.Object.GameObject;
+import com.JDStudio.Engine.World.Camera.CameraProfile;
+import com.JDStudio.Engine.World.Camera.FollowStyle;
 
 public class Camera {
 
@@ -19,6 +21,12 @@ public class Camera {
 
     // --- "PERFIL" QUE GUARDA AS CONFIGURAÇÕES DA CÂMARA ---
     public record CameraProfile(FollowStyle style, double smoothSpeed, double zoom) {}
+    /**Perfil padrão para jogabilidade normal*/
+    public static  CameraProfile PROFILE_GAMEPLAY = new CameraProfile(FollowStyle.SMOOTH_FOLLOW, 0.1, 1.0);
+    /**Perfil para um momento de "foco", com mais zoom e mais rápido*/
+	public static CameraProfile PROFILE_FOCUS = new CameraProfile(FollowStyle.SMOOTH_FOLLOW, 0.2, 1.2);
+    /**Perfil para mostrar uma área do mapa, sem seguir o jogador*/
+	public static CameraProfile PROFILE_STATIC_VIEW = new CameraProfile(FollowStyle.STATIC, 0, 1.0);
 
     private double x, y;
     private double currentZoom; // Zoom atual, para transições suaves

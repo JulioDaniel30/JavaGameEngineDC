@@ -1,9 +1,14 @@
 package com.game;
 //package com.meujogo;
 
+import java.util.Map;
+
 import org.json.JSONObject;
 import com.JDStudio.Engine.Components.Moviments.MovementComponent;
 import com.JDStudio.Engine.Events.EventManager;
+import com.JDStudio.Engine.Graphics.Sprite.Spritesheet;
+import com.JDStudio.Engine.Graphics.Sprite.Animations.Animation;
+import com.JDStudio.Engine.Graphics.Sprite.Animations.AnimationLoader;
 import com.JDStudio.Engine.Graphics.Sprite.Animations.Animator;
 import com.JDStudio.Engine.Input.InputManager;
 import com.JDStudio.Engine.Object.Character;
@@ -29,6 +34,31 @@ public class Player extends Character {
 		setCollisionMask(2, 2, 12, 14);
 		this.maxLife = 100;
 		this.life = this.maxLife;
+		//setupAnimations(properties);
+	}
+	
+	/**
+	 * O método setupAnimations agora lê os nomes dos sprites a partir das propriedades.
+	 */
+	@SuppressWarnings("unused")
+	private void setupAnimations(JSONObject properties) {
+		
+		Animator animator = getComponent(Animator.class);
+		if (animator == null) return;	
+		Spritesheet playerSheet = new Spritesheet("/player_sheet.png"); // Use o caminho correto
+
+        // Carrega TODAS as animações de uma vez a partir do JSON!
+        // O 'true' no final diz para criar as versões "_left" automaticamente.
+        Map<String, Animation> playerAnims = AnimationLoader.loadFromAsepriteJson(
+            "/player_sheet.json", playerSheet, true);
+
+        // Adiciona as animações carregadas ao Animator do jogador
+        for (Map.Entry<String, Animation> entry : playerAnims.entrySet()) {
+            animator.addAnimation(entry.getKey(), entry.getValue());
+        }
+        animator.play("idle_right");
+
+        
 	}
 
 	@Override

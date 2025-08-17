@@ -66,6 +66,7 @@ import com.JDStudio.Engine.Object.TriggerZone;
 import com.JDStudio.Engine.Sound.Sound;
 import com.JDStudio.Engine.States.EnginePlayingState;
 import com.JDStudio.Engine.Utils.ImageUtils;
+import com.JDStudio.Engine.World.Camera;
 import com.JDStudio.Engine.World.Camera.CameraProfile;
 import com.JDStudio.Engine.World.Camera.FollowStyle;
 import com.JDStudio.Engine.World.IMapLoaderListener;
@@ -111,14 +112,7 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 	private EventListener playerDiedListener;
 	private EventListener characterSpokeListener;
 	
-	// Perfil padrão para jogabilidade normal
-    private final CameraProfile PROFILE_GAMEPLAY = new CameraProfile(FollowStyle.SMOOTH_FOLLOW, 0.1, 1.0);
-    // Perfil para um momento de "foco", com mais zoom e mais rápido
-    @SuppressWarnings("unused")
-	private final CameraProfile PROFILE_FOCUS = new CameraProfile(FollowStyle.SMOOTH_FOLLOW, 0.2, 1.2);
-    // Perfil para mostrar uma área do mapa, sem seguir o jogador
-    @SuppressWarnings("unused")
-	private final CameraProfile PROFILE_STATIC_VIEW = new CameraProfile(FollowStyle.STATIC, 0, 1.0);
+	
     private GameObject interactableObjectInRange = null;
 	public PlayingState() {
 		
@@ -147,7 +141,7 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 		 
 		// A engine agora lida com a ordem de carregamento internamente.
 		world = new World("/map1.json", this);
-		Engine.camera.applyProfile(PROFILE_GAMEPLAY, player);
+		Engine.camera.applyProfile(Camera.PROFILE_GAMEPLAY, player);
 		projectileManager.init(() -> new Projectile(),world,gameObjects);
 		registerRenderSystems();
 		

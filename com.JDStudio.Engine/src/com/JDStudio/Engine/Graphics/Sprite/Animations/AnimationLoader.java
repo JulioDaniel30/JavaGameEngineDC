@@ -66,13 +66,26 @@ public class AnimationLoader {
                 
                 animations.put(animName, new Animation(speedInTicks, loop, animFrames.toArray(new Sprite[0])));
                 
-                if (createFlippedVersions && animName.contains("_right")) {
-                    String flippedName = animName.replace("_right", "_left");
-                    List<Sprite> flippedFrames = new ArrayList<>();
-                    for (Sprite frame : animFrames) {
-                        flippedFrames.add(new Sprite(ImageUtils.flipHorizontal(frame.getImage())));
+                if (createFlippedVersions) {
+                    String flippedName = null;
+
+                    // Primeiro, verifica se o nome termina com "_right"
+                    if (animName.endsWith("_right")) {
+                        flippedName = animName.replace("_right", "_left");
+                    } 
+                    // Se não, verifica se termina apenas com "right"
+                    else if (animName.endsWith("right")) {
+                        flippedName = animName.replace("right", "left");
                     }
-                    animations.put(flippedName, new Animation(speedInTicks, loop, flippedFrames.toArray(new Sprite[0])));
+
+                    // Se uma das condições acima for verdadeira, flippedName não será nulo
+                    if (flippedName != null) {
+                        List<Sprite> flippedFrames = new ArrayList<>();
+                        for (Sprite frame : animFrames) {
+                            flippedFrames.add(new Sprite(ImageUtils.flipHorizontal(frame.getImage())));
+                        }
+                        animations.put(flippedName, new Animation(speedInTicks, loop, flippedFrames.toArray(new Sprite[0])));
+                    }
                 }
             }
         } catch (Exception e) {

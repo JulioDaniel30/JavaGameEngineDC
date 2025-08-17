@@ -1,7 +1,10 @@
 package com.game;
 
 import java.awt.event.KeyEvent;
+
 import com.JDStudio.Engine.Engine;
+import com.JDStudio.Engine.Graphics.ResolutionProfile;
+import com.JDStudio.Engine.Graphics.StandardResolutions;
 import com.JDStudio.Engine.Input.InputManager;
 
 public class Main {
@@ -26,8 +29,22 @@ public class Main {
 		// 1. Configura os controlos
 		setupInputBindings();
 
+		// --- MÉTODO 1: Usar uma Predefinição ---
+        // Escolha um perfil pré-pronto do enum. É limpo e legível.
+        ResolutionProfile profile = StandardResolutions.GBA_STYLE.getProfile();
+        
+        // --- MÉTODO 2: Criar uma Resolução Customizada ---
+        // Se nenhuma predefinição servir, crie a sua própria na hora.
+        // ResolutionProfile profile = new ResolutionProfile(400, 240, 3);
 		// 2. Cria a engine com as configurações desejadas
-		Engine engine = new Engine(240, 160, 3, false, "Meu Novo Jogo", 60.0);
+		Engine engine = new Engine(
+				profile.width(), //width
+				profile.height(), //height
+				profile.recommendedScale(),//Scale 
+				false, //Redimencionavel
+				"Meu Novo Jogo", //Titulo
+				60.0//FPS
+				);
 
 		// 3. Define a classe do estado inicial (o Menu)
 		Engine.setInitialGameState(MenuState.class);
