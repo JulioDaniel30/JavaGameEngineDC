@@ -1,5 +1,5 @@
 {
-  "startNodeId": 0,
+  "defaultEntryPoint": 0,
   "nodes": [
     {
       "id": 0,

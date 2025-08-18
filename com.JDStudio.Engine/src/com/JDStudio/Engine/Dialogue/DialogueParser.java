@@ -1,4 +1,3 @@
-// engine
 package com.JDStudio.Engine.Dialogue;
 
 import java.io.InputStream;
@@ -20,15 +19,31 @@ public class DialogueParser {
     public static Dialogue parseDialogue(String path) {
         try (InputStream is = DialogueParser.class.getResourceAsStream(path)) {
             if (is == null) {
-                throw new Exception("Arquivo de diálogo não encontrado: " + path);
+                System.err.println("Arquivo de diálogo não encontrado: " + path);
+                return null;
             }
             
             String jsonText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             JSONObject json = new JSONObject(jsonText);
 
-            int startNodeId = json.getInt("startNodeId");
-            Dialogue dialogue = new Dialogue(startNodeId);
+            // --- LÓGICA ATUALIZADA PARA LER OS PONTOS DE ENTRADA ---
 
+            // 1. Lê o ponto de entrada padrão (obrigatório)
+            int defaultId = json.getInt("defaultEntryPoint");
+            Dialogue dialogue = new Dialogue(defaultId);
+
+            // 2. Lê os pontos de entrada condicionais (opcional)
+            if (json.has("entryPoints")) {
+                JSONArray entryPointsArray = json.getJSONArray("entryPoints");
+                for (int i = 0; i < entryPointsArray.length(); i++) {
+                    JSONObject entryJson = entryPointsArray.getJSONObject(i);
+                    String condition = entryJson.getString("condition");
+                    int nodeId = entryJson.getInt("nodeId");
+                    dialogue.addEntryPoint(new DialogueEntryPoint(condition, nodeId));
+                }
+            }
+
+            // 3. O resto do código para ler os nós permanece o mesmo, mas atualizado
             JSONArray nodesArray = json.getJSONArray("nodes");
             for (int i = 0; i < nodesArray.length(); i++) {
                 JSONObject nodeJson = nodesArray.getJSONObject(i);
@@ -45,10 +60,12 @@ public class DialogueParser {
                         String choiceText = choiceJson.getString("text");
                         int nextNodeId = choiceJson.getInt("nextNodeId");
                         
-                        // Lê a ação se ela existir; caso contrário, a ação é nula.
-                        String action = choiceJson.has("action") ? choiceJson.getString("action") : null;
+                        // Usa optString para ler as propriedades opcionais
+                        String action = choiceJson.optString("action", null);
+                        String condition = choiceJson.optString("condition", null);
 
-                        node.addChoice(choiceText, nextNodeId, action);
+                        // Passa todos os parâmetros para o construtor de DialogueChoice
+                        node.addChoice(choiceText, nextNodeId, action, condition);
                     }
                 }
                 dialogue.addNode(node);

@@ -1,8 +1,8 @@
-// engine
 package com.JDStudio.Engine.Object;
 
 import java.awt.Graphics;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.JDStudio.Engine.Components.InteractionComponent;
@@ -14,22 +14,22 @@ import com.JDStudio.Engine.Dialogue.DialogueNode;
 import com.JDStudio.Engine.Dialogue.DialogueParser;
 import com.JDStudio.Engine.Utils.PropertiesReader;
 
-public abstract class EngineNPC extends Character{
+public class DialogableGameObject extends GameObject{
 
-    protected Dialogue dialogue;
-    protected String dialoguePath;
+	protected Dialogue dialogue;
+	protected String dialoguePath;
     protected int interactionRadius;
-
-    public EngineNPC(JSONObject properties) {
-        super(properties);
-    }
-
-    @Override
-    public void initialize(JSONObject properties) {
-        super.initialize(properties); // Inicializa a base (GameObject -> Character)
-        
+	
+	public DialogableGameObject(JSONObject properties) {
+		super(properties);
+		// TODO Auto-generated constructor stub
+	}
+	
+	@Override
+	public void initialize(JSONObject properties) {
+		// TODO Auto-generated method stub
+		super.initialize(properties);
         PropertiesReader reader = new PropertiesReader(properties);
-        
         this.interactionRadius = reader.getInt("interactionRadius", 24);
         
         
@@ -52,19 +52,13 @@ public abstract class EngineNPC extends Character{
         } else {
             System.err.println("AVISO: NPC '" + this.name + "' não tem a propriedade 'dialogueFile' definida no Tiled.");
         }
-    }
-
- // Método para o EventListener poder aceder ao diálogo
+	}
+	
+	//Método para o EventListener poder aceder ao diálogo
     public Dialogue getDialogue() {
         return this.dialogue;
     }
-
-    @Override
-    public void tick() {
-        super.tick();
-        // NPCs não se movem por padrão, então não chamamos movement.tick()
-    }
-
+    
     public void startFilteredDialogue(GameObject interactor) {
         // Cria uma cópia fresca do diálogo para não modificar o original
         Dialogue filteredDialogue = DialogueParser.parseDialogue(this.dialoguePath); // Supondo que o NPC tem o caminho do seu diálogo
@@ -96,5 +90,5 @@ public abstract class EngineNPC extends Character{
     	// TODO Auto-generated method stub
     	super.renderDebug(g);
     }
-    
+
 }

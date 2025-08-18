@@ -123,12 +123,16 @@ public class DialogueBox extends UIElement {
             }
         }
         
-        if (!node.choices.isEmpty() && charIndex >= fullText.length()) {
+        List<DialogueChoice> choices = node.getChoices(); // Pega a lista usando o método
+
+        if (!choices.isEmpty() && charIndex >= fullText.length()) {
             if (InputManager.isKeyJustPressed(KeyEvent.VK_DOWN) || InputManager.isKeyJustPressed(KeyEvent.VK_S)) {
-                currentChoice = (currentChoice + 1) % node.choices.size();
+                currentChoice = (currentChoice + 1) % choices.size();
             } else if (InputManager.isKeyJustPressed(KeyEvent.VK_UP) || InputManager.isKeyJustPressed(KeyEvent.VK_W)) {
                 currentChoice--;
-                if (currentChoice < 0) currentChoice = node.choices.size() - 1;
+                if (currentChoice < 0) {
+                    currentChoice = choices.size() - 1;
+                }
             }
         }
     }
@@ -161,16 +165,20 @@ public class DialogueBox extends UIElement {
             g.drawString(line, x + padding, currentY);
             currentY += lineSpacing;
         }
+        
 
-        if (charIndex >= fullText.length() && !node.choices.isEmpty()) {
+     // Pega a lista de escolhas de forma segura usando o método
+        List<DialogueChoice> choices = node.getChoices();
+
+        if (charIndex >= fullText.length() && !choices.isEmpty()) {
             FontMetrics metrics = g.getFontMetrics(textFont);
             int choiceSpacing = metrics.getHeight() + moreChoiceSpacing;
             
-            // Calcula a posição Y inicial para a PRIMEIRA escolha, deixando espaço para todas as outras abaixo.
-            int choiceY_start = y + height - (node.choices.size() * choiceSpacing) - padding + moreSectionChoiceSpacion;
+            // Calcula a posição Y inicial para a PRIMEIRA escolha
+            int choiceY_start = y + height - (choices.size() * choiceSpacing) - padding + moreSectionChoiceSpacion;
             
-            for (int i = 0; i < node.choices.size(); i++) {
-                DialogueChoice choice = node.choices.get(i);
+            for (int i = 0; i < choices.size(); i++) {
+                DialogueChoice choice = choices.get(i);
                 String choiceText = choice.text;
 
                 // Calcula a posição Y para a escolha atual
@@ -181,7 +189,7 @@ public class DialogueBox extends UIElement {
                     choiceText = selectionCursor + choiceText; 
                 } else {
                     g.setColor(textColor);
-                    // Adiciona espaços em branco para alinhar com a opção selecionada
+                    // Adiciona espaços em branco para alinhar
                     String pad = " ".repeat(selectionCursor.length());
                     choiceText = pad + choiceText;
                 }

@@ -119,8 +119,6 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 		loadAssets();
 
 		uiManager = new UIManager();
-		createDialogueBox();
-		uiManager.addElement(dialogueBox);
 		registerDialogueActions();
 		projectileManager = ProjectileManager.getInstance();
 		
