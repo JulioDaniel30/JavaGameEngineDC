@@ -199,14 +199,12 @@ Carregue três sprites de coração no seu `AssetManager` ou `ThemeManager`, cor
     ```java
     // Em PlayingState.java -> setupUI()
     this.healthHearts = new ArrayList<>();
-    int maxHearts = (int) Math.ceil(player.maxLife / 20.0); // Ex: 1 coração para cada 20 de vida
-
-    for (int i = 0; i < maxHearts; i++) {
-        // Cria os ícones de coração, posicionando-os lado a lado
-        UIImage heart = new UIImage(10 + (i * 18), 10, ThemeManager.getInstance().get(UISpriteKey.HEART_FULL));
-        this.healthHearts.add(heart);
-        this.uiManager.addElement(heart);
-    }
+		int maxHearts = (int) Math.ceil(player.maxLife / 40.0); // Ex: 1 coração para cada 40 de vida
+		for (int i = 0; i < maxHearts; i++) {
+			UIImage heart = new UIImage(5 + (i * 18), 5, ThemeManager.getInstance().get(UISpriteKey.HEART_FULL));
+			healthHearts.add(heart);
+			uiManager.addElement(heart);
+		}
     ```
 
 3.  **Crie o método de atualização `updateHealthUI()`**:
@@ -215,19 +213,20 @@ Carregue três sprites de coração no seu `AssetManager` ou `ThemeManager`, cor
     ```java
     // Em PlayingState.java
     private void updateHealthUI() {
-        for (int i = 0; i < healthHearts.size(); i++) {
-            int heartValue = (int) (player.life - (i * 20));
-            Sprite newSprite;
+        double healthPerHeart = player.maxLife / healthHearts.size();
 
-            if (heartValue >= 20) {
-                newSprite = ThemeManager.getInstance().get(UISpriteKey.HEART_FULL);
-            } else if (heartValue >= 10) {
-                newSprite = ThemeManager.getInstance().get(UISpriteKey.HEART_HALF);
-            } else {
-                newSprite = ThemeManager.getInstance().get(UISpriteKey.HEART_EMPTY);
-            }
-            healthHearts.get(i).setSprite(newSprite);
-        }
+		for (int i = 0; i < healthHearts.size(); i++) {
+			UIImage heart = healthHearts.get(i);
+			double heartHealthThreshold = (i + 1) * healthPerHeart;
+
+			if (player.life >= heartHealthThreshold) {
+				heart.setSprite(ThemeManager.getInstance().get(UISpriteKey.HEART_FULL));
+			} else if (player.life >= heartHealthThreshold - (healthPerHeart / 2)) {
+				heart.setSprite(ThemeManager.getInstance().get(UISpriteKey.HEART_HALF));
+			} else {
+				heart.setSprite(ThemeManager.getInstance().get(UISpriteKey.HEART_EMPTY));
+			}
+		}
     }
     ```
 

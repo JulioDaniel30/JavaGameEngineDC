@@ -60,15 +60,12 @@ import com.JDStudio.Engine.Object.Character;
 import com.JDStudio.Engine.Object.EngineNPC;
 import com.JDStudio.Engine.Object.GameObject;
 import com.JDStudio.Engine.Object.GameObject.CollisionType;
-import com.JDStudio.Engine.Object.Interactable;
 import com.JDStudio.Engine.Object.ProjectileManager;
 import com.JDStudio.Engine.Object.TriggerZone;
 import com.JDStudio.Engine.Sound.Sound;
 import com.JDStudio.Engine.States.EnginePlayingState;
 import com.JDStudio.Engine.Utils.ImageUtils;
 import com.JDStudio.Engine.World.Camera;
-import com.JDStudio.Engine.World.Camera.CameraProfile;
-import com.JDStudio.Engine.World.Camera.FollowStyle;
 import com.JDStudio.Engine.World.IMapLoaderListener;
 import com.JDStudio.Engine.World.Tile;
 import com.JDStudio.Engine.World.World;
@@ -162,7 +159,7 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 		Sound.setMusicVolume(0.01f);
 		Sound.setSfxVolume(0.02f);
 		// Configura as dependências DEPOIS que todos os objetos foram criados.
-
+		
 	}
 
 	/**

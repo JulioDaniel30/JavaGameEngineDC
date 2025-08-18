@@ -125,6 +125,7 @@ public class PlayingState extends EnginePlayingState implements IMapLoaderListen
 
 	@Override
 	public void tick() {
+		uiManager.tick();
 		super.tick(); // Atualiza todos os GameObjects registados
 
 		if (InputManager.isKeyJustPressed(KeyEvent.VK_ESCAPE)) {

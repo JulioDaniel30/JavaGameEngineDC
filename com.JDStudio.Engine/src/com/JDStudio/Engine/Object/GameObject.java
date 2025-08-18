@@ -405,4 +405,37 @@ public abstract class GameObject implements IRenderable  {
     public void setMaskWidth(int maskWidth) { this.maskWidth = maskWidth; }
     public int getMaskHeight() { return maskHeight; }
     public void setMaskHeight(int maskHeight) { this.maskHeight = maskHeight; }
+    /**
+     * Retorna a coordenada X do centro do objeto, com base nas suas dimensões totais (width).
+     * @return A posição X central do objeto.
+     */
+    public double getCenterX() {
+        return this.x + (this.width / 2.0);
+    }
+
+    /**
+     * Retorna a coordenada Y do centro do objeto, com base nas suas dimensões totais (height).
+     * @return A posição Y central do objeto.
+     */
+    public double getCenterY() {
+        return this.y + (this.height / 2.0);
+    }
+
+    /**
+     * Retorna a coordenada X do centro da MÁSCARA de colisão.
+     * Útil para cálculos de colisão e mira precisos.
+     * @return A posição X central da máscara de colisão.
+     */
+    public double getMaskCenterX() {
+        return this.x + this.maskX + (this.maskWidth / 2.0);
+    }
+
+    /**
+     * Retorna a coordenada Y do centro da MÁSCARA de colisão.
+     * Útil para cálculos de colisão e mira precisos.
+     * @return A posição Y central da máscara de colisão.
+     */
+    public double getMaskCenterY() {
+        return this.y + this.maskY + (this.maskHeight / 2.0);
+    }
 }

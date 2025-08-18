@@ -10,53 +10,58 @@ public class EventManager {
 
     private static final EventManager instance = new EventManager();
     
-    // --- MUDANÇA AQUI: O mapa agora usa um Enum como chave ---
-    // Usamos 'Enum<?>' para que o manager seja genérico e possa aceitar qualquer tipo de enum.
     private final Map<Enum<?>, List<EventListener>> listeners = new HashMap<>();
+    
+    // --- ADIÇÃO AQUI ---
+    // Uma nova lista para listeners que querem ouvir TODOS os eventos.
+    private final List<EventListener> globalListeners = new ArrayList<>();
 
     private EventManager() {}
 
     public static EventManager getInstance() {
         return instance;
     }
-
+    
     /**
-     * Inscreve um ouvinte para um tipo de evento específico.
-     * @param eventType O enum que representa o evento (ex: GameEvent.ENEMY_DIED).
-     * @param listener A ação a ser executada quando o evento ocorrer.
+     * **NOVO MÉTODO**
+     * Inscreve um ouvinte que será notificado de CADA evento disparado no jogo.
+     * @param listener O ouvinte a ser adicionado.
      */
+    public void subscribeToAll(EventListener listener) {
+        if (!globalListeners.contains(listener)) {
+            globalListeners.add(listener);
+        }
+    }
+
     public void subscribe(Enum<?> eventType, EventListener listener) {
         this.listeners.computeIfAbsent(eventType, k -> new ArrayList<>()).add(listener);
     }
 
-    /**
-     * Desinscreve um ouvinte de um tipo de evento.
-     * @param eventType O enum do evento.
-     * @param listener O ouvinte a ser removido.
-     */
     public void unsubscribe(Enum<?> eventType, EventListener listener) {
         if (this.listeners.containsKey(eventType)) {
             this.listeners.get(eventType).remove(listener);
         }
+        // Garante que também é removido dos ouvintes globais
+        globalListeners.remove(listener);
     }
 
     /**
-     * Dispara um evento, notificando todos os ouvintes inscritos.
-     * @param eventType O enum do evento a ser disparado.
-     * @param data Os dados a serem passados para os ouvintes (pode ser 'null').
+     * Dispara um evento, notificando todos os ouvintes inscritos (específicos e globais).
      */
     public void trigger(Enum<?> eventType, Object data) {
-        if (!this.listeners.containsKey(eventType)) {
-            return;
+        // Notifica os listeners específicos (lógica antiga)
+        if (this.listeners.containsKey(eventType)) {
+            new ArrayList<>(this.listeners.get(eventType)).forEach(listener -> listener.onEvent(data));
         }
-        new ArrayList<>(this.listeners.get(eventType)).forEach(listener -> listener.onEvent(data));
+
+        // --- ADIÇÃO AQUI ---
+        // Notifica também todos os listeners globais, passando o próprio enum do evento como dado.
+        new ArrayList<>(globalListeners).forEach(listener -> listener.onEvent(eventType));
     }
-    /**
-     * Limpa todos os ouvintes de todos os eventos.
-     * Essencial para reiniciar o estado do jogo.
-     */
+    
     public void reset() {
         listeners.clear();
+        globalListeners.clear(); // Limpa também os ouvintes globais
         System.out.println("EventManager resetado.");
     }
 }

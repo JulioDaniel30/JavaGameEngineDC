@@ -56,39 +56,161 @@ assets.registerSprite("player_jump", playerJump);
 Sprite frameAndar = assets.getSprite("player_walk_1");
 ```
 
-#### Método 3: Carregar Sprites em Lote via Arquivo de Configuração (JSON)
+#### Método 3: Carregar Sprites em Lote via JSON
 
-Esta abordagem permite definir todos os sprites simples em um único arquivo de configuração, tornando o gerenciamento muito mais organizado e flexível. O `AssetManager` agora possui o método `loadSpritesFromJson`, que lê o arquivo JSON e carrega todos os sprites automaticamente.
+Esta é a abordagem mais poderosa e organizada para carregar múltiplos sprites, combinando os dois métodos anteriores. A engine possui duas formas de fazer isso a partir de um arquivo de configuração JSON.
 
-**Fluxo:** `Arquivo de Configuração (JSON) -> AssetManager.loadSpritesFromJson() -> Sprites em Cache`
+**A. Carregar Arquivos de Imagem Individuais via JSON**
+
+Ideal para organizar o carregamento de muitos sprites que estão em arquivos separados.
+
+1. **Crie o arquivo `sprites.json`:**
+    ```json
+    {
+      "sprites": [
+        { "key": "player_idle", "path": "/sprites/player.png" },
+        { "key": "enemy_slime", "path": "/sprites/slime.png" }
+      ]
+    }
+    ```
+
+2. **Chame o método `loadSpritesFromJson`:**
+    ```java
+    // Carrega todos os sprites definidos no arquivo JSON de uma só vez
+    assets.loadSpritesFromJson("/configs/sprites.json");
+    ```
+
+**B. Recortar Múltiplos Sprites de uma Spritesheet via JSON (Recomendado para Tilesets)**
+
+Permite definir como recortar uma única `Spritesheet` diretamente no JSON.
+
+1. **Crie o arquivo de definição (ex: `tileset_grass.json`).**
+2. **Chame o método `loadSpritesFromSpritesheetJson`:**
+    ```java
+    // Esta única linha carrega a spritesheet e recorta todos os sprites definidos no JSON
+    assets.loadSpritesFromSpritesheetJson("/configs/tileset_grass.json");
+    ```
+
+### O Formato do JSON de Definição de Spritesheet
+
+O arquivo JSON tem uma estrutura principal:
+
+- `"spritesheetPath"`: O caminho para o arquivo de imagem `.png`.
+- `"definitions"`: Um array que pode conter múltiplos blocos de definição, dos tipos `grid` ou `manual`.
+
+#### Definição do Tipo "manual"
+
+Ideal para spritesheets "empacotadas", onde os sprites têm tamanhos e posições diferentes.
 
 ```json
-// Exemplo de arquivo "sprites.json"
 {
-  "sprites": [
-    { "key": "player_idle", "path": "/sprites/player.png" },
-    { "key": "enemy_slime", "path": "/sprites/slime.png" },
-    { "key": "heart_full", "path": "/ui/heart_full.png" }
+  "spritesheetPath": "/sprites/player_sheet.png",
+  "definitions": [
+    {
+      "type": "manual",
+      "sprites": [
+        { "key": "player_jump_fall", "x": 64, "y": 0, "w": 16, "h": 20 },
+        { "key": "player_portrait", "x": 0, "y": 32, "w": 32, "h": 32 }
+      ]
+    }
+  ]
+}
+```
+Isto irá recortar e registrar dois sprites com tamanhos e nomes específicos.
+
+#### Definição do Tipo "grid"
+
+Ideal para tilesets uniformes. Ele percorre uma grelha e nomeia os sprites com um prefixo e um número sequencial. A engine suporta dois formatos para grid: um para múltiplas linhas (recomendado) e um para uma única linha (retrocompatibilidade).
+
+**Formato Multi-Linha (Recomendado):**
+```json
+{
+  "spritesheetPath": "/tilesets/grass_sheet.png",
+  "definitions": [
+    {
+      "type": "grid",
+      "prefix": "grass_v_",
+      "spriteWidth": 16,
+      "spriteHeight": 16,
+      "numCols": 8,
+      "numRows": 4
+    }
+  ]
+}
+```
+Isto irá gerar 32 sprites, com as chaves `grass_v_1` a `grass_v_32`.
+
+**Formato de Linha Única (Compatibilidade):**
+Este formato é útil para recortar uma única linha de frames de uma spritesheet de animação.
+
+```json
+{
+  "spritesheetPath": "/sprites/player_sheet.png",
+  "definitions": [
+    {
+      "type": "grid",
+      "prefix": "player_walk_down_",
+      "spriteWidth": 16,
+      "spriteHeight": 16,
+      "count": 4
+    }
+  ]
+}
+```
+Isto irá gerar 4 sprites, `player_walk_down_1` a `player_walk_down_4`, a partir da primeira linha (y=0) da spritesheet.
+
+**Propriedades Opcionais para "grid" (`startX`, `startY`, `startIndex`):**
+
+- `startX` e `startY`: Use estas propriedades se a sua grelha não começar no canto superior esquerdo (0,0) da imagem.
+- `startIndex`: Define o número inicial para a chave do sprite. Se omitido, começará em 1.
+
+**Exemplo Combinado:**
+```json
+{
+  "spritesheetPath": "/tilesets/terreno_parte2.png",
+  "definitions": [
+    {
+      "type": "grid",
+      "prefix": "terreno_",
+      "spriteWidth": 16,
+      "spriteHeight": 16,
+      "startX": 32,
+      "startY": 16,
+      "numCols": 8,
+      "numRows": 2,
+      "startIndex": 33
+    }
+  ]
+}
+```
+Isto irá ler uma grelha de 8x2 a partir da posição (32, 16) da imagem e irá gerar os sprites `terreno_33` a `terreno_48`.
+
+#### Definição do Tipo "full_grid" (Automático)
+
+Este é o método mais rápido para recortar um tileset inteiro onde todos os tiles têm o mesmo tamanho. Você só precisa especificar o tamanho de um tile, e a engine calcula automaticamente quantas colunas e linhas existem na imagem.
+
+**Uso:** Ideal para importar um tileset completo com uma única definição.
+
+```json
+{
+  "spritesheetPath": "/tilesets/terreno_completo.png",
+  "definitions": [
+    {
+      "type": "full_grid",
+      "prefix": "terreno_",
+      "spriteWidth": 16,
+      "spriteHeight": 16,
+      "startIndex": 1
+    }
   ]
 }
 ```
 
-```java
-// Em um método de carregamento
-AssetManager assets = new AssetManager();
+**Como Funciona:**  
+O AssetManager irá pegar a largura total da imagem `terreno_completo.png` e dividi-la por `spriteWidth` (16) para descobrir o número de colunas. Fará o mesmo com a altura para descobrir o número de linhas.
 
-// Carrega todos os sprites definidos no JSON de uma vez
-assets.loadSpritesFromJson("/configs/sprites.json");
-
-// Para usar depois:
-Sprite slimeSprite = assets.getSprite("enemy_slime");
-Sprite vidaCheia = assets.getSprite("heart_full");
-```
-
-**Vantagens:**  
-- Organização centralizada dos sprites  
-- Fácil manutenção: basta editar o JSON para adicionar ou remover sprites  
-- Menos código repetitivo
+**Resultado:**  
+Se a imagem `terreno_completo.png` tiver 128x64 pixels, a engine irá calcular `numCols = 8` (128/16) e `numRows = 4` (64/16), gerando automaticamente os sprites
 
 ---
 
@@ -206,5 +328,6 @@ animator.getAnimations().putAll(minhasAnims);
 - Totalmente data-driven: fácil editar ou adicionar animações sem mexer no código Java  
 - Reutiliza sprites já carregados  
 - Ideal para animações simples, efeitos ou quando não se usa Aseprite
+
 ---
 [⬅️ Voltar para o Guias Avançados](./README.md)

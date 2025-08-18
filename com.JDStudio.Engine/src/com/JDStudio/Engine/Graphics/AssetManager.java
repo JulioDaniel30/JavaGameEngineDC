@@ -14,6 +14,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.JDStudio.Engine.Graphics.Sprite.Sprite;
+import com.JDStudio.Engine.Graphics.Sprite.Spritesheet;
 
 /**
  * Gerencia o carregamento, armazenamento (cache) e acesso a todos os sprites do jogo.
@@ -62,6 +63,126 @@ public class AssetManager {
             System.out.println(spritesArray.length() + " sprites carregados com sucesso de: " + jsonPath);
         } catch (Exception e) {
             System.err.println("Erro ao processar o arquivo de configuração de sprites '" + jsonPath + "'.");
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * **NOVO MÉTODO**
+     * Carrega e recorta múltiplos sprites de uma única spritesheet, com base
+     * em definições de um arquivo de configuração JSON.
+     * Suporta definições baseadas em grelha (grid) e coordenadas manuais.
+     *
+     * @param jsonPath O caminho para o recurso do arquivo .json (ex: "/configs/player_sprites.json").
+     */
+    public void loadSpritesFromSpritesheetJson(String jsonPath) {
+        try (InputStream is = getClass().getResourceAsStream(jsonPath)) {
+            if (is == null) {
+                System.err.println("Falha ao encontrar o arquivo de definição de spritesheet: " + jsonPath);
+                return;
+            }
+
+            String jsonText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            JSONObject config = new JSONObject(jsonText);
+
+            // 1. Carrega a spritesheet principal
+            String sheetPath = config.getString("spritesheetPath");
+            Spritesheet sheet = new Spritesheet(sheetPath);
+
+            JSONArray definitions = config.getJSONArray("definitions");
+            int spritesRegistered = 0;
+
+            // 2. Itera sobre cada bloco de definição (grid ou manual)
+            for (int i = 0; i < definitions.length(); i++) {
+                JSONObject def = definitions.getJSONObject(i);
+                String type = def.getString("type");
+
+                if ("grid".equals(type)) {
+                	 String prefix = def.getString("prefix");
+                     int spriteWidth = def.getInt("spriteWidth");
+                     int spriteHeight = def.getInt("spriteHeight");
+                     int startX = def.optInt("startX", 0);
+                     int startY = def.optInt("startY", 0);
+
+                     // --- LÓGICA ATUALIZADA ---
+
+                     // 1. Lê o 'startIndex' opcional. O padrão é 1 para manter a compatibilidade.
+                     int startIndex = def.optInt("startIndex", 1);
+
+                     // Se tiver numCols e numRows, usa a nova lógica 2D
+                     if (def.has("numCols") && def.has("numRows")) {
+                         int numCols = def.getInt("numCols");
+                         int numRows = def.getInt("numRows");
+                         
+                         // 2. Inicia o contador com o startIndex
+                         int counter = startIndex;
+                         for (int row = 0; row < numRows; row++) {
+                             for (int col = 0; col < numCols; col++) {
+                                 String key = prefix + counter; // Usa o contador
+                                 int x = startX + (col * spriteWidth);
+                                 int y = startY + (row * spriteHeight);
+                                 registerSprite(key, sheet.getSprite(x, y, spriteWidth, spriteHeight));
+                                 spritesRegistered++;
+                                 counter++;
+                             }
+                         }
+                     } 
+                     // Se não, se tiver 'count', usa a lógica antiga 1D
+                     else if (def.has("count")) {
+                         int count = def.getInt("count");
+                         for (int j = 0; j < count; j++) {
+                             // 3. Modifica a criação da chave para usar o startIndex
+                             // Se j=0, a chave será prefix + startIndex. Se j=1, será prefix + startIndex + 1, e assim por diante.
+                             String key = prefix + (startIndex + j);
+                             int x = startX + (j * spriteWidth);
+                             registerSprite(key, sheet.getSprite(x, startY, spriteWidth, spriteHeight));
+                             spritesRegistered++;
+                         }
+                     }
+                } else if ("full_grid".equals(type)) {
+                    // --- A NOVA LÓGICA AUTOMÁTICA ESTÁ AQUI ---
+                    String prefix = def.getString("prefix");
+                    int spriteWidth = def.getInt("spriteWidth");
+                    int spriteHeight = def.getInt("spriteHeight");
+                    int startIndex = def.optInt("startIndex", 1);
+                    
+                    // Calcula automaticamente o número de colunas e linhas
+                    int numCols = sheet.getWidth() / spriteWidth;
+                    int numRows = sheet.getHeight() / spriteHeight;
+                    
+                    int counter = startIndex;
+
+                    for (int row = 0; row < numRows; row++) {
+                        for (int col = 0; col < numCols; col++) {
+                            String key = prefix + counter;
+                            int x = col * spriteWidth;
+                            int y = row * spriteHeight;
+                            
+                            registerSprite(key, sheet.getSprite(x, y, spriteWidth, spriteHeight));
+                            spritesRegistered++;
+                            counter++;
+                        }
+                    }
+
+                } else if ("manual".equals(type)) {
+                    // Lógica para extração manual
+                    JSONArray manualSprites = def.getJSONArray("sprites");
+                    for (int j = 0; j < manualSprites.length(); j++) {
+                        JSONObject spriteData = manualSprites.getJSONObject(j);
+                        String key = spriteData.getString("key");
+                        int x = spriteData.getInt("x");
+                        int y = spriteData.getInt("y");
+                        int w = spriteData.getInt("w");
+                        int h = spriteData.getInt("h");
+                        registerSprite(key, sheet.getSprite(x, y, w, h));
+                        spritesRegistered++;
+                    }
+                }
+            }
+            System.out.println(spritesRegistered + " sprites recortados e registrados com sucesso de: " + sheetPath);
+
+        } catch (Exception e) {
+            System.err.println("Erro ao processar o arquivo de definição de spritesheet '" + jsonPath + "'. Verifique o formato do JSON.");
             e.printStackTrace();
         }
     }
