@@ -19,8 +19,10 @@ Este diretório reúne tutoriais e guias avançados para quem deseja explorar re
 * **[Movimentos](./Guia_Avancado_Movimento.md)**
 * **[Interações Avançadas](./Guia_Interacoes_Avancadas.md)**
 * **[GameObjects Interativos](./Guia_GameObjects_Interativos.md)**
+* **[GameObjects Pré Construidos](./Guia_GameObjects_Preconstruidos.md)**
 * **[Criação de Inimigos com IA](./Guia_Criacao_de_Inimigos_IA.md)**
 * **[Sistema de Tutorial](./Guia_Sistema_de_Tutoriais.md)**
+* **[Sistema de Prefabs](./Guia_Avancado_Prefabs.md)**
 
 ## Como usar
 
