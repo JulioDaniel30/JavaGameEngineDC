@@ -29,7 +29,7 @@ public class UIAnimatedImage extends UIElement {
             Sprite frame = animation.getCurrentFrame();
             if (frame != null) {
                 this.width = frame.getWidth();
-                this.height = frame.getHeight();
+                this.setHeight(frame.getHeight());
             }
         }
     }

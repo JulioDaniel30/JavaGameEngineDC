@@ -26,7 +26,7 @@ public class UIToggleButton extends UIElement {
         
         if (offSprite != null) {
             this.width = offSprite.getWidth();
-            this.height = offSprite.getHeight();
+            this.setHeight(offSprite.getHeight());
         }
     }
     
@@ -40,7 +40,7 @@ public class UIToggleButton extends UIElement {
         int mouseX = InputManager.getMouseX() / com.JDStudio.Engine.Engine.getSCALE();
         int mouseY = InputManager.getMouseY() / com.JDStudio.Engine.Engine.getSCALE();
 
-        Rectangle bounds = new Rectangle(x, y, width, height);
+        Rectangle bounds = new Rectangle(x, y, width, getHeight());
         isHovering = bounds.contains(mouseX, mouseY);
 
         if (isHovering && InputManager.isLeftMouseButtonJustPressed()) {
@@ -63,7 +63,7 @@ public class UIToggleButton extends UIElement {
         // Adiciona um contorno simples quando o mouse está em cima
         if(isHovering){
             g.setColor(new java.awt.Color(255, 255, 0, 100)); // Amarelo semitransparente
-            g.drawRect(x, y, width, height);
+            g.drawRect(x, y, width, getHeight());
         }
     }
 }

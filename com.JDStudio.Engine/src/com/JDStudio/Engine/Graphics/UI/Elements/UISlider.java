@@ -30,7 +30,7 @@ public class UISlider extends UIElement {
 
         if (trackSprite != null) {
             this.width = trackSprite.getWidth();
-            this.height = trackSprite.getHeight();
+            this.setHeight(trackSprite.getHeight());
         }
         if (handleSprite != null) {
             this.handleWidth = handleSprite.getWidth();
@@ -48,7 +48,7 @@ public class UISlider extends UIElement {
 
         if (trackSprite != null) {
             this.width = trackSprite.getWidth();
-            this.height = trackSprite.getHeight();
+            this.setHeight(trackSprite.getHeight());
         }
         if (handleSprite != null) {
             this.handleWidth = handleSprite.getWidth();
@@ -66,7 +66,7 @@ public class UISlider extends UIElement {
         int mouseX = InputManager.getMouseX() / com.JDStudio.Engine.Engine.getSCALE();
 
         int handleX = getHandleX();
-        int handleY = y + (height - handleHeight) / 2;
+        int handleY = y + (getHeight() - handleHeight) / 2;
         Rectangle handleBounds = new Rectangle(handleX, handleY, handleWidth, handleHeight);
 
         if (InputManager.isLeftMouseButtonJustPressed() && handleBounds.contains(mouseX, InputManager.getMouseY() / com.JDStudio.Engine.Engine.getSCALE())) {
@@ -110,7 +110,7 @@ public class UISlider extends UIElement {
         
         // Desenha o cursor/alça
         if (handleSprite != null) {
-            g.drawImage(handleSprite.getImage(), getHandleX(), y + (height - handleHeight) / 2, null);
+            g.drawImage(handleSprite.getImage(), getHandleX(), y + (getHeight() - handleHeight) / 2, null);
         }
     }
 }

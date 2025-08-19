@@ -33,7 +33,7 @@ public class UIButton extends UIElement {
         
         if (normalSprite != null) {
             this.width = normalSprite.getWidth();
-            this.height = normalSprite.getHeight();
+            this.setHeight(normalSprite.getHeight());
         }
     }
     
@@ -48,7 +48,7 @@ public class UIButton extends UIElement {
         
         if (normalSprite != null) {
             this.width = normalSprite.getWidth();
-            this.height = normalSprite.getHeight();
+            this.setHeight(normalSprite.getHeight());
         }
     }
     
@@ -63,7 +63,7 @@ public class UIButton extends UIElement {
         int mouseX = InputManager.getMouseX()/ com.JDStudio.Engine.Engine.getSCALE();
         int mouseY = InputManager.getMouseY() / com.JDStudio.Engine.Engine.getSCALE();
 
-        Rectangle bounds = new Rectangle(this.x, this.y, this.width, this.height);
+        Rectangle bounds = new Rectangle(this.x, this.y, this.width, this.getHeight());
         isHovering = bounds.contains(mouseX, mouseY);
 
         if (isHovering) {
@@ -99,7 +99,7 @@ public class UIButton extends UIElement {
             int textWidth = g.getFontMetrics().stringWidth(text);
             int textHeight = g.getFontMetrics().getAscent();
             int textX = x + (width - textWidth) / 2;
-            int textY = y + (height + textHeight) / 2;
+            int textY = y + (getHeight() + textHeight) / 2;
             g.drawString(text, textX, textY);
         }
     }

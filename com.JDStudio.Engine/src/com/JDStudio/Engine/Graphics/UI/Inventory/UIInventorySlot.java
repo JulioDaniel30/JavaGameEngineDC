@@ -28,7 +28,7 @@ public class UIInventorySlot extends UIElement {
         this.inventoryOwner = owner;
         if (backgroundSprite != null) {
             this.width = backgroundSprite.getWidth();
-            this.height = backgroundSprite.getHeight();
+            this.setHeight(backgroundSprite.getHeight());
         }
     }
     
@@ -48,7 +48,7 @@ public class UIInventorySlot extends UIElement {
         int mouseX = InputManager.getMouseX() / com.JDStudio.Engine.Engine.getSCALE();
         int mouseY = InputManager.getMouseY() / com.JDStudio.Engine.Engine.getSCALE();
 
-        Rectangle bounds = new Rectangle(this.x, this.y, this.width, this.height);
+        Rectangle bounds = new Rectangle(this.x, this.y, this.width, this.getHeight());
         isHovering = bounds.contains(mouseX, mouseY);
 
         // Apenas deteta o clique e define uma flag. A UIInventoryView decidirá o que fazer.
@@ -72,7 +72,7 @@ public class UIInventorySlot extends UIElement {
             if (itemSprite != null) {
                 // Desenha o sprite do item centralizado dentro do slot
                 int itemX = x + (width - itemSprite.getWidth()) / 2;
-                int itemY = y + (height - itemSprite.getHeight()) / 2;
+                int itemY = y + (getHeight() - itemSprite.getHeight()) / 2;
                 g.drawImage(itemSprite.getImage(), itemX, itemY, null);
             }
 
@@ -82,7 +82,7 @@ public class UIInventorySlot extends UIElement {
                 g.setColor(Color.WHITE);
                 String quantityText = String.valueOf(itemStack.getQuantity());
                 int textWidth = g.getFontMetrics().stringWidth(quantityText);
-                g.drawString(quantityText, x + width - textWidth - 2, y + height - 2);
+                g.drawString(quantityText, x + width - textWidth - 2, y + getHeight() - 2);
             }
         }
         
@@ -90,13 +90,13 @@ public class UIInventorySlot extends UIElement {
         // Desenha um contorno se o rato estiver sobre o slot OU se ele estiver selecionado
         if (isHovering || isSelected) { // <-- MUDANÇA AQUI
             g.setColor(Color.YELLOW);
-            g.drawRect(x, y, width - 1, height - 1);
+            g.drawRect(x, y, width - 1, getHeight() - 1);
         }
         
         // Adiciona um destaque extra se estiver selecionado
         if (isSelected) {
             g.setColor(new Color(255, 255, 0, 70)); // Amarelo semitransparente
-            g.fillRect(x, y, width, height);
+            g.fillRect(x, y, width, getHeight());
         }
     }
 }

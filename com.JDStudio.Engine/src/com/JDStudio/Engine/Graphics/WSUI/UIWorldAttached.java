@@ -1,11 +1,12 @@
 package com.JDStudio.Engine.Graphics.WSUI;
+//World Space UI
 
 import com.JDStudio.Engine.Graphics.UI.Elements.UIElement;
 import com.JDStudio.Engine.Object.GameObject;
 
 public abstract class UIWorldAttached extends UIElement {
 
-    protected GameObject target;
+    public GameObject target;
     protected int yOffset; // Deslocamento vertical em relação ao alvo
 
     public UIWorldAttached(GameObject target, int yOffset) {

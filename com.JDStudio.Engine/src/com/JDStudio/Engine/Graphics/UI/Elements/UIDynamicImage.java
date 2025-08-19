@@ -37,7 +37,7 @@ public class UIDynamicImage extends UIElement {
         // Atualiza as dimensões do elemento com base no sprite atual
         if (this.currentSprite != null) {
             this.width = currentSprite.getWidth();
-            this.height = currentSprite.getHeight();
+            this.setHeight(currentSprite.getHeight());
         }
     }
 

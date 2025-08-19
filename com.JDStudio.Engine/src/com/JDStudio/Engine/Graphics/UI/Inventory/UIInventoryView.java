@@ -31,7 +31,7 @@ public class UIInventoryView extends UIElement {
         this.padding = padding;
         this.slots = new ArrayList<>();
 
-        if (background != null) { this.width = background.getWidth(); this.height = background.getHeight(); }
+        if (background != null) { this.width = background.getWidth(); this.setHeight(background.getHeight()); }
 
         createSlots(slotBackground);
     }

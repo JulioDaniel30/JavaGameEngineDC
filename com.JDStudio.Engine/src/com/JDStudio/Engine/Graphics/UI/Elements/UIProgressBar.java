@@ -31,7 +31,7 @@ public class UIProgressBar extends UIElement {
         
         if (background != null) {
             this.width = background.getWidth();
-            this.height = background.getHeight();
+            this.setHeight(background.getHeight());
         }
     }
 
@@ -64,7 +64,7 @@ public class UIProgressBar extends UIElement {
         int fillWidth = (int)(this.width * progressRatio);
         
         g.setColor(foregroundColor);
-        g.fillRect(x, y, fillWidth, this.height);
+        g.fillRect(x, y, fillWidth, this.getHeight());
     }
     
     /**

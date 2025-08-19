@@ -41,7 +41,7 @@ public class UIImage extends UIElement {
         this.sprite = newSprite;
         if (this.sprite != null) {
             this.width = this.sprite.getWidth();
-            this.height = this.sprite.getHeight();
+            this.setHeight(this.sprite.getHeight());
         }
     }
 }

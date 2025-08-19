@@ -29,7 +29,7 @@ public class UIMarker extends UIImage {
         this.x = progressBar.x + (int)(ratio * barTotalWidth) - (markerWidth / 2);
         
         // Calcula a posição Y do marcador (centralizado verticalmente na barra)
-        this.y = progressBar.y + (progressBar.height / 2) - (this.height / 2);
+        this.y = progressBar.y + (progressBar.getHeight() / 2) - (this.getHeight() / 2);
     }
 
     // O método render() é herdado de UIImage e já funciona perfeitamente.

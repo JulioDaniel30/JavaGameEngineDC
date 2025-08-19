@@ -1,8 +1,9 @@
-package com.JDStudio.Engine.Graphics.WSUI;
+package com.JDStudio.Engine.Graphics.WSUI.BarElements;
 
 import java.awt.Color;
 import java.awt.Graphics;
 import com.JDStudio.Engine.Components.HealthComponent;
+import com.JDStudio.Engine.Graphics.WSUI.UIWorldAttached;
 import com.JDStudio.Engine.Engine;
 import com.JDStudio.Engine.Object.GameObject;
 

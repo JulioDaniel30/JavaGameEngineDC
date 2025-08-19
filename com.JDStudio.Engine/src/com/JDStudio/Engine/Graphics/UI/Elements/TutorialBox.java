@@ -26,11 +26,11 @@ public class TutorialBox extends UIElement {
         
         // Lógica de posicionamento (pode ser expandida)
         this.width = text.length() * 7 + 20; // Estimativa de largura
-        this.height = 30;
+        this.setHeight(30);
 
         if ("BOTTOM_CENTER".equals(position)) {
             this.x = Engine.getWIDTH() / 2 - this.width / 2;
-            this.y = Engine.getHEIGHT() - this.height - 20;
+            this.y = Engine.getHEIGHT() - this.getHeight() - 20;
         } else { // Padrão
             this.x = Engine.getWIDTH() / 2 - this.width / 2;
             this.y = 20;
@@ -49,7 +49,7 @@ public class TutorialBox extends UIElement {
         if (!visible) return;
         
         g.setColor(boxColor);
-        g.fillRect(x, y, width, height);
+        g.fillRect(x, y, width, getHeight());
         
         g.setColor(textColor);
         g.setFont(font);

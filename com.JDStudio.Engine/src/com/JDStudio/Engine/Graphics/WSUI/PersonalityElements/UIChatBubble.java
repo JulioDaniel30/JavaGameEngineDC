@@ -1,10 +1,11 @@
-package com.JDStudio.Engine.Graphics.WSUI;
+package com.JDStudio.Engine.Graphics.WSUI.PersonalityElements;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 
 import com.JDStudio.Engine.Engine;
+import com.JDStudio.Engine.Graphics.WSUI.UIWorldAttached;
 import com.JDStudio.Engine.Object.GameObject;
 
 public class UIChatBubble extends UIWorldAttached {

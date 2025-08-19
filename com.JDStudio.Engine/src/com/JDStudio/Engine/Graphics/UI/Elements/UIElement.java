@@ -4,6 +4,7 @@ import java.awt.Graphics;
 
 import com.JDStudio.Engine.Graphics.Layers.IRenderable;
 import com.JDStudio.Engine.Graphics.Layers.RenderLayer;
+import com.JDStudio.Engine.Graphics.Layers.RenderManager;
 import com.JDStudio.Engine.Graphics.Layers.StandardLayers;
 
 /**
@@ -47,7 +48,11 @@ public abstract class UIElement implements IRenderable{
     @Override
     public RenderLayer getRenderLayer() { return StandardLayers.UI; }
     
-    
+ // Em UIElement.java
+    public void destroy() {
+        this.visible = false;
+        RenderManager.getInstance().unregister(this);
+    }
     
     /**
      * Atualiza a lógica do elemento de UI.
@@ -96,4 +101,12 @@ public abstract class UIElement implements IRenderable{
         this.x = x;
         this.y = y;
     }
+
+	public int getHeight() {
+		return height;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
+	}
 }
