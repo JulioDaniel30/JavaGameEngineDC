@@ -21,6 +21,7 @@ public class DialogueBox extends UIElement {
     private final DialogueManager dialogueManager;
     private int currentChoice = 0;
     private final int width, height;
+    public boolean inputConsumedThisFrame = false;
 
     // Estilos
     private Font nameFont = new Font("Arial", Font.BOLD, 14);
@@ -92,7 +93,10 @@ public class DialogueBox extends UIElement {
     	this.moreSectionChoiceSpacion = moreSectionChoiceSpacion;
     }
     
+ // Em DialogueBox.java
+
     public void tick() {
+    	inputConsumedThisFrame = false; 
         if (!dialogueManager.isActive()) return;
         DialogueNode node = dialogueManager.getCurrentNode();
         if (node == null) return;
@@ -113,22 +117,27 @@ public class DialogueBox extends UIElement {
             }
         }
 
-        if (InputManager.isKeyJustPressed(KeyEvent.VK_ENTER) || InputManager.isKeyJustPressed(KeyEvent.VK_E)) {
+        // --- OTIMIZAÇÃO AQUI ---
+        // Agora, ouve a ação "INTERACT" em vez de teclas específicas.
+        if (InputManager.isActionJustPressed("INTERACT")) {
             if (charIndex < fullText.length()) {
+                // Se o texto ainda está a aparecer, avança-o todo
                 charIndex = fullText.length();
                 displayedText = fullText;
             } else {
+                // Se o texto já terminou, seleciona a escolha
                 dialogueManager.selectChoice(currentChoice);
-                currentChoice = 0;
+                currentChoice = 0; // Reseta a escolha para o próximo nó
             }
+            inputConsumedThisFrame = true;
         }
         
-        List<DialogueChoice> choices = node.getChoices(); // Pega a lista usando o método
-
+        // A navegação pelas escolhas continua a usar as teclas de direção
+        List<DialogueChoice> choices = node.getChoices();
         if (!choices.isEmpty() && charIndex >= fullText.length()) {
-            if (InputManager.isKeyJustPressed(KeyEvent.VK_DOWN) || InputManager.isKeyJustPressed(KeyEvent.VK_S)) {
+            if (InputManager.isActionJustPressed("UI_DOWN")) {
                 currentChoice = (currentChoice + 1) % choices.size();
-            } else if (InputManager.isKeyJustPressed(KeyEvent.VK_UP) || InputManager.isKeyJustPressed(KeyEvent.VK_W)) {
+            } else if (InputManager.isActionJustPressed("UI_UP")) {
                 currentChoice--;
                 if (currentChoice < 0) {
                     currentChoice = choices.size() - 1;

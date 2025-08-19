@@ -135,11 +135,13 @@ Todos os elementos de UI herdam de `UIElement` e são adicionados a um `UIManage
 ### Sistema de Diálogo e Ações
 A engine permite criar diálogos complexos com escolhas e ações que afetam o jogo.
 
+verifique o [Guia Avançado de Dialogos](../../4-GUIAS_AVANCADOS/Guia_Avançado_de_Dialogos.md)
+
 #### Estrutura do JSON de Diálogo
 Crie arquivos `.json` para suas conversas com a seguinte estrutura:
 ```json
 {
-  "startNodeId": 0,
+  "defaultEntryPoint": 0,
   "nodes": [
     {
       "id": 0,

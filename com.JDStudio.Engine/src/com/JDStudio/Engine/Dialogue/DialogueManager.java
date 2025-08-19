@@ -1,5 +1,7 @@
 package com.JDStudio.Engine.Dialogue;
 
+import com.JDStudio.Engine.Events.EngineEvent;
+import com.JDStudio.Engine.Events.EventManager;
 import com.JDStudio.Engine.Object.GameObject;
 
 /**
@@ -16,6 +18,8 @@ public class DialogueManager {
     
     private GameObject dialogueSource; // Quem é o dono do diálogo (o NPC)
     private GameObject interactor;     // Quem está interagindo (o Player)
+    
+    
 
     private DialogueManager() {}
 
@@ -37,13 +41,19 @@ public class DialogueManager {
         this.isActive = true;
         this.dialogueSource = source;
         this.interactor = interactor;
+        
+        // Dispara o evento de que um diálogo começou
+        EventManager.getInstance().trigger(EngineEvent.DIALOGUE_STARTED, null);
     }
 
     public void endDialogue() {
+    	if (!isActive) return;
         this.currentDialogue = null;
         this.currentNode = null;
         this.isActive = false;
         System.out.println("Diálogo finalizado.");
+     // Dispara o evento de que o diálogo terminou
+        EventManager.getInstance().trigger(EngineEvent.DIALOGUE_ENDED, null);
     }
 
     /**

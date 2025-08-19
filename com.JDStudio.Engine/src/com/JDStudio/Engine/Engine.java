@@ -225,9 +225,15 @@ public class Engine extends Canvas implements Runnable {
             lastTime = now;
             
             if (delta >= 1) {
+            	// 1. Processa todos os inputs que aconteceram desde a última frame.
+                InputManager.instance.pollEvents();
+                
+                // 2. Executa a lógica do jogo com um estado de input 100% fiável.
                 tick();
+                
+                // 3. Renderiza o resultado.
                 render();
-                InputManager.instance.update();
+                
                 frames++;
                 delta--;
             }

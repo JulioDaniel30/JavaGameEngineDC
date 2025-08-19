@@ -316,9 +316,14 @@ public PlayingState() {
 // 3. Chame o tick() da caixa de diálogo no tick() do seu estado
 @Override
 public void tick() {
-    super.tick();
+    
     // A caixa de diálogo precisa de ser atualizada para ouvir o input do jogador
     dialogueBox.tick();
+    //adicione isso para evitar que o jogo continue quando a dialogbox esta ativa 
+    if (DialogueManager.getInstance().isActive()) return;
+	//adicione isso para evitar um bug com a integraçao com o teclado
+    if (dialogueBox.inputConsumedThisFramereturn) return;
+    super.tick();
 }
 
 // 4. Chame o render() da caixa de diálogo no render() do seu estado
