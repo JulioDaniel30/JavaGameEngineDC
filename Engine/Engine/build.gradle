@@ -62,3 +62,17 @@ tasks.named('test') {
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
+
+//block of comments to gradle commands
+/*
+    To build the project, run:
+    ./gradlew build
+
+    To publish the library to a local Maven repository, run:
+    ./gradlew publishToMavenLocal
+
+    To run tests, use:
+    ./gradlew test
+
+    For more information on Gradle commands, refer to the Gradle documentation.
+*/
