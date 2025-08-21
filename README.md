@@ -80,81 +80,114 @@ O código está organizado em pacotes, cada um responsável por uma parte espec�
 ---
 
 
-## Como Começar (Configuração do Ambiente Eclipse)
 
-**1. Clonar o Repositório**
+## Como Começar com Gradle
+
+Este projeto utiliza uma estrutura de múltiplos projetos Gradle para gerenciar a engine e os jogos. A configuração é simples e não requer um IDE específico.
+
+### Estrutura de Múltiplos Projetos
+
+O repositório está organizado da seguinte forma:
+
+-   `Engine/`: Contém o código-fonte da engine.
+-   `Game/`: Um jogo de exemplo completo que demonstra os recursos da engine.
+-   `Game_Project_Template/`: Um template básico para iniciar um novo jogo.
+
+### Pré-requisitos
+
+-   **JDK 17** ou superior.
+-   **Gradle 8.5** ou superior (o projeto inclui um Gradle Wrapper, então não é necessário instalar o Gradle manualmente).
+
+### Construindo o Projeto
+
+Para construir a engine e o jogo de exemplo, execute o seguinte comando na raiz do repositório:
+
 ```bash
-git clone https://github.com/JulioDaniel30/JavaGameEngineDC.git
+./gradlew build
 ```
 
-**2. Importar os Projetos no Eclipse**
+Este comando irá compilar todo o código, executar os testes e montar os artefatos necessários.
 
-- Abra o Eclipse e vá em `File` > `Import...`.
-- Expanda a opção `General` e selecione **`Existing Projects into Workspace`**. Clique em `Next`.
-- Clique em `Browse...` e selecione a pasta principal que você acabou de clonar.
-- O Eclipse deve detectar automaticamente todos os projetos (`com.JDStudio.Engine`, `Game_Project_Template`, etc.). Certifique-se de que **todos estejam marcados**.
-- Clique em `Finish`.
+### Executando o Jogo de Exemplo
 
-**3. Configurar a Biblioteca JSON**
+Para executar o jogo de exemplo, utilize o seguinte comando:
 
-- No Eclipse, clique com o botão direito no projeto da engine > `Build Path` > `Configure Build Path...`.
-- Vá para a aba `Libraries`.
-- Clique em `Add JARs...`.
-- Navegue até a pasta `lib` dentro do projeto da engine e selecione o arquivo `.jar` do JSON.
-- Vá para a aba `Order and Export` e **marque a caixa** ao lado do JAR do JSON. Isso garante que os projetos de jogo também possam usá-lo.
-- Clique em `Apply and Close`.
+```bash
+./gradlew :Game:run
+```
 
-**4. Executar o Jogo de Exemplo**
+### Publicando a Engine em um Repositório Maven Local
 
-- No "Package Explorer", dentro do projeto do jogo de exemplo (`Game`), encontre a classe `Main.java`.
-- Clique com o botão direito sobre ela > `Run As` > `Java Application`.
+Se você deseja usar a engine em um projeto separado, pode publicá-la em seu repositório Maven local. Isso permite que você adicione a engine como uma dependência em outros projetos Gradle.
 
----
+Para publicar a engine, execute o seguinte comando:
 
-## Como Criar um Novo Jogo (Método Rápido com o Gerador)
+```bash
+./gradlew :Engine:publishToMavenLocal
+```
 
-A maneira mais fácil e recomendada de começar um novo projeto é usando a ferramenta **JDStudioGameProjectGenerator**, incluída neste repositório. Ela automatiza todo o processo de configuração.
+Após a publicação, você pode adicionar a seguinte dependência ao arquivo `build.gradle` do seu jogo:
 
-### Passo 1: Baixar e Executar a Ferramenta
+```groovy
+repositories {
+    mavenLocal()
+}
 
-1. Navegue até a pasta `Executaveis/` deste repositório e baixe o arquivo **`JDStudioGameProjectGenerator.jar`** para o seu computador.
-2. Dê um duplo clique no arquivo para iniciar o gerador.
+dependencies {
+    implementation 'com.JDStudio:Engine:1.0.0'
+}
+```
 
-### Passo 2: Descrição das Janelas do Assistente Gráfico
+### Criando um Novo Jogo
 
-Durante o processo, o gerador apresenta uma sequência de janelas para configurar seu novo projeto:
+A maneira recomendada de criar um novo jogo é copiar o projeto `Game_Project_Template`.
 
-#### Janela 1: Fonte dos Arquivos
-- Escolha entre **clonar o essencial do repositório** (baixa automaticamente os arquivos necessários para uma pasta escolhida) ou **usar uma pasta local** (caso já tenha o repositório no computador).
+1.  Copie a pasta `Game_Project_Template` para um novo local e renomeie-a para o nome do seu jogo (por exemplo, `MeuSuperJogo`).
+2.  Abra o arquivo `settings.gradle` na raiz do repositório e adicione o seu novo projeto:
 
-#### Janela 2: Nome do Novo Projeto
-- Digite o nome do seu jogo (exemplo: `MeuSuperJogo`). Este será o nome da pasta e do projeto no Eclipse.
+```groovy
+include 'Engine', 'Game', 'Game_Project_Template', 'MeuSuperJogo'
+```
 
-#### Janela 3: Renomear Pacote
-- O gerador pergunta se deseja **renomear o pacote padrão** (`com.game`).
-  - **Sim**: Digite um nome de pacote personalizado (ex: `com.meuestudio.meusuperjogo`).
-  - **Não**: O projeto será criado com o pacote padrão.
+3.  Agora você pode construir e executar seu novo jogo usando os mesmos comandos Gradle, substituindo `Game` pelo nome do seu projeto:
 
-#### Janela 4: Diretório de Destino
-- Escolha a pasta onde o projeto será criado (exemplo: `C:/MeusJogos`). O gerador criará uma nova pasta com o nome do projeto dentro desse diretório.
+```bash
+./gradlew :MeuSuperJogo:build
+./gradlew :MeuSuperJogo:run
+```
 
-#### Janela 5: Opção da Engine
-- Escolha como a engine será tratada:
-  - **Copiar Engine (Autocontido)**: O projeto e a engine ficam juntos, tornando o projeto independente.
-  - **Linkar com Engine (Workspace)**: O projeto do jogo é criado e vinculado à engine do workspace. Atualizações na engine são refletidas automaticamente no jogo.
+### Criando um Novo Jogo com a Engine Local (Maven)
 
-#### Janela 6: Sucesso
-- Ao final, uma janela informa que o **projeto foi gerado com sucesso**, mostrando o caminho onde ele foi criado.
+Se você publicou a engine em seu repositório Maven local, pode criar um novo projeto Gradle em qualquer lugar do seu sistema de arquivos e usar a engine como uma dependência.
 
-### Passo 3: Importar o Projeto Gerado no Eclipse
+**1. Crie um novo projeto Gradle**
 
-1. Abra o Eclipse.
-2. Vá em `File` > `Import...`.
-3. Selecione **`Existing Projects into Workspace`**.
-4. Clique em `Browse...` e selecione a pasta de destino escolhida.
-5. Marque os projetos encontrados e clique em `Finish`.
+Crie uma nova pasta para o seu jogo e, dentro dela, crie um arquivo `build.gradle` com o seguinte conteúdo:
 
-Pronto! Seu novo projeto estará configurado e pronto para desenvolvimento.
+```groovy
+plugins {
+    id 'java'
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation 'com.JDStudio:Engine:1.0.0'
+}
+
+application {
+    mainClass = 'com.meujogo.Main'
+}
+```
+
+**2. Crie a estrutura de pastas**
+
+Crie a seguinte estrutura de pastas dentro do seu projeto:
+
 
 ## Documentação Completa
 

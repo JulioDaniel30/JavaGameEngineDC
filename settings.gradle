@@ -1,0 +1,5 @@
+rootProject.name = 'my-game-repository'
+
+include 'Game'
+include 'Engine'
+include 'Game_Project_Template'

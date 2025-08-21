@@ -9,7 +9,7 @@ Este roadmap organiza os **40 WSUI** em fases de prioridade, para facilitar a im
 
 - [x] [UIHealthBar](#uihealthbarsegmented)  
 - [x] [UIHealthBarSegmented](#uihealthbarsegmented)  
-- [ ] [UIManaBar](#uimanabar)  
+- [x] [UIManaBar](#uimanabar)  
 - [ ] [UIStaminaRing](#uistaminaring)  
 - [x] [UINameplate](#uilevelindicator)  
 - [x] [UIPopup (dano/cura)](#uibuffdebufficon)  

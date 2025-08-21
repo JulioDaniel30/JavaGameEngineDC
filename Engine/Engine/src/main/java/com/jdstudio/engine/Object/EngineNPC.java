@@ -1,0 +1,100 @@
+// engine
+package com.jdstudio.engine.Object;
+
+import java.awt.Graphics;
+
+import org.json.JSONObject;
+
+import com.jdstudio.engine.Components.InteractionComponent;
+import com.jdstudio.engine.Components.InteractionZone;
+import com.jdstudio.engine.Dialogue.ConditionManager;
+import com.jdstudio.engine.Dialogue.Dialogue;
+import com.jdstudio.engine.Dialogue.DialogueManager;
+import com.jdstudio.engine.Dialogue.DialogueNode;
+import com.jdstudio.engine.Dialogue.DialogueParser;
+import com.jdstudio.engine.Utils.PropertiesReader;
+
+public abstract class EngineNPC extends Character{
+
+    protected Dialogue dialogue;
+    protected String dialoguePath;
+    protected int interactionRadius;
+
+    public EngineNPC(JSONObject properties) {
+        super(properties);
+    }
+
+    @Override
+    public void initialize(JSONObject properties) {
+        super.initialize(properties); // Inicializa a base (GameObject -> Character)
+        
+        PropertiesReader reader = new PropertiesReader(properties);
+        
+        this.interactionRadius = reader.getInt("interactionRadius", 24);
+        
+        
+        InteractionComponent interaction = new InteractionComponent();
+
+        // 2. Cria uma zona de interação circular com o TIPO "DIALOGUE" e o mesmo raio de antes
+        interaction.addZone(new InteractionZone(this, InteractionZone.TYPE_DIALOGUE, interactionRadius));
+
+        // 3. Adiciona o componente ao GameObject
+        this.addComponent(interaction);
+           
+       
+        dialoguePath = reader.getString("dialogueFile", null);
+        if (dialoguePath != null && !dialoguePath.isEmpty()) {
+            System.out.println("NPC '" + this.name + "' tentando carregar diálogo de: " + dialoguePath);
+            this.dialogue = DialogueParser.parseDialogue(dialoguePath);
+            if (this.dialogue == null) {
+                System.err.println("ERRO: O diálogo para o NPC '" + this.name + "' falhou ao carregar.");
+            }
+        } else {
+            System.err.println("AVISO: NPC '" + this.name + "' não tem a propriedade 'dialogueFile' definida no Tiled.");
+        }
+    }
+
+ // Método para o EventListener poder aceder ao diálogo
+    public Dialogue getDialogue() {
+        return this.dialogue;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        // NPCs não se movem por padrão, então não chamamos movement.tick()
+    }
+
+    public void startFilteredDialogue(GameObject interactor) {
+        // Cria uma cópia fresca do diálogo para não modificar o original
+        Dialogue filteredDialogue = DialogueParser.parseDialogue(this.dialoguePath); // Supondo que o NPC tem o caminho do seu diálogo
+        if (filteredDialogue == null) return;
+        
+        // Percorre todos os nós do diálogo
+        for (DialogueNode node : filteredDialogue.getNodes().values()) {
+            node.getChoices().removeIf(choice -> {
+                String condition = choice.getCondition();
+                if (condition == null) {
+                    return false; // Sem condição, a escolha nunca é removida
+                }
+
+                // --- A LÓGICA AGORA É DELEGADA AO CONDITION MANAGER ---
+                // A engine pergunta ao jogo se a condição foi satisfeita.
+                boolean conditionMet = ConditionManager.getInstance().checkCondition(condition, interactor);
+                
+                // A escolha será removida se a condição NÃO for satisfeita
+                return !conditionMet;
+            });
+        }
+
+        // Inicia o diálogo com as escolhas já filtradas
+        DialogueManager.getInstance().startDialogue(filteredDialogue, this, interactor);
+    }
+    
+    @Override
+    public void renderDebug(Graphics g) {
+    	// TODO Auto-generated method stub
+    	super.renderDebug(g);
+    }
+    
+}

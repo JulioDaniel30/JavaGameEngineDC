@@ -59,6 +59,28 @@ O local mais comum para criar estes elementos é no método `onObjectFound` do s
         break;
     ```
 
+### Barra de Mana (`UIManaBar`)
+
+**Conceito**: Uma barra que segue um `GameObject` e exibe a sua mana atual, ideal para personagens que usam magia ou habilidades especiais.
+
+**Receita**: Adicionar uma barra de mana ao jogador.
+1.  **Pré-requisito**: O `GameObject` do jogador deve ter um `ManaComponent` adicionado a ele.
+2.  **Implementação**: No `PlayingState`, após criar o jogador, crie e adicione a sua barra de mana.
+    ```java
+    // Em PlayingState.java -> após criar o objeto 'player'
+    
+    // Adiciona a barra de vida (exemplo)
+    UIHealthBar playerHealthBar = new UIHealthBar(player, -8, 24, 4);
+    this.uiManager.addElement(playerHealthBar);
+
+    // Adiciona a nova barra de mana
+    // Parâmetros: (alvo, offset Y, largura da barra, altura da barra)
+    UIManaBar playerManaBar = new UIManaBar(player, -14, 24, 4);
+    
+    // Adiciona a barra de mana ao gestor de UI
+    this.uiManager.addElement(playerManaBar);
+    ```
+
 ### Placa de Nome (`UINameplate`)
 
 **Conceito**: Exibe o nome de um `GameObject` (como um NPC) sobre a sua cabeça.

@@ -1,0 +1,43 @@
+{
+  "defaultEntryPoint": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "speakerName": "Ferreiro",
+      "text": "Olá, aventureiro! Meu martelo quebrou.\nVocê pode me ajudar?",
+      "choices": [
+        {
+          "text": "Claro, o que precisa?",
+          "nextNodeId": 1
+        },
+        {
+          "text": "Estou ocupado agora.",
+          "nextNodeId": 2
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "speakerName": "Ferreiro",
+      "text": "Ótimo! Traga-me 5 minérios de ferro e eu o recompensarei bem.",
+      "choices": [
+        {
+          "text": "Entendido.",
+          "nextNodeId": -1,
+          "action": "accept_quest_martelo"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "speakerName": "Ferreiro",
+      "text": "Que pena. Volte se mudar de ideia.",
+      "choices": [
+        {
+          "text": "Adeus.",
+          "nextNodeId": -1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+    "MOVE_UP": [{ "key": "W" },{ "key": "UP" }],
+	"MOVE_DOWN":[{"key":"S"},{"key":"DOWN"}],
+	"MOVE_RIGHT":[{"key":"D"},{"key":"RIGHT"}],
+	"MOVE_LEFT":[{"key":"A"},{"key":"LEFT"}],
+	
+    "SAVE_GAME": [
+        { "key": "F5"}
+    ],
+	"PAUSE_GAME":[{"key": "F2"}],
+    "RUN": [
+        { "key": "W", "shift": true }
+    ]
+}
