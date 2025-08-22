@@ -11,7 +11,7 @@ plugins {
     // Adiciona o plugin para permitir a publicação em um repositório Maven.
     id 'maven-publish'
 }
-version = '0.1.0'
+version = '0.1.0-SNAPSHOT'
 group = 'com.jdstudio.engine' // Corrigido para corresponder ao uso no projeto Game
 
 repositories {

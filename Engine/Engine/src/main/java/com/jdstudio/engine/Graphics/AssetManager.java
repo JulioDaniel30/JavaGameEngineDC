@@ -138,7 +138,9 @@ public class AssetManager {
                              registerSprite(key, sheet.getSprite(x, startY, spriteWidth, spriteHeight));
                              spritesRegistered++;
                          }
+                         System.out.println("tipo grid (1D): " + count + " sprites registrados.");
                      }
+                    System.out.println("tipo grid: " + spritesRegistered + " sprites registrados.");
                 } else if ("full_grid".equals(type)) {
                     // --- A NOVA LÓGICA AUTOMÁTICA ESTÁ AQUI ---
                     String prefix = def.getString("prefix");
@@ -163,6 +165,7 @@ public class AssetManager {
                             counter++;
                         }
                     }
+                    System.out.println("tipo full_grid: " + (numCols * numRows) + " sprites registrados.");
 
                 } else if ("manual".equals(type)) {
                     // Lógica para extração manual
@@ -177,6 +180,7 @@ public class AssetManager {
                         registerSprite(key, sheet.getSprite(x, y, w, h));
                         spritesRegistered++;
                     }
+                    System.out.println("tipo manual: " + manualSprites.length() + " sprites registrados.");
                 }
             }
             System.out.println(spritesRegistered + " sprites recortados e registrados com sucesso de: " + sheetPath);
