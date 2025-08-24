@@ -9,75 +9,91 @@ import com.jdstudio.engine.Graphics.Sprite.Sprite;
 import com.jdstudio.engine.Graphics.UI.UISpriteKey;
 import com.jdstudio.engine.Graphics.UI.UITheme;
 
+/**
+ * A singleton class that manages UI themes, loading and caching sprites
+ * based on the currently active theme. This allows for easy switching of UI skins.
+ * 
+ * @author JDStudio
+ */
 public class ThemeManager {
     
     private static final ThemeManager instance = new ThemeManager();
     
-    // Um cache aninhado: Map<Tema, Map<Chave, Sprite>>
+    /** A nested cache: Map<Theme, Map<Key, Sprite>> to store loaded sprites per theme. */
     private final Map<UITheme, Map<UISpriteKey, Sprite>> themeCache = new HashMap<>();
     
-    // Define um tema padrão
+    /** The currently active UI theme. */
     private UITheme currentTheme = UITheme.MEDIEVAL;
 
     private ThemeManager() {}
 
+    /**
+     * Gets the single instance of the ThemeManager.
+     * @return The singleton instance.
+     */
     public static ThemeManager getInstance() {
         return instance;
     }
 
     /**
-     * Define o tema de UI ativo para o jogo.
-     * @param theme O tema a ser usado (ex: UITheme.SCI_FI).
+     * Sets the active UI theme for the game.
+     * @param theme The theme to be used (e.g., UITheme.SCI_FI).
      */
     public void setTheme(UITheme theme) {
-        System.out.println("Tema de UI definido para: " + theme.name());
+        System.out.println("UI Theme set to: " + theme.name());
         this.currentTheme = theme;
     }
 
     /**
-     * Pega um sprite do tema atualmente ativo.
-     * Carrega e armazena em cache o sprite se for o primeiro acesso.
-     * @param key A chave do sprite desejado (ex: UISpriteKey.BUTTON_NORMAL).
-     * @return O Sprite correspondente.
+     * Retrieves a sprite from the currently active theme.
+     * It loads and caches the sprite if it's the first access for that theme and key.
+     * 
+     * @param key The key of the desired sprite (e.g., UISpriteKey.BUTTON_NORMAL).
+     * @return The corresponding Sprite.
+     * @throws RuntimeException if the sprite file cannot be found or loaded.
      */
     public Sprite get(UISpriteKey key) {
-        // Garante que o mapa para o tema atual exista no cache
+        // Ensure the map for the current theme exists in the cache
         themeCache.computeIfAbsent(currentTheme, k -> new HashMap<>());
         
-        // Tenta pegar o sprite do cache
+        // Try to get the sprite from the cache
         Sprite cachedSprite = themeCache.get(currentTheme).get(key);
         if (cachedSprite != null) {
             return cachedSprite;
         }
 
-        // Se não estiver no cache, carrega o sprite
+        // If not in cache, load the sprite
         String path = buildSpritePath(currentTheme, key);
         try {
             BufferedImage image = ImageIO.read(getClass().getResourceAsStream(path));
             if (image == null) {
-                throw new IOException("Arquivo de sprite não encontrado para o tema: " + path);
+                throw new IOException("Sprite file not found for theme: " + path);
             }
             Sprite newSprite = new Sprite(image);
             
-            // Armazena o novo sprite no cache
+            // Store the new sprite in the cache
             themeCache.get(currentTheme).put(key, newSprite);
             
             return newSprite;
         } catch (Exception e) {
-            System.err.println("Falha crítica ao carregar o sprite do tema: " + path);
+            System.err.println("Critical failure to load theme sprite: " + path);
             e.printStackTrace();
-            // Lança uma exceção para parar o jogo, pois a UI não pode ser construída
+            // Throw a runtime exception to stop the game, as the UI cannot be built
             throw new RuntimeException(e);
         }
     }
 
     /**
-     * Constrói o caminho do arquivo de forma padronizada.
-     * Ex: getPath(UITheme.MEDIEVAL, UISpriteKey.BUTTON_NORMAL) -> "/ui/medieval/button_normal.png"
+     * Constructs the file path for a UI sprite based on the theme and sprite key.
+     * Example: getPath(UITheme.MEDIEVAL, UISpriteKey.BUTTON_NORMAL) -> "/ui/medieval/button_normal.png"
+     * 
+     * @param theme The UITheme.
+     * @param key   The UISpriteKey.
+     * @return The constructed file path.
      */
     private String buildSpritePath(UITheme theme, UISpriteKey key) {
-        String themeName = theme.name().toLowerCase(); // ex: "medieval"
-        String keyName = key.name().toLowerCase();   // ex: "button_normal"
+        String themeName = theme.name().toLowerCase(); // e.g., "medieval"
+        String keyName = key.name().toLowerCase();   // e.g., "button_normal"
         return "/Engine/UI/" + themeName + "/" + keyName + ".png";
     }
 }

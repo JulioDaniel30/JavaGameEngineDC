@@ -10,23 +10,32 @@ import com.jdstudio.engine.Graphics.WSUI.UIWorldAttached;
 import com.jdstudio.engine.Object.GameObject;
 
 /**
- * Um elemento de UI no mundo do jogo que exibe uma seta sobre um alvo,
- * podendo piscar e girar para apontar para outro GameObject.
+ * A world-space UI element that displays an arrow above a target {@link GameObject}.
+ * The arrow can blink and rotate to point towards another specified {@link GameObject}.
+ * 
+ * @author JDStudio
  */
 public class UIDirectionArrow extends UIWorldAttached {
 
     private final Sprite arrowSprite;
-    private GameObject pointTarget; // O GameObject para o qual a seta deve apontar
+    private GameObject pointTarget; // The GameObject the arrow should point towards
 
-    // Lógica para o efeito de piscar
+    // Logic for the blinking effect
     private boolean isBlinking = false;
     private int blinkTimer = 0;
-    private int blinkSpeed = 15; // Pisca a cada 15 ticks
+    private int blinkSpeed = 15; // Blinks every 15 ticks
 
-    private double currentAngle = 0.0; // Ângulo de rotação em radianos
+    private double currentAngle = 0.0; // Rotation angle in radians
 
+    /**
+     * Constructs a new UIDirectionArrow.
+     *
+     * @param followTarget The GameObject this arrow will follow (its owner).
+     * @param arrowSprite  The sprite to use for the arrow.
+     * @param blinking     If true, the arrow will blink.
+     */
     public UIDirectionArrow(GameObject followTarget, Sprite arrowSprite, boolean blinking) {
-        // O offset Y padrão pode ser ajustado para aparecer acima da cabeça do personagem
+        // The default Y offset can be adjusted to appear above the character's head
         super(followTarget, -20);
         this.arrowSprite = arrowSprite;
         this.isBlinking = blinking;
@@ -37,20 +46,24 @@ public class UIDirectionArrow extends UIWorldAttached {
     }
 
     /**
-     * Define o alvo para o qual a seta deve apontar.
-     * Se for nulo, a seta aponta para cima.
-     * @param pointTarget O GameObject alvo.
+     * Sets the target GameObject for the arrow to point towards.
+     * If null, the arrow will point upwards.
+     * @param pointTarget The target GameObject.
      */
     public void setPointTarget(GameObject pointTarget) {
         this.pointTarget = pointTarget;
     }
 
+    /**
+     * Updates the arrow's position, blinking state, and rotation.
+     * It follows its {@code followTarget} and rotates to point towards its {@code pointTarget}.
+     */
     @Override
     public void tick() {
-        super.tick(); // A classe pai (UIWorldAttached) já trata de seguir o alvo.
+        super.tick(); // The parent class (UIWorldAttached) already handles following the target.
         if (!visible) return;
 
-        // Lógica de piscar
+        // Blinking logic
         if (isBlinking) {
             blinkTimer++;
             if (blinkTimer > blinkSpeed * 2) {
@@ -58,7 +71,7 @@ public class UIDirectionArrow extends UIWorldAttached {
             }
         }
         
-        // Lógica de rotação
+        // Rotation logic
         if (pointTarget != null && target != null) {
             double targetX = pointTarget.getCenterX();
             double targetY = pointTarget.getCenterY();
@@ -66,42 +79,47 @@ public class UIDirectionArrow extends UIWorldAttached {
             double selfX = target.getCenterX();
             double selfY = target.getCenterY();
 
-            // Calcula o ângulo entre o dono da seta e o alvo
+            // Calculate the angle between the arrow's owner and the target
             this.currentAngle = Math.atan2(targetY - selfY, targetX - selfX);
         } else {
-            // Se não houver alvo para apontar, aponta para cima
-            this.currentAngle = -Math.PI / 2; // -90 graus
+            // If there's no target to point to, point upwards
+            this.currentAngle = -Math.PI / 2; // -90 degrees
         }
     }
 
+    /**
+     * Renders the direction arrow, applying blinking and rotation effects.
+     *
+     * @param g The Graphics context to draw on.
+     */
     @Override
     public void render(Graphics g) {
         if (!visible || target == null || arrowSprite == null) return;
 
-        // Se estiver a piscar, só desenha na "primeira metade" do ciclo
+        // If blinking, only draw in the "first half" of the cycle
         if (isBlinking && blinkTimer > blinkSpeed) {
             return;
         }
 
         Graphics2D g2d = (Graphics2D) g.create();
         
-        // As coordenadas 'this.x' e 'this.y' já são atualizadas pelo tick() da classe pai.
+        // The coordinates 'this.x' and 'this.y' are already updated by the parent's tick().
         int drawX = this.x - Engine.camera.getX();
         int drawY = this.y - Engine.camera.getY();
 
-        // --- LÓGICA DE ROTAÇÃO ---
+        // --- ROTATION LOGIC ---
         AffineTransform oldTransform = g2d.getTransform();
         
-        // Translada o ponto de rotação para o centro da imagem
+        // Translate the rotation point to the center of the image
         int centerX = drawX - width / 2;
         int centerY = drawY - height / 2;
         
-        // Roda o contexto gráfico. Adicionamos +90 graus (PI/2) porque a maioria das setas é desenhada apontando para a direita.
+        // Rotate the graphics context. Add +90 degrees (PI/2) because most arrows are drawn pointing right.
         g2d.rotate(currentAngle + Math.PI / 2, centerX + width / 2.0, centerY + height / 2.0);
 
         g2d.drawImage(arrowSprite.getImage(), centerX, centerY, null);
         
-        g2d.setTransform(oldTransform); // Restaura a transformação para não afetar outros desenhos
+        g2d.setTransform(oldTransform); // Restore the transform to not affect other drawings
         g2d.dispose();
     }
 }

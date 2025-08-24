@@ -10,9 +10,12 @@ import com.jdstudio.engine.Object.GameObject;
 import com.jdstudio.engine.Utils.PropertiesReader;
 
 /**
- * Uma classe base "engine-side" para qualquer tipo de baú/cofre.
- * Contém toda a lógica de estado (aberto/fechado), animação, interação e sistema de loot.
- * A subclasse do jogo é responsável por fornecer as animações específicas e definir o loot.
+ * An abstract base class for any type of chest or container in the game.
+ * It handles the state logic (open/closed, looted), animation, interaction, and loot system.
+ * Game-specific subclasses are responsible for providing the specific animations and defining the loot.
+ * This class also implements {@link ISavable} to allow its state to be persisted.
+ * 
+ * @author JDStudio
  */
 public abstract class EngineChest extends GameObject implements ISavable {
 
@@ -23,10 +26,21 @@ public abstract class EngineChest extends GameObject implements ISavable {
     protected boolean requiresKey = false;
     protected String requiredKeyId;
 
+    /**
+     * Constructs a new EngineChest with the given properties.
+     * 
+     * @param properties A JSONObject containing the initial properties of the chest.
+     */
     public EngineChest(JSONObject properties) {
         super(properties);
     }
 
+    /**
+     * Initializes the EngineChest's properties from a JSONObject.
+     * It sets up the open/looted state, loot table, key requirements, and animator.
+     *
+     * @param properties A JSONObject containing the properties to initialize.
+     */
     @Override
     public void initialize(JSONObject properties) {
         super.initialize(properties);
@@ -41,10 +55,10 @@ public abstract class EngineChest extends GameObject implements ISavable {
         this.animator = new Animator();
         this.addComponent(animator);
         
-        // Chama o método abstrato que a classe do JOGO irá implementar
+        // Call the abstract method that the GAME class will implement
         setupAnimations(this.animator);
 
-        // Adiciona a zona de interação manual
+        // Add manual interaction zone
         InteractionComponent interaction = new InteractionComponent();
         interaction.addZone(new InteractionZone(this, InteractionZone.TYPE_DIALOGUE, 24.0));
         this.addComponent(interaction);
@@ -54,51 +68,56 @@ public abstract class EngineChest extends GameObject implements ISavable {
     }
     
     /**
-     * Método principal de interação com o baú
+     * Main interaction method with the chest.
+     * It handles opening the chest (with optional key requirement) and looting it.
      */
     public void interact() {
         if (!animator.getCurrentAnimationKey().startsWith("idle")) return;
 
-        // Se já está aberto e foi saqueado, não faz nada
+        // If already open and looted, do nothing
         if (isOpen && hasBeenLooted) {
             onAlreadyLooted();
             return;
         }
 
-        // Se está fechado, tenta abrir
+        // If closed, try to open
         if (!isOpen) {
             if (requiresKey && !hasRequiredKey()) {
                 onKeyRequired();
                 return;
             }
             
-            // Abre o baú
+            // Open the chest
             animator.play("opening");
             isOpen = true;
             onChestOpened();
         }
         
-        // Se está aberto mas não foi saqueado, permite saquear
+        // If open but not looted, allow looting
         if (isOpen && !hasBeenLooted) {
             lootChest();
         }
     }
 
     /**
-     * Executa o saque do baú
+     * Executes the looting process of the chest.
+     * It sets the {@code hasBeenLooted} flag and calls the game-specific loot giving method.
      */
     protected void lootChest() {
         if (hasBeenLooted) return;
         
         hasBeenLooted = true;
         
-        // Chama o método abstrato para dar o loot específico do jogo
+        // Call the abstract method to give game-specific loot
         giveLoot(lootTable);
         
-        // Notifica que o baú foi saqueado
+        // Notify that the chest was looted
         onChestLooted();
     }
 
+    /**
+     * Updates the chest's logic, primarily handling animation state transitions.
+     */
     @Override
     public void tick() {
         super.tick();
@@ -115,7 +134,8 @@ public abstract class EngineChest extends GameObject implements ISavable {
     }
     
     /**
-     * Atualiza os visuais baseado no estado atual
+     * Updates the visual state of the chest based on its open/looted status.
+     * It plays different idle animations (e.g., idleClosed, idleOpenFull, idleOpenEmpty).
      */
     private void updateStateVisuals() {
         if (isOpen) {
@@ -129,6 +149,11 @@ public abstract class EngineChest extends GameObject implements ISavable {
         }
     }
 
+    /**
+     * Saves the current state of the chest to a JSONObject.
+     * 
+     * @return A JSONObject containing the chest's savable state.
+     */
     @Override
     public JSONObject saveState() {
         JSONObject state = new JSONObject();
@@ -138,6 +163,11 @@ public abstract class EngineChest extends GameObject implements ISavable {
         return state;
     }
 
+    /**
+     * Loads the state of the chest from a JSONObject.
+     * 
+     * @param state The JSONObject containing the saved data.
+     */
     @Override
     public void loadState(JSONObject state) {
         this.isOpen = state.getBoolean("isOpen");
@@ -153,56 +183,59 @@ public abstract class EngineChest extends GameObject implements ISavable {
     public String getRequiredKeyId() { return requiredKeyId; }
     
     /**
-     * MÉTODOS ABSTRATOS: A classe do jogo DEVE implementar estes métodos
+     * ABSTRACT METHODS: The game class MUST implement these methods
      */
     
     /**
-     * Configura as animações específicas do baú
-     * @param animator O componente Animator a ser configurado
+     * Configures the specific animations for the chest.
+     * 
+     * @param animator The Animator component to be configured.
      */
     protected abstract void setupAnimations(Animator animator);
     
     /**
-     * Verifica se o jogador possui a chave necessária
-     * @return true se possui a chave ou se não é necessária
+     * Checks if the player possesses the required key to open this chest.
+     * 
+     * @return true if the key is held or if no key is needed.
      */
     protected abstract boolean hasRequiredKey();
     
     /**
-     * Dá o loot específico do jogo ao jogador
-     * @param lootTable A tabela de loot a ser usada
+     * Gives the game-specific loot to the player.
+     * 
+     * @param lootTable The loot table to be used.
      */
     protected abstract void giveLoot(String lootTable);
     
     /**
-     * MÉTODOS OPCIONAIS: A classe do jogo pode sobrescrever para comportamento customizado
+     * OPTIONAL METHODS: The game class can override these for custom behavior
      */
     
     /**
-     * Chamado quando o baú é aberto pela primeira vez
+     * Called when the chest is opened for the first time.
      */
     protected void onChestOpened() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando o baú é saqueado
+     * Called when the chest is looted.
      */
     protected void onChestLooted() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando o jogador tenta abrir um baú que requer chave
+     * Called when the player attempts to open a chest that requires a key without having it.
      */
     protected void onKeyRequired() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando o jogador interage com um baú já saqueado
+     * Called when the player interacts with an already looted chest.
      */
     protected void onAlreadyLooted() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
 }

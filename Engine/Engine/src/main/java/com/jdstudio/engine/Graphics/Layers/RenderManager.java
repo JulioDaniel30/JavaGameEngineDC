@@ -1,4 +1,3 @@
-// engine
 package com.jdstudio.engine.Graphics.Layers;
 
 import java.awt.Graphics;
@@ -9,16 +8,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A singleton class responsible for managing and orchestrating the rendering of all {@link IRenderable} objects
+ * across different {@link RenderLayer}s. It ensures objects are drawn in the correct order based on their layer depth
+ * and Z-order within each layer.
+ * 
+ * @author JDStudio
+ */
 public class RenderManager {
     
     private static final RenderManager instance = new RenderManager();
     
-    // Agora temos uma lista de camadas e um mapa para a fila de renderização
+    /** A sorted list of registered render layers. */
     private final List<RenderLayer> layers = new ArrayList<>();
+    
+    /** A map where keys are RenderLayers and values are lists of IRenderable objects to be rendered on that layer. */
     private final Map<RenderLayer, List<IRenderable>> renderQueue = new HashMap<>();
 
+    /**
+     * Private constructor to enforce singleton pattern.
+     * Registers the engine's standard rendering layers.
+     */
     private RenderManager() {
-        // Regista as camadas padrão da engine
+        // Register the engine's standard layers
         registerLayer(StandardLayers.PARALLAX_BACKGROUND);
         registerLayer(StandardLayers.WORLD_BACKGROUND);
         registerLayer(StandardLayers.GAMEPLAY_BELOW);
@@ -32,24 +44,34 @@ public class RenderManager {
         registerLayer(StandardLayers.UI);
     }
 
-    public static RenderManager getInstance() { return instance; }
+    /**
+     * Gets the single instance of the RenderManager.
+     * @return The singleton instance.
+     */
+    public static RenderManager getInstance() { 
+        return instance; 
+    }
 
     /**
-     * O jogo usa este método para adicionar as suas próprias camadas de renderização.
+     * Registers a new rendering layer with the manager.
+     * The game can use this method to add its own custom rendering layers.
+     * Layers are automatically sorted by their depth.
+     * 
+     * @param layer The RenderLayer to register.
      */
     public void registerLayer(RenderLayer layer) {
         if (!layers.contains(layer)) {
             layers.add(layer);
             renderQueue.put(layer, new ArrayList<>());
-            // Reordena a lista de camadas por profundidade sempre que uma nova é adicionada
+            // Re-sort the layer list by depth whenever a new one is added
             Collections.sort(layers);
         }
     }
     
     /**
-     * Procura e retorna uma camada de renderização pelo seu nome.
-     * @param name O nome da camada (ex: "CHARACTERS").
-     * @return O objeto RenderLayer correspondente, ou null se não for encontrado.
+     * Finds and returns a registered render layer by its name.
+     * @param name The name of the layer (e.g., "CHARACTERS").
+     * @return The corresponding RenderLayer object, or null if not found.
      */
     public RenderLayer getLayerByName(String name) {
         for (RenderLayer layer : layers) {
@@ -57,25 +79,43 @@ public class RenderManager {
                 return layer;
             }
         }
-        return null; // Retorna nulo se nenhuma camada com esse nome foi registada.
+        return null; // Returns null if no layer with that name is registered.
     }
 
+    /**
+     * Registers an {@link IRenderable} object to be drawn on its specified layer.
+     * 
+     * @param renderable The object to register for rendering.
+     */
     public void register(IRenderable renderable) {
         if (renderable != null) {
             renderQueue.get(renderable.getRenderLayer()).add(renderable);
         }
     }
 
+    /**
+     * Unregisters an {@link IRenderable} object, removing it from the rendering queue.
+     * 
+     * @param renderable The object to unregister.
+     */
     public void unregister(IRenderable renderable) {
         if (renderable != null) {
             renderQueue.get(renderable.getRenderLayer()).remove(renderable);
         }
     }
 
+    /**
+     * Performs the actual rendering process.
+     * It iterates through all registered layers in order of depth, and for each layer,
+     * it draws all visible {@link IRenderable} objects sorted by their Z-order.
+     * 
+     * @param g The Graphics context to draw on.
+     */
     public void render(Graphics g) {
-        // Itera sobre as camadas já ordenadas por profundidade
+        // Iterate over layers already sorted by depth
         for (RenderLayer layer : layers) {
             List<IRenderable> renderables = renderQueue.get(layer);
+            // Sort renderables within the layer by their Z-order
             renderables.sort(Comparator.comparingInt(IRenderable::getZOrder));
             for (IRenderable renderable : renderables) {
                 if (renderable.isVisible()) {
@@ -85,6 +125,10 @@ public class RenderManager {
         }
     }
 
+    /**
+     * Clears all {@link IRenderable} objects from all rendering layers.
+     * This is typically called when changing game states or loading a new level.
+     */
     public void clear() {
         for (List<IRenderable> list : renderQueue.values()) {
             list.clear();

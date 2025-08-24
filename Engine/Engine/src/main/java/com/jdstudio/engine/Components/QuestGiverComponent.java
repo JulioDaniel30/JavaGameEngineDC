@@ -5,43 +5,53 @@ import com.jdstudio.engine.Graphics.UI.Managers.UIManager;
 import com.jdstudio.engine.Object.GameObject;
 
 /**
- * A classe base "engine-side" para qualquer componente que dá missões.
- * Ela gere a parte visual (o UIQuestMarker), enquanto delega a lógica
- * da missão para as subclasses do jogo.
+ * The base, engine-side class for any component that gives quests.
+ * It manages the visual aspect (the UI Quest Marker) while delegating the actual quest logic
+ * to game-specific subclasses.
+ * 
+ * @author JDStudio
  */
 public abstract class QuestGiverComponent extends Component {
 
-    // Este componente agora gere internamente o indicador visual
+    /** This component now internally manages the visual indicator. */
     private QuestIndicatorComponent indicator;
 
     /**
-     * Construtor para a classe base.
-     * @param uiManager O UIManager do estado de jogo, necessário para criar o marcador de UI.
-     * @param assets O AssetManager que contém os sprites dos ícones de missão.
+     * Constructor for the base class.
+     * 
+     * @param uiManager The UIManager from the game state, required to create the UI marker.
+     * @param assets    The AssetManager containing the quest icon sprites.
      */
     public QuestGiverComponent(UIManager uiManager, AssetManager assets) {
         this.indicator = new QuestIndicatorComponent(uiManager, assets);
     }
     
+    /**
+     * Initializes the component, adding the visual indicator to the same owner.
+     */
     @Override
     public void initialize(GameObject owner) {
         super.initialize(owner);
-        // Garante que o indicador visual seja adicionado ao mesmo dono
+        // Ensures the visual indicator is added to the same owner
         owner.addComponent(this.indicator);
-        updateMarkerState(); // Define o estado inicial do ícone
+        updateMarkerState(); // Sets the initial state of the icon
     }
 
+    /**
+     * Updates the component every frame, checking the quest state and updating the visual icon accordingly.
+     */
     @Override
     public void update() {
-        // A lógica principal do componente: a cada frame, verifica o estado da missão
-        // e atualiza o ícone visual de acordo.
         updateMarkerState();
     }
     
+    /**
+     * Checks the current quest state by calling the abstract methods and updates the visual indicator.
+     */
     private void updateMarkerState() {
         if (indicator == null) return;
         
-        // Delega a verificação da lógica para os métodos abstratos que o jogo irá implementar
+        // Delegates the logic check to the abstract methods that the game will implement
         if (isQuestCompleted()) {
             indicator.hide();
         } else if (isQuestCompletable()) {
@@ -55,29 +65,29 @@ public abstract class QuestGiverComponent extends Component {
         }
     }
 
-    // --- MÉTODOS ABSTRATOS PARA SEREM IMPLEMENTADOS PELO JOGO ---
+    // --- ABSTRACT METHODS TO BE IMPLEMENTED BY THE GAME ---
 
     /**
-     * O JOGO deve implementar esta lógica.
-     * @return true se a missão estiver disponível para ser aceite.
+     * GAME-SPECIFIC LOGIC: Must be implemented by the subclass.
+     * @return true if the quest is available to be accepted.
      */
     public abstract boolean isQuestAvailable();
     
     /**
-     * O JOGO deve implementar esta lógica.
-     * @return true se a missão já foi aceite e está em andamento.
+     * GAME-SPECIFIC LOGIC: Must be implemented by the subclass.
+     * @return true if the quest has been accepted and is in progress.
      */
     public abstract boolean isQuestActive();
     
     /**
-     * O JOGO deve implementar esta lógica.
-     * @return true se a missão está em andamento E os objetivos foram cumpridos.
+     * GAME-SPECIFIC LOGIC: Must be implemented by the subclass.
+     * @return true if the quest is in progress AND the objectives have been met.
      */
     public abstract boolean isQuestCompletable();
     
     /**
-     * O JOGO deve implementar esta lógica.
-     * @return true se a missão já foi entregue e está permanentemente concluída.
+     * GAME-SPECIFIC LOGIC: Must be implemented by the subclass.
+     * @return true if the quest has been turned in and is permanently completed.
      */
     public abstract boolean isQuestCompleted();
 }

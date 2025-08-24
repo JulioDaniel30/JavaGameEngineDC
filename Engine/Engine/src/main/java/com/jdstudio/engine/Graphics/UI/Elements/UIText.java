@@ -6,11 +6,11 @@ import java.awt.Graphics;
 import java.util.function.Supplier;
 
 /**
- * Um elemento de UI que renderiza um texto na tela.
+ * A UI element that renders text on the screen.
  * <p>
- * Esta classe é capaz de exibir tanto texto estático quanto texto dinâmico,
- * cujo conteúdo pode mudar a cada quadro (frame). A dinamicidade é alcançada
- * através de um {@link Supplier<String>}, que fornece o texto atualizado.
+ * This class is capable of displaying both static text and dynamic text,
+ * whose content can change every frame. Dynamicity is achieved through
+ * a {@link Supplier<String>}, which provides the updated text.
  *
  * @author JDStudio
  * @since 1.0
@@ -18,28 +18,28 @@ import java.util.function.Supplier;
  */
 public class UIText extends UIElement {
 
-    /** A fonte usada para renderizar o texto. */
+    /** The font used to render the text. */
     private Font font;
 
-    /** A cor do texto. */
+    /** The color of the text. */
     private Color color;
 
     /**
-     * Um fornecedor funcional (Supplier) que retorna a string de texto atual.
-     * Permite que o texto seja atualizado dinamicamente a cada renderização.
-     * Por exemplo, para exibir um contador de FPS: {@code () -> "FPS: " + getFPS()}
+     * A functional supplier that returns the current text string.
+     * Allows the text to be updated dynamically with each rendering.
+     * For example, to display an FPS counter: {@code () -> "FPS: " + getFPS()}
      */
     private Supplier<String> textSupplier;
 
     /**
-     * Construtor para criar um elemento de texto dinâmico.
+     * Constructs a new dynamic text UI element.
      *
-     * @param x            A coordenada horizontal (eixo X) onde o texto será desenhado.
-     * @param y            A coordenada vertical (eixo Y) onde o texto será desenhado.
-     * @param font         O objeto {@link Font} para estilizar o texto.
-     * @param color        O objeto {@link Color} para colorir o texto.
-     * @param textSupplier Uma função {@code Supplier} que retorna a string a ser exibida.
-     * É executada a cada chamada do método render.
+     * @param x            The horizontal coordinate (X-axis) where the text will be drawn.
+     * @param y            The vertical coordinate (Y-axis) where the text will be drawn.
+     * @param font         The {@link Font} object to style the text.
+     * @param color        The {@link Color} object to color the text.
+     * @param textSupplier A {@code Supplier} function that returns the string to be displayed.
+     *                     It is executed on each call to the render method.
      */
     public UIText(int x, int y, Font font, Color color, Supplier<String> textSupplier) {
         super(x, y);
@@ -49,28 +49,29 @@ public class UIText extends UIElement {
     }
 
     /**
-     * Construtor para criar um elemento de texto estático.
+     * Constructs a new static text UI element.
      * <p>
-     * Este é um construtor de conveniência que internamente cria um {@code Supplier}
-     * para um texto que nunca muda.
+     * This is a convenience constructor that internally creates a {@code Supplier}
+     * for a text that never changes.
      *
-     * @param x          A coordenada horizontal (eixo X).
-     * @param y          A coordenada vertical (eixo Y).
-     * @param font       O objeto {@link Font} para estilizar o texto.
-     * @param color      O objeto {@link Color} para colorir o texto.
-     * @param staticText A string de texto fixa que será exibida.
+     * @param x          The horizontal coordinate (X-axis).
+     * @param y          The vertical coordinate (Y-axis).
+     * @param font       The {@link Font} object to style the text.
+     * @param color      The {@link Color} object to color the text.
+     * @param staticText The fixed text string that will be displayed.
      */
     public UIText(int x, int y, Font font, Color color, String staticText) {
-        // Reutiliza o construtor principal, envolvendo o texto estático em um Supplier.
+        // Reuses the main constructor, wrapping the static text in a Supplier.
         this(x, y, font, color, () -> staticText);
     }
 
     /**
-     * {@inheritDoc}
-     * <p>
-     * Desenha o texto na tela. A cada chamada, ele obtém o valor mais recente
-     * do {@code textSupplier}, define a fonte e a cor no contexto gráfico
-     * e, em seguida, desenha a string na posição (x, y) do elemento.
+     * Renders the text on the screen.
+     * On each call, it obtains the latest value from the {@code textSupplier},
+     * sets the font and color in the graphics context, and then draws the string
+     * at the element's (x, y) position.
+     *
+     * @param g The Graphics context to draw on.
      */
     @Override
     public void render(Graphics g) {

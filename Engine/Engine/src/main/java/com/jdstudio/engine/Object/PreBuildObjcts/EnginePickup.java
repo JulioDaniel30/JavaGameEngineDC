@@ -10,9 +10,12 @@ import com.jdstudio.engine.Object.GameObject;
 import com.jdstudio.engine.Utils.PropertiesReader;
 
 /**
- * Uma classe base "engine-side" para qualquer tipo de item coletável.
- * Contém toda a lógica de coleta, animação e integração com inventário.
- * A subclasse do jogo é responsável por fornecer as animações específicas e definir o item.
+ * An abstract base class for any type of collectible item in the game.
+ * It contains all the logic for collection, animation, and inventory integration.
+ * Game-specific subclasses are responsible for providing the specific animations and defining the item.
+ * This class also implements {@link ISavable} to allow its state to be persisted.
+ * 
+ * @author JDStudio
  */
 public abstract class EnginePickup extends GameObject implements ISavable {
 
@@ -22,15 +25,26 @@ public abstract class EnginePickup extends GameObject implements ISavable {
     protected int quantity = 1;
     protected boolean autoPickup = false;
     protected boolean respawns = false;
-    protected int respawnTime = 0; // Em ticks
+    protected int respawnTime = 0; // In ticks
     protected int currentRespawnTimer = 0;
     protected boolean requiresKey = false;
     protected String requiredKeyId;
 
+    /**
+     * Constructs a new EnginePickup with the given properties.
+     * 
+     * @param properties A JSONObject containing the initial properties of the pickup.
+     */
     public EnginePickup(JSONObject properties) {
         super(properties);
     }
 
+    /**
+     * Initializes the EnginePickup's properties from a JSONObject.
+     * It sets up item ID, quantity, auto-pickup, respawn behavior, and key requirements.
+     *
+     * @param properties A JSONObject containing the properties to initialize.
+     */
     @Override
     public void initialize(JSONObject properties) {
         super.initialize(properties);
@@ -40,7 +54,7 @@ public abstract class EnginePickup extends GameObject implements ISavable {
         this.quantity = reader.getInt("quantity", 1);
         this.autoPickup = reader.getBoolean("autoPickup", false);
         this.respawns = reader.getBoolean("respawns", false);
-        this.respawnTime = reader.getInt("respawnTime", 300); // 5 segundos a 60 FPS
+        this.respawnTime = reader.getInt("respawnTime", 300); // 5 seconds at 60 FPS
         this.requiresKey = reader.getBoolean("requiresKey", false);
         this.requiredKeyId = reader.getString("requiredKeyId", "");
         this.isCollected = reader.getBoolean("isCollected", false);
@@ -48,10 +62,10 @@ public abstract class EnginePickup extends GameObject implements ISavable {
         this.animator = new Animator();
         this.addComponent(animator);
         
-        // Chama o método abstrato que a classe do JOGO irá implementar
+        // Call the abstract method that the GAME class will implement
         setupAnimations(this.animator);
 
-        // Se não é auto pickup, adiciona zona de interação
+        // If not auto pickup, add interaction zone
         if (!autoPickup) {
             InteractionComponent interaction = new InteractionComponent();
             interaction.addZone(new InteractionZone(this, InteractionZone.TYPE_DIALOGUE, 24.0));
@@ -63,13 +77,14 @@ public abstract class EnginePickup extends GameObject implements ISavable {
     }
     
     /**
-     * Método principal de interação com o item (para pickup manual)
+     * Main interaction method for manual pickup.
+     * It checks for key requirements and then collects the item.
      */
     public void interact() {
         if (isCollected) return;
         if (!animator.getCurrentAnimationKey().startsWith("idle")) return;
 
-        // Verifica se precisa de chave
+        // Check if key is required
         if (requiresKey && !hasRequiredKey()) {
             onKeyRequired();
             return;
@@ -79,14 +94,17 @@ public abstract class EnginePickup extends GameObject implements ISavable {
     }
 
     /**
-     * Método para coleta automática (chamado por colisão)
+     * Method for automatic collection (called by collision).
+     * 
+     * @param other The GameObject that collided with this pickup.
      */
+    @Override
     public void onCollision(GameObject other) {
         if (!autoPickup || isCollected) return;
         
-        // Verifica se é o jogador colidindo
+        // Check if it's the player colliding
         if (isPlayer(other)) {
-            // Verifica se precisa de chave
+            // Check if key is required
             if (requiresKey && !hasRequiredKey()) {
                 onKeyRequired();
                 return;
@@ -97,7 +115,9 @@ public abstract class EnginePickup extends GameObject implements ISavable {
     }
 
     /**
-     * Executa a coleta do item
+     * Executes the item collection process.
+     * It sets the collected flag, plays the collecting animation, gives the item to the player,
+     * and handles respawn logic.
      */
     protected void collectItem() {
         if (isCollected) return;
@@ -105,13 +125,13 @@ public abstract class EnginePickup extends GameObject implements ISavable {
         isCollected = true;
         animator.play("collecting");
         
-        // Chama o método abstrato para adicionar o item ao inventário
+        // Call the abstract method to add the item to the player's inventory
         giveItemToPlayer(itemId, quantity);
         
-        // Notifica que o item foi coletado
+        // Notify that the item was collected
         onItemCollected();
         
-        // Se não respawna, marca para destruição
+        // If it doesn't respawn, mark for destruction
         if (!respawns) {
             setCollisionType(CollisionType.NO_COLLISION);
         } else {
@@ -119,11 +139,14 @@ public abstract class EnginePickup extends GameObject implements ISavable {
         }
     }
 
+    /**
+     * Updates the pickup's logic, primarily managing respawn timers and animation state transitions.
+     */
     @Override
     public void tick() {
         super.tick();
         
-        // Gerencia o respawn
+        // Manage respawn
         if (isCollected && respawns && currentRespawnTimer > 0) {
             currentRespawnTimer--;
             if (currentRespawnTimer <= 0) {
@@ -131,7 +154,7 @@ public abstract class EnginePickup extends GameObject implements ISavable {
             }
         }
         
-        // Gerencia as animações
+        // Manage animations
         if (animator.getCurrentAnimation() != null && animator.getCurrentAnimation().hasFinished()) {
             String currentKey = animator.getCurrentAnimationKey();
             
@@ -139,7 +162,7 @@ public abstract class EnginePickup extends GameObject implements ISavable {
                 if (respawns) {
                     animator.play("collected");
                 } else {
-                    // Item não respawna, pode ser destruído
+                    // Item does not respawn, can be destroyed
                     this.isDestroyed = true;
                 }
             } else if ("respawning".equals(currentKey)) {
@@ -149,7 +172,8 @@ public abstract class EnginePickup extends GameObject implements ISavable {
     }
     
     /**
-     * Respawna o item
+     * Respawns the item, making it available for collection again.
+     * It resets the collected flag, plays the respawning animation, and updates collision type.
      */
     protected void respawnItem() {
         isCollected = false;
@@ -159,14 +183,15 @@ public abstract class EnginePickup extends GameObject implements ISavable {
     }
     
     /**
-     * Atualiza os visuais baseado no estado atual
+     * Updates the visual state of the pickup based on its collected status.
+     * It plays different idle animations (e.g., idleAvailable, collected).
      */
     private void updateStateVisuals() {
         if (isCollected) {
             if (respawns) {
                 animator.play("collected");
             } else {
-                // Item coletado e não respawna - pode ser invisível
+                // Item collected and does not respawn - can be invisible
                 animator.play("collected");
             }
         } else {
@@ -174,6 +199,11 @@ public abstract class EnginePickup extends GameObject implements ISavable {
         }
     }
 
+    /**
+     * Saves the current state of the pickup to a JSONObject.
+     * 
+     * @return A JSONObject containing the pickup's savable state.
+     */
     @Override
     public JSONObject saveState() {
         JSONObject state = new JSONObject();
@@ -183,13 +213,18 @@ public abstract class EnginePickup extends GameObject implements ISavable {
         return state;
     }
 
+    /**
+     * Loads the state of the pickup from a JSONObject.
+     * 
+     * @param state The JSONObject containing the saved data.
+     */
     @Override
     public void loadState(JSONObject state) {
         this.isCollected = state.getBoolean("isCollected");
         this.currentRespawnTimer = state.getInt("currentRespawnTimer");
         updateStateVisuals();
         
-        // Atualiza o tipo de colisão baseado no estado
+        // Update collision type based on state
         if (isCollected && !respawns) {
             setCollisionType(CollisionType.NO_COLLISION);
         } else {
@@ -209,57 +244,61 @@ public abstract class EnginePickup extends GameObject implements ISavable {
     public String getRequiredKeyId() { return requiredKeyId; }
     
     /**
-     * MÉTODOS ABSTRATOS: A classe do jogo DEVE implementar estes métodos
+     * ABSTRACT METHODS: The game class MUST implement these methods
      */
     
     /**
-     * Configura as animações específicas do item
-     * @param animator O componente Animator a ser configurado
+     * Configures the specific animations for the pickup.
+     * 
+     * @param animator The Animator component to be configured.
      */
     protected abstract void setupAnimations(Animator animator);
     
     /**
-     * Verifica se o jogador possui a chave necessária
-     * @return true se possui a chave ou se não é necessária
+     * Checks if the player possesses the required key to collect this item.
+     * 
+     * @return true if the key is held or if no key is needed.
      */
     protected abstract boolean hasRequiredKey();
     
     /**
-     * Verifica se o GameObject é o jogador
-     * @param gameObject O GameObject a ser verificado
-     * @return true se for o jogador
+     * Checks if the given GameObject is the player.
+     * 
+     * @param gameObject The GameObject to check.
+     * @return true if it is the player, false otherwise.
      */
     protected abstract boolean isPlayer(GameObject gameObject);
     
     /**
-     * Adiciona o item ao inventário do jogador
-     * @param itemId O ID do item a ser adicionado
-     * @param quantity A quantidade do item
+     * Adds the item to the player's inventory.
+     * 
+     * @param itemId The ID of the item to be added.
+     * @param quantity The quantity of the item.
      */
     protected abstract void giveItemToPlayer(String itemId, int quantity);
     
     /**
-     * MÉTODOS OPCIONAIS: A classe do jogo pode sobrescrever para comportamento customizado
+     * OPTIONAL METHODS: The game class can override these for custom behavior
      */
     
     /**
-     * Chamado quando o item é coletado
+     * Called when the item is collected.
      */
     protected void onItemCollected() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando o item respawna
+     * Called when the item respawns.
      */
     protected void onItemRespawned() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando o jogador tenta coletar um item que requer chave
+     * Called when the player attempts to collect an item that requires a key without having it.
      */
     protected void onKeyRequired() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
 }

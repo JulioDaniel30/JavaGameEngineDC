@@ -11,6 +11,13 @@ import com.jdstudio.engine.Input.InputManager;
 import com.jdstudio.engine.Items.ItemStack;
 import com.jdstudio.engine.Object.GameObject;
 
+/**
+ * Represents a single slot in an inventory display.
+ * It shows the item stack it contains, handles hover and click states,
+ * and provides visual feedback for selection.
+ * 
+ * @author JDStudio
+ */
 public class UIInventorySlot extends UIElement {
 
     private ItemStack itemStack;
@@ -22,6 +29,14 @@ public class UIInventorySlot extends UIElement {
     @SuppressWarnings("unused")
 	private GameObject inventoryOwner;
 
+    /**
+     * Constructs a new UIInventorySlot.
+     *
+     * @param x                The x-coordinate of the slot's top-left corner.
+     * @param y                The y-coordinate of the slot's top-left corner.
+     * @param backgroundSprite The sprite to use for the slot's background.
+     * @param owner            The GameObject that owns the inventory this slot belongs to.
+     */
     public UIInventorySlot(int x, int y, Sprite backgroundSprite, GameObject owner) {
         super(x, y);
         this.backgroundSprite = backgroundSprite;
@@ -32,17 +47,54 @@ public class UIInventorySlot extends UIElement {
         }
     }
     
-    public void setItemStack(ItemStack stack) { this.itemStack = stack; }
-    public ItemStack getItemStack() { return this.itemStack; }
-    public void setSelected(boolean selected) { this.isSelected = selected; }
-    public boolean wasClicked() { return this.wasClicked; }
-    public boolean isHovering() { return this.isHovering; }
+    /**
+     * Sets the ItemStack to be displayed in this slot.
+     * @param stack The ItemStack to set.
+     */
+    public void setItemStack(ItemStack stack) { 
+        this.itemStack = stack; 
+    }
+
+    /**
+     * Gets the ItemStack currently in this slot.
+     * @return The ItemStack.
+     */
+    public ItemStack getItemStack() { 
+        return this.itemStack; 
+    }
+
+    /**
+     * Sets the selected state of the slot.
+     * @param selected true to mark as selected, false otherwise.
+     */
+    public void setSelected(boolean selected) { 
+        this.isSelected = selected; 
+    }
+
+    /**
+     * Checks if the slot was clicked in the current frame.
+     * @return true if clicked, false otherwise.
+     */
+    public boolean wasClicked() { 
+        return this.wasClicked; 
+    }
+
+    /**
+     * Checks if the mouse cursor is currently hovering over the slot.
+     * @return true if hovering, false otherwise.
+     */
+    public boolean isHovering() { 
+        return this.isHovering; 
+    }
     
+    /**
+     * Updates the slot's state, detecting mouse hover and clicks.
+     */
     @Override
     public void tick() {
         if (!visible) return;
 
-        // Reseta o estado de clique a cada quadro
+        // Reset click state each frame
         wasClicked = false; 
 
         int mouseX = InputManager.getMouseX() / com.jdstudio.engine.Engine.getSCALE();
@@ -51,32 +103,37 @@ public class UIInventorySlot extends UIElement {
         Rectangle bounds = new Rectangle(this.x, this.y, this.width, this.getHeight());
         isHovering = bounds.contains(mouseX, mouseY);
 
-        // Apenas deteta o clique e define uma flag. A UIInventoryView decidirá o que fazer.
+        // Only detect click and set a flag. UIInventoryView will decide what to do.
         if (isHovering && InputManager.isLeftMouseButtonJustPressed() && itemStack != null) {
             wasClicked = true;
         }
     }
 
+    /**
+     * Renders the inventory slot, including its background, item sprite, quantity, and selection/hover highlights.
+     *
+     * @param g The Graphics context to draw on.
+     */
     @Override
     public void render(Graphics g) {
         if (!visible) return;
 
-        // Desenha o fundo do slot
+        // Draw the slot background
         if (backgroundSprite != null) {
             g.drawImage(backgroundSprite.getImage(), x, y, null);
         }
 
-        // Se houver um item no slot, desenha-o
+        // If there's an item in the slot, draw it
         if (itemStack != null && itemStack.getItem() != null) {
             Sprite itemSprite = itemStack.getItem().getSprite();
             if (itemSprite != null) {
-                // Desenha o sprite do item centralizado dentro do slot
+                // Draw the item sprite centered within the slot
                 int itemX = x + (width - itemSprite.getWidth()) / 2;
                 int itemY = y + (getHeight() - itemSprite.getHeight()) / 2;
                 g.drawImage(itemSprite.getImage(), itemX, itemY, null);
             }
 
-            // Desenha a quantidade se for maior que 1
+            // Draw quantity if greater than 1
             if (itemStack.getQuantity() > 1) {
                 g.setFont(quantityFont);
                 g.setColor(Color.WHITE);
@@ -86,16 +143,15 @@ public class UIInventorySlot extends UIElement {
             }
         }
         
-     // --- LÓGICA DE DESTAQUE ATUALIZADA ---
-        // Desenha um contorno se o rato estiver sobre o slot OU se ele estiver selecionado
-        if (isHovering || isSelected) { // <-- MUDANÇA AQUI
+        // Draw an outline if the mouse is hovering over the slot OR if it is selected
+        if (isHovering || isSelected) {
             g.setColor(Color.YELLOW);
             g.drawRect(x, y, width - 1, getHeight() - 1);
         }
         
-        // Adiciona um destaque extra se estiver selecionado
+        // Add an extra highlight if it's selected
         if (isSelected) {
-            g.setColor(new Color(255, 255, 0, 70)); // Amarelo semitransparente
+            g.setColor(new Color(255, 255, 0, 70)); // Semi-transparent yellow
             g.fillRect(x, y, width, getHeight());
         }
     }

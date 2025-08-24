@@ -1,12 +1,12 @@
 package com.jdstudio.engine.Object.PreBuildObjcts;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.awt.Rectangle;
 
 import org.json.JSONObject;
 
+import com.jdstudio.engine.Engine;
 import com.jdstudio.engine.Components.InteractionComponent;
 import com.jdstudio.engine.Components.InteractionZone;
 import com.jdstudio.engine.Core.ISavable;
@@ -14,31 +14,39 @@ import com.jdstudio.engine.Graphics.Sprite.Animations.Animator;
 import com.jdstudio.engine.Object.GameObject;
 import com.jdstudio.engine.Utils.PropertiesReader;
 
-
-
 /**
- * Uma classe base "engine-side" para qualquer tipo de porta.
- * Contém toda a lógica de estado (aberta/fechada), animação e colisão.
- * A subclasse do jogo é responsável por fornecer as animações específicas.
+ * An abstract base class for any type of door in the game.
+ * It contains all the logic for state (open/closed), animation, and collision.
+ * Game-specific subclasses are responsible for providing the specific animations.
+ * This class also implements {@link ISavable} to allow its state to be persisted.
+ * 
+ * @author JDStudio
  */
 public abstract class EngineDoor extends GameObject implements ISavable {
 
     protected boolean isOpen = false;
     protected Animator animator;
-    protected double interactionRadius = 35.0f; // Raio de interação padrão
-    protected GameObject target; // Lista de objetos do jogo para interação
-    private List<GameObject> allGameObjects;
+    protected double interactionRadius = 35.0f; // Default interaction radius
+    protected GameObject target; // The GameObject (e.g., player) for interaction checks
+    private List<GameObject> allGameObjects; // Reference to the main game object list for obstruction checks
 
     /**
-     * Construtor padrão que inicializa a porta com propriedades JSON.
-     * @param properties Propriedades da porta em formato JSON.
+     * Constructs a new EngineDoor with the given properties.
+     * 
+     * @param properties Properties of the door in JSON format.
+     * @param target The GameObject (e.g., player) that will interact with this door.
      */
-
     public EngineDoor(JSONObject properties, GameObject target) {
         super(properties);
         this.target = target;
     }
 
+    /**
+     * Initializes the EngineDoor's properties from a JSONObject.
+     * It sets up the initial open state, animator, and interaction component.
+     *
+     * @param properties A JSONObject containing the properties to initialize.
+     */
     @Override
     public void initialize(JSONObject properties) {
         super.initialize(properties);
@@ -48,54 +56,81 @@ public abstract class EngineDoor extends GameObject implements ISavable {
         this.animator = new Animator();
         this.addComponent(animator);
         
-        // Chama o método abstrato que a classe do JOGO irá implementar
+        // Call the abstract method that the GAME class will implement
         setupAnimations(this.animator); 
 
         interactionRadius = reader.getDouble("interactionRadius", 24.0f);
 
-        // Adiciona a zona de interação manual
+        // Add the interaction zone
         InteractionComponent interaction = new InteractionComponent();
         interaction.addZone(new InteractionZone(this, InteractionZone.TYPE_TRIGGER, interactionRadius));
         this.addComponent(interaction);
 
         updateStateVisuals();
     }
+
+
+
     
+    /**
+     * Handles interaction with the door based on the logic from the reference code.
+     * The door will not close if any object is obstructing it.
+     */
     public void interact() {
-        if (!animator.getCurrentAnimationKey().startsWith("idle")) return;
+        // Only interact if the door is idle
+        if (animator == null || !animator.getCurrentAnimationKey().startsWith("idle")) {
+            return;
+        }
 
         if (isOpen) {
-            // cancela se estiver obstruída
-            if (isObstructed()) return;
-            animator.play("closing");
+            // Check for any obstruction before closing
+            if (isObstructed()) {
+                // Optional: play a "blocked" sound here for feedback
+                return;
+            }
+            // Become solid immediately, then play the animation
             setCollisionType(CollisionType.SOLID);
+            animator.play("closing");
             isOpen = false;
         } else {
+            // When opening, remain solid during the animation for safety
             animator.play("opening");
             isOpen = true;
         }
     }
 
+    /**
+     * Updates the door's logic, handling animation completion.
+     */
     @Override
     public void tick() {
         super.tick();
 
         if (animator == null) return;
-        this.getComponent(InteractionComponent.class).checkInteractions(Collections.singletonList(target));
 
+        // Check for interactions with the target (e.g., player)
+        if (target != null && this.getComponent(InteractionComponent.class) != null) {
+            this.getComponent(InteractionComponent.class).checkInteractions(Collections.singletonList(target));
+        }
 
-
-
+        // Update state after an animation finishes
         if (animator.getCurrentAnimation() != null && animator.getCurrentAnimation().hasFinished()) {
-            if ("opening".equals(animator.getCurrentAnimationKey())) {
-                animator.play("idleOpen");
+            String currentKey = animator.getCurrentAnimationKey();
+
+            if ("opening".equals(currentKey)) {
+                // Only become passable after the opening animation is complete
                 setCollisionType(CollisionType.TRIGGER);
-            } else if ("closing".equals(animator.getCurrentAnimationKey())) {
+                animator.play("idleOpen");
+            } else if ("closing".equals(currentKey)) {
                 animator.play("idleClosed");
             }
         }
     }
     
+    /**
+     * Updates the visual state of the door based on its open/closed status.
+     * It plays different idle animations (e.g., idleOpen, idleClosed) and sets collision type.
+     */
     private void updateStateVisuals() {
         if (isOpen) {
             animator.play("idleOpen");
@@ -106,6 +141,11 @@ public abstract class EngineDoor extends GameObject implements ISavable {
         }
     }
 
+    /**
+     * Saves the current state of the door to a JSONObject.
+     * 
+     * @return A JSONObject containing the door's savable state.
+     */
     @Override
     public JSONObject saveState() {
         JSONObject state = new JSONObject();
@@ -114,6 +154,11 @@ public abstract class EngineDoor extends GameObject implements ISavable {
         return state;
     }
 
+    /**
+     * Loads the state of the door from a JSONObject.
+     * 
+     * @param state The JSONObject containing the saved data.
+     */
     @Override
     public void loadState(JSONObject state) {
         this.isOpen = state.getBoolean("isOpen");
@@ -121,43 +166,72 @@ public abstract class EngineDoor extends GameObject implements ISavable {
     }
     
     /**
-     * MÉTODO ABSTRATO: A classe do jogo DEVE implementar este método
-     * para fornecer as animações específicas desta porta.
-     * @param animator O componente Animator a ser configurado.
+     * ABSTRACT METHOD: The game class MUST implement this method
+     * to provide the specific animations for this door.
+     * @param animator The Animator component to be configured.
      */
     protected abstract void setupAnimations(Animator animator);
+
+    /**
+     * Sets the interaction radius for this door.
+     * @param radius The new interaction radius.
+     */
     public void setInteractionRadius(float radius){
         this.interactionRadius = radius;
     }
+
+    /**
+     * Gets the interaction radius of this door.
+     * @return The interaction radius.
+     */
     public double getInteractionRadius() {
         return interactionRadius;
     }
 
+    /**
+     * Checks if the door's path is obstructed by any other GameObject.
+     * This is used to prevent closing the door if an object is in the way.
+     * 
+     * @return true if the door is obstructed, false otherwise.
+     */
     public boolean isObstructed() {
-        if (allGameObjects == null) return false;
-        Rectangle Bounds = new Rectangle(
+        
+        if (allGameObjects == null){ 
+            if(Engine.isDebug) System.out.println("allGameObjects is null");
+            return false;}
+        
+        Rectangle bounds = new Rectangle(
             this.getX() + this.getMaskX(), 
             this.getY() + this.getMaskY(),
             this.getWidth() + this.getMaskWidth(), 
             this.getHeight() + this.getMaskHeight()
         );
 
-        
         for (GameObject obj : allGameObjects) {
-            if (obj == this) continue;
-           Rectangle otherBounds = new Rectangle(
+            if (obj == this) continue; // Ignore self
+            
+            Rectangle otherBounds = new Rectangle(
                 obj.getX() + obj.getMaskX(),
                 obj.getY() + obj.getMaskY(),
                 obj.getWidth() + obj.getMaskWidth(),
                 obj.getHeight() + obj.getMaskHeight()
             );
-            if (Bounds.intersects(otherBounds)) {
-                return true;
+            
+            if (bounds.intersects(otherBounds)) {
+                if (Engine.isDebug) System.out.println("obstruçao detectda!");                return true;
+                
             }
         }
+        System.out.println("porta nao obstruida!");
         return false;
     }
 
+    /**
+     * Sets the list of all GameObjects in the game.
+     * This is required for the {@code isObstructed} method to work correctly.
+     * 
+     * @param gameObjects The list of all GameObjects.
+     */
     public void setGameObjects(List<GameObject> gameObjects) {
         this.allGameObjects = gameObjects;
     }

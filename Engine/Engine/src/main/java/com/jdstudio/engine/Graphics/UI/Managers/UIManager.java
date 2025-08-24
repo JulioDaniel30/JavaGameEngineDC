@@ -8,31 +8,33 @@ import com.jdstudio.engine.Graphics.Layers.RenderManager;
 import com.jdstudio.engine.Graphics.UI.Elements.UIElement;
 
 /**
- * Gerencia uma coleção de elementos de UI ({@link UIElement}).
+ * Manages a collection of User Interface (UI) elements ({@link UIElement}).
  * <p>
- * Esta classe atua como um contêiner para todos os elementos da interface do usuário,
- * simplificando o processo de renderizá-los e gerenciá-los em conjunto.
+ * This class acts as a container for all UI elements, simplifying the process
+ * of rendering and managing them together. It also handles registering/unregistering
+ * elements with the {@link RenderManager}.
  *
  * @author JDStudio
  * @since 1.0
  */
 public class UIManager {
 
-    /** A lista que armazena todos os elementos de UI gerenciados. */
+    /** The list that stores all managed UI elements. */
     private List<UIElement> elements;
 
     /**
-     * Construtor padrão que inicializa o gerenciador de UI.
-     * Cria uma nova lista vazia para armazenar os elementos.
+     * Default constructor that initializes the UI manager.
+     * Creates a new empty list to store the elements.
      */
     public UIManager() {
         elements = new ArrayList<>();
     }
 
     /**
-     * Adiciona um novo elemento de UI para ser gerenciado e renderizado.
+     * Adds a new UI element to be managed and rendered.
+     * The element is also registered with the {@link RenderManager}.
      *
-     * @param element O {@link UIElement} a ser adicionado. Não pode ser nulo.
+     * @param element The {@link UIElement} to be added. Cannot be null.
      */
     public void addElement(UIElement element) {
         elements.add(element);
@@ -40,10 +42,10 @@ public class UIManager {
     }
 
     /**
-     * Remove um elemento de UI da lista de gerenciamento.
-     * O elemento não será mais renderizado.
+     * Removes a UI element from the management list.
+     * The element will no longer be rendered.
      *
-     * @param element O {@link UIElement} a ser removido.
+     * @param element The {@link UIElement} to be removed.
      */
     public void removeElement(UIElement element) {
         elements.remove(element);
@@ -51,8 +53,8 @@ public class UIManager {
     }
     
     /**
-     * Desregista todos os elementos de UI do RenderManager e limpa a lista interna.
-     * Essencial para ser chamado quando um estado de menu é fechado.
+     * Unregisters all UI elements from the {@link RenderManager} and clears the internal list.
+     * Essential to be called when a menu state is closed or a scene is unloaded.
      */
     public void unregisterAllElements() {
         for (UIElement element : elements) {
@@ -62,13 +64,12 @@ public class UIManager {
     }
     
     /**
-     * Atualiza a lógica de todos os elementos de UI gerenciados.
-     * Agora, itera sobre uma cópia da lista para evitar ConcurrentModificationException.
+     * Updates the logic of all managed UI elements.
+     * It iterates over a copy of the list to prevent {@code ConcurrentModificationException}.
      */
     public void tick() {
-        // --- A CORREÇÃO ESTÁ AQUI ---
-        // Cria uma cópia da lista de elementos para iterar sobre ela.
-        // A lista original (this.elements) pode agora ser modificada com segurança.
+        // Create a copy of the elements list to iterate over it.
+        // The original list (this.elements) can now be safely modified (e.g., elements added/removed).
         for (UIElement element : new ArrayList<>(this.elements)) {
             if (element.isVisible()) {
                 element.tick();
@@ -77,12 +78,12 @@ public class UIManager {
     }
 
     /**
-     * Renderiza todos os elementos de UI visíveis na tela.
+     * Renders all visible UI elements on the screen.
      * <p>
-     * Este método itera sobre todos os elementos e chama o método {@code render(g)}
-     * de cada um que estiver marcado como visível.
+     * This method iterates over all elements and calls the {@code render(g)}
+     * method of each one that is marked as visible.
      *
-     * @param g O contexto {@link Graphics} onde os elementos serão desenhados.
+     * @param g The {@link Graphics} context where the elements will be drawn.
      */
     public void render(Graphics g) {
         for (UIElement element : elements) {

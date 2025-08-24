@@ -7,25 +7,28 @@ import com.jdstudio.engine.Graphics.WSUI.UIWorldAttached;
 import com.jdstudio.engine.Object.GameObject;
 
 /**
- * Um marcador de UI no mundo do jogo que indica um objetivo de missão.
- * Ele flutua suavemente sobre um GameObject alvo para chamar a atenção.
+ * A world-space UI marker that indicates a quest objective.
+ * It floats smoothly above a target {@link GameObject} to draw attention.
+ * 
+ * @author JDStudio
  */
 public class UIObjectiveMarker extends UIWorldAttached {
 
     private final Sprite markerSprite;
 
-    // Lógica para a animação de flutuação (bobbing)
+    // Logic for the bobbing (floating) animation
     private int bobbingTimer = 0;
-    private int bobbingSpeed = 5; // Quão rápido ele flutua
-    private int bobbingAmount = 4;  // Quantos pixels ele se move para cima e para baixo
+    private int bobbingSpeed = 5; // How fast it bobs
+    private int bobbingAmount = 4;  // How many pixels it moves up and down
 
     /**
-     * Cria um novo marcador de objetivo.
-     * @param target O GameObject que é o objetivo da missão.
-     * @param markerSprite O Sprite a ser usado como ícone do marcador.
+     * Constructs a new objective marker.
+     *
+     * @param target       The GameObject that is the quest objective.
+     * @param markerSprite The Sprite to be used as the marker icon.
      */
     public UIObjectiveMarker(GameObject target, Sprite markerSprite) {
-        // O offset Y posiciona o marcador acima do alvo
+        // The Y offset positions the marker above the target
         super(target, -24); 
         this.markerSprite = markerSprite;
         this.visible = (target != null);
@@ -36,31 +39,40 @@ public class UIObjectiveMarker extends UIWorldAttached {
         }
     }
 
+    /**
+     * Updates the marker's position and bobbing animation.
+     * It also checks if the target GameObject has been destroyed.
+     */
     @Override
     public void tick() {
-        // A visibilidade é controlada externamente, mas se o alvo for destruído, ele desaparece.
+        // Visibility is controlled externally, but if the target is destroyed, it disappears.
         if (target == null || target.isDestroyed) {
             this.visible = false;
         }
         if (!visible) return;
 
-        // A classe pai (UIWorldAttached) já trata de seguir a posição base do alvo.
+        // The parent class (UIWorldAttached) already handles following the target's base position.
         super.tick(); 
         
-        // Atualiza o timer para a animação de flutuação
+        // Update the timer for the bobbing animation
         bobbingTimer++;
     }
 
+    /**
+     * Renders the objective marker, applying the bobbing (floating) effect.
+     *
+     * @param g The Graphics context to draw on.
+     */
     @Override
     public void render(Graphics g) {
         if (!visible || target == null || markerSprite == null) return;
 
-        // Calcula o deslocamento vertical da flutuação usando uma função seno
-        // para um movimento suave de sobe e desce.
+        // Calculate the vertical bobbing offset using a sine function
+        // for a smooth up and down movement.
         double bobbingOffset = Math.sin(bobbingTimer * (Math.PI / 180.0) * bobbingSpeed) * bobbingAmount;
         
-        // As coordenadas 'this.x' e 'this.y' já seguem o alvo.
-        // O cálculo centraliza o sprite e aplica o offset da câmera e da flutuação.
+        // The 'this.x' and 'this.y' coordinates already follow the target.
+        // The calculation centers the sprite and applies the camera and bobbing offset.
         int drawX = (this.x - (this.width / 2)) - Engine.camera.getX();
         int drawY = (int) (this.y - this.height + bobbingOffset) - Engine.camera.getY();
 
@@ -68,7 +80,8 @@ public class UIObjectiveMarker extends UIWorldAttached {
     }
     
     /**
-     * Permite mudar o alvo do marcador dinamicamente.
+     * Allows changing the target of the marker dynamically.
+     * @param newTarget The new GameObject target.
      */
     public void setTarget(GameObject newTarget) {
         this.target = newTarget;

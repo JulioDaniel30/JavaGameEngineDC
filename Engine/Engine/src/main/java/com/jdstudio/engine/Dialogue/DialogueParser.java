@@ -6,33 +6,41 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
- * Uma classe utilitária "engine side" para analisar (parse) arquivos de diálogo
- * em formato JSON e transformá-los em objetos Dialogue.
+ * An engine-side utility class for parsing dialogue files in JSON format
+ * and transforming them into Dialogue objects.
+ * 
+ * @author JDStudio
  */
 public class DialogueParser {
 
     /**
-     * Analisa um arquivo JSON de diálogo e o converte em um objeto Dialogue.
-     * @param path O caminho para o recurso do arquivo .json (ex: "/dialogues/npc1.json").
-     * @return Um objeto Dialogue preenchido, ou null se ocorrer um erro.
+     * Parses a JSON dialogue file and converts it into a Dialogue object.
+     * The JSON file should have a specific structure:
+     * - "defaultEntryPoint": (int) The ID of the starting node.
+     * - "entryPoints": (JSONArray, optional) A list of conditional entry points.
+     *   - Each entry point has a "condition" (String) and a "nodeId" (int).
+     * - "nodes": (JSONArray) The list of all dialogue nodes.
+     *   - Each node has an "id", "speakerName", "text", and an optional "choices" array.
+     *   - Each choice has "text", "nextNodeId", and optional "action" and "condition" strings.
+     * 
+     * @param path The path to the .json resource file (e.g., "/dialogues/npc1.json").
+     * @return A populated Dialogue object, or null if an error occurs.
      */
     public static Dialogue parseDialogue(String path) {
         try (InputStream is = DialogueParser.class.getResourceAsStream(path)) {
             if (is == null) {
-                System.err.println("Arquivo de diálogo não encontrado: " + path);
+                System.err.println("Dialogue file not found: " + path);
                 return null;
             }
             
             String jsonText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             JSONObject json = new JSONObject(jsonText);
 
-            // --- LÓGICA ATUALIZADA PARA LER OS PONTOS DE ENTRADA ---
-
-            // 1. Lê o ponto de entrada padrão (obrigatório)
+            // 1. Read the default entry point (mandatory)
             int defaultId = json.getInt("defaultEntryPoint");
             Dialogue dialogue = new Dialogue(defaultId);
 
-            // 2. Lê os pontos de entrada condicionais (opcional)
+            // 2. Read conditional entry points (optional)
             if (json.has("entryPoints")) {
                 JSONArray entryPointsArray = json.getJSONArray("entryPoints");
                 for (int i = 0; i < entryPointsArray.length(); i++) {
@@ -43,7 +51,7 @@ public class DialogueParser {
                 }
             }
 
-            // 3. O resto do código para ler os nós permanece o mesmo, mas atualizado
+            // 3. Read all the dialogue nodes
             JSONArray nodesArray = json.getJSONArray("nodes");
             for (int i = 0; i < nodesArray.length(); i++) {
                 JSONObject nodeJson = nodesArray.getJSONObject(i);
@@ -60,11 +68,10 @@ public class DialogueParser {
                         String choiceText = choiceJson.getString("text");
                         int nextNodeId = choiceJson.getInt("nextNodeId");
                         
-                        // Usa optString para ler as propriedades opcionais
+                        // Use optString to read optional properties
                         String action = choiceJson.optString("action", null);
                         String condition = choiceJson.optString("condition", null);
 
-                        // Passa todos os parâmetros para o construtor de DialogueChoice
                         node.addChoice(choiceText, nextNodeId, action, condition);
                     }
                 }
@@ -74,7 +81,7 @@ public class DialogueParser {
             return dialogue;
 
         } catch (Exception e) {
-            System.err.println("Falha ao analisar o diálogo de: " + path);
+            System.err.println("Failed to parse dialogue from: " + path);
             e.printStackTrace();
             return null;
         }

@@ -10,9 +10,12 @@ import com.jdstudio.engine.Object.GameObject;
 import com.jdstudio.engine.Utils.PropertiesReader;
 
 /**
- * Uma classe base "engine-side" para qualquer tipo de barreira destrutível.
- * Contém toda a lógica de vida, dano, destruição e animação.
- * A subclasse do jogo é responsável por fornecer as animações específicas e definir o comportamento.
+ * An abstract base class for any type of destructible barrier in the game.
+ * It contains all the logic for health, damage, destruction, regeneration, and animation.
+ * Game-specific subclasses are responsible for providing the specific animations and defining behavior.
+ * This class also implements {@link ISavable} to allow its state to be persisted.
+ * 
+ * @author JDStudio
  */
 public abstract class EngineBarrier extends GameObject implements ISavable {
 
@@ -24,16 +27,27 @@ public abstract class EngineBarrier extends GameObject implements ISavable {
     protected boolean requiresSpecialWeapon = false;
     protected String requiredWeaponType;
     protected boolean canRegenerate = false;
-    protected double regenerationRate = 0.0; // Vida por tick
-    protected int regenerationDelay = 0; // Ticks sem dano antes de regenerar
+    protected double regenerationRate = 0.0; // Health per tick
+    protected int regenerationDelay = 0; // Ticks without damage before regenerating
     protected int timeSinceLastDamage = 0;
     protected boolean dropsLoot = false;
     protected String lootTable;
 
+    /**
+     * Constructs a new EngineBarrier with the given properties.
+     * 
+     * @param properties A JSONObject containing the initial properties of the barrier.
+     */
     public EngineBarrier(JSONObject properties) {
         super(properties);
     }
 
+    /**
+     * Initializes the EngineBarrier's properties from a JSONObject.
+     * It sets up health, regeneration, loot, and interaction components.
+     *
+     * @param properties A JSONObject containing the properties to initialize.
+     */
     @Override
     public void initialize(JSONObject properties) {
         super.initialize(properties);
@@ -46,7 +60,7 @@ public abstract class EngineBarrier extends GameObject implements ISavable {
         this.requiredWeaponType = reader.getString("requiredWeaponType", "");
         this.canRegenerate = reader.getBoolean("canRegenerate", false);
         this.regenerationRate = reader.getDouble("regenerationRate", 0.1);
-        this.regenerationDelay = reader.getInt("regenerationDelay", 300); // 5 segundos a 60 FPS
+        this.regenerationDelay = reader.getInt("regenerationDelay", 300); // 5 seconds at 60 FPS
         this.dropsLoot = reader.getBoolean("dropsLoot", false);
         this.lootTable = reader.getString("lootTable", "");
         this.isDestroyed = reader.getBoolean("isDestroyed", false);
@@ -54,10 +68,10 @@ public abstract class EngineBarrier extends GameObject implements ISavable {
         this.animator = new Animator();
         this.addComponent(animator);
         
-        // Chama o método abstrato que a classe do JOGO irá implementar
+        // Call the abstract method that the GAME class will implement
         setupAnimations(this.animator);
 
-        // Adiciona zona de interação para ataques manuais (opcional)
+        // Add interaction zone for manual attacks (optional)
         InteractionComponent interaction = new InteractionComponent();
         interaction.addZone(new InteractionZone(this, InteractionZone.TYPE_DIALOGUE, 24.0));
         this.addComponent(interaction);
@@ -67,30 +81,34 @@ public abstract class EngineBarrier extends GameObject implements ISavable {
     }
     
     /**
-     * Método principal de interação com a barreira (ataque manual)
+     * Main interaction method with the barrier (manual attack).
+     * It checks for special weapon requirements and applies damage.
      */
     public void interact() {
         if (isDestroyed) return;
         if (!animator.getCurrentAnimationKey().startsWith("idle")) return;
 
-        // Verifica se precisa de arma especial
+        // Check if special weapon is required
         if (requiresSpecialWeapon && !hasRequiredWeapon()) {
             onSpecialWeaponRequired();
             return;
         }
 
-        // Aplica dano baseado na arma do jogador
+        // Apply damage based on player's weapon
         double damage = getPlayerWeaponDamage();
         takeDamage(damage);
     }
 
     /**
-     * Aplica dano à barreira
+     * Applies damage to the barrier.
+     * It checks for valid damage types and triggers destruction if health drops to zero.
+     *
+     * @param damage The amount of damage to apply.
      */
     public void takeDamage(double damage) {
         if (isDestroyed || damage <= 0) return;
 
-        // Verifica se o tipo de dano é válido
+        // Check if damage type is valid
         if (requiresSpecialWeapon && !isValidDamageType()) {
             onInvalidDamageType();
             return;
@@ -99,19 +117,20 @@ public abstract class EngineBarrier extends GameObject implements ISavable {
         health -= damage;
         timeSinceLastDamage = 0;
         
-        // Notifica que a barreira tomou dano
+        // Notify that the barrier took damage
         onBarrierDamaged(damage);
 
         if (health <= 0) {
             destroyBarrier();
         } else {
-            // Toca animação de dano se não foi destruída
+            // Play damage animation if not destroyed
             animator.play("damaged");
         }
     }
 
     /**
-     * Destrói a barreira
+     * Destroys the barrier.
+     * It sets the destroyed flag, changes collision type, plays destruction animation, and drops loot.
      */
     protected void destroyBarrier() {
         if (isDestroyed) return;
@@ -121,17 +140,17 @@ public abstract class EngineBarrier extends GameObject implements ISavable {
         animator.play("destroying");
         setCollisionType(CollisionType.NO_COLLISION);
         
-        // Dropa loot se configurado
+        // Drop loot if configured
         if (dropsLoot && !lootTable.isEmpty()) {
             dropLoot(lootTable);
         }
         
-        // Notifica que a barreira foi destruída
+        // Notify that the barrier was destroyed
         onBarrierDestroyed();
     }
 
     /**
-     * Regenera a barreira (se aplicável)
+     * Regenerates the barrier's health if regeneration is enabled and enough time has passed since last damage.
      */
     protected void regenerateHealth() {
         if (!canRegenerate || isDestroyed) return;
@@ -146,6 +165,9 @@ public abstract class EngineBarrier extends GameObject implements ISavable {
         }
     }
 
+    /**
+     * Updates the barrier's logic, including regeneration and animation state transitions.
+     */
     @Override
     public void tick() {
         super.tick();
@@ -155,7 +177,7 @@ public abstract class EngineBarrier extends GameObject implements ISavable {
             regenerateHealth();
         }
         
-        // Gerencia as animações
+        // Manage animations
         if (animator.getCurrentAnimation() != null && animator.getCurrentAnimation().hasFinished()) {
             String currentKey = animator.getCurrentAnimationKey();
             
@@ -163,14 +185,15 @@ public abstract class EngineBarrier extends GameObject implements ISavable {
                 updateStateVisuals();
             } else if ("destroying".equals(currentKey)) {
                 animator.play("destroyed");
-                // Pode marcar para remoção completa do jogo se necessário
+                // Can mark for complete removal from the game if necessary
                 // this.isDestroyed = true;
             }
         }
     }
     
     /**
-     * Atualiza os visuais baseado no estado atual
+     * Updates the visual state of the barrier based on its current health percentage.
+     * It plays different idle animations (e.g., intact, damaged, heavily damaged, critical).
      */
     private void updateStateVisuals() {
         if (isDestroyed) {
@@ -178,7 +201,7 @@ public abstract class EngineBarrier extends GameObject implements ISavable {
             return;
         }
         
-        // Diferentes estados visuais baseados na vida
+        // Different visual states based on health
         double healthPercentage = health / maxHealth;
         
         if (healthPercentage > 0.75) {
@@ -192,6 +215,11 @@ public abstract class EngineBarrier extends GameObject implements ISavable {
         }
     }
 
+    /**
+     * Saves the current state of the barrier to a JSONObject.
+     * 
+     * @return A JSONObject containing the barrier's savable state.
+     */
     @Override
     public JSONObject saveState() {
         JSONObject state = new JSONObject();
@@ -202,6 +230,11 @@ public abstract class EngineBarrier extends GameObject implements ISavable {
         return state;
     }
 
+    /**
+     * Loads the state of the barrier from a JSONObject.
+     * 
+     * @param state The JSONObject containing the saved data.
+     */
     @Override
     public void loadState(JSONObject state) {
         this.health = state.getDouble("health");
@@ -225,75 +258,82 @@ public abstract class EngineBarrier extends GameObject implements ISavable {
     public double getHealthPercentage() { return health / maxHealth; }
     
     /**
-     * MÉTODOS ABSTRATOS: A classe do jogo DEVE implementar estes métodos
+     * ABSTRACT METHODS: The game class MUST implement these methods
      */
     
     /**
-     * Configura as animações específicas da barreira
-     * @param animator O componente Animator a ser configurado
+     * Configures the specific animations for the barrier.
+     * 
+     * @param animator The Animator component to be configured.
      */
     protected abstract void setupAnimations(Animator animator);
     
     /**
-     * Verifica se o jogador possui a arma necessária
-     * @return true se possui a arma necessária ou se não é necessária
+     * Checks if the player possesses the required weapon to damage this barrier.
+     * 
+     * @return true if the required weapon is held or if no special weapon is needed.
      */
     protected abstract boolean hasRequiredWeapon();
     
     /**
-     * Verifica se o tipo de dano atual é válido para esta barreira
-     * @return true se o dano é válido
+     * Checks if the current damage type is valid for this barrier.
+     * 
+     * @return true if the damage is valid.
      */
     protected abstract boolean isValidDamageType();
     
     /**
-     * Obtém o dano da arma atual do jogador
-     * @return O valor do dano a ser aplicado
+     * Gets the damage value of the player's current weapon.
+     * 
+     * @return The damage value to be applied.
      */
     protected abstract double getPlayerWeaponDamage();
     
     /**
-     * Dropa o loot da barreira destruída
-     * @param lootTable A tabela de loot a ser usada
+     * Drops loot from the destroyed barrier.
+     * 
+     * @param lootTable The loot table to be used.
      */
     protected abstract void dropLoot(String lootTable);
     
     /**
-     * MÉTODOS OPCIONAIS: A classe do jogo pode sobrescrever para comportamento customizado
+     * OPTIONAL METHODS: The game class can override these for custom behavior
      */
     
     /**
-     * Chamado quando a barreira toma dano
+     * Called when the barrier takes damage.
+     * 
+     * @param damage The amount of damage taken.
      */
     protected void onBarrierDamaged(double damage) {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando a barreira é destruída
+     * Called when the barrier is destroyed.
      */
     protected void onBarrierDestroyed() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando a barreira regenera vida
+     * Called when the barrier regenerates health.
      */
     protected void onBarrierRegenerated() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando o jogador tenta atacar sem a arma necessária
+     * Called when the player attempts to attack without the required special weapon.
      */
     protected void onSpecialWeaponRequired() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando o tipo de dano não é válido
+     * Called when the damage type is not valid for this barrier.
      */
     protected void onInvalidDamageType() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
 }

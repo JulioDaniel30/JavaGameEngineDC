@@ -1,15 +1,21 @@
 package com.jdstudio.engine.Components;
 
 /**
- * Um componente de dados que guarda a informação para um prompt de interação.
- * (ex: "[E] Falar", "[F] Abrir").
+ * A data component that holds information for an interaction prompt.
+ * This is used to display a message to the player when they are near an interactable object.
+ * For example: "[E] Talk", "[F] Open".
+ * 
+ * @author JDStudio
  */
 public class InteractionPromptComponent extends Component {
     
+    /** The text to be displayed in the interaction prompt (e.g., "[E] Talk"). */
     public final String promptText;
 
     /**
-     * @param promptText O texto a ser exibido quando o jogador está próximo.
+     * Constructs a new InteractionPromptComponent.
+     * 
+     * @param promptText The text to be displayed when the player is nearby.
      */
     public InteractionPromptComponent(String promptText) {
         this.promptText = promptText;

@@ -10,8 +10,11 @@ import com.jdstudio.engine.Graphics.UI.UISpriteKey;
 import com.jdstudio.engine.Object.GameObject;
 
 /**
- * Uma barra de vida que exibe a saúde em segmentos discretos (como corações),
- * em vez de uma barra contínua.
+ * A health bar that displays health in discrete segments (like hearts),
+ * instead of a continuous bar. It automatically determines the number of segments
+ * based on the target's max health and a defined health per segment.
+ * 
+ * @author JDStudio
  */
 public class UIHealthBarSegmented extends UIWorldAttached {
 
@@ -19,45 +22,46 @@ public class UIHealthBarSegmented extends UIWorldAttached {
     private final int maxSegments;
     private final int healthPerSegment;
 
-    // Sprites para os diferentes estados de um segmento
+    // Sprites for the different states of a segment
     private Sprite fullSegmentSprite;
     private Sprite halfSegmentSprite;
     private Sprite emptySegmentSprite;
 
     /**
-     * Cria uma nova barra de vida segmentada.
-     * @param target O GameObject cuja vida será exibida.
-     * @param yOffset O deslocamento vertical em relação ao alvo.
-     * @param healthPerSegment Quantos pontos de vida cada segmento representa.
+     * Constructs a new segmented health bar.
+     *
+     * @param target           The GameObject whose health will be displayed.
+     * @param yOffset          The vertical offset from the target.
+     * @param healthPerSegment How many health points each segment represents.
      */
     public UIHealthBarSegmented(GameObject target, int yOffset, int healthPerSegment) {
         super(target, yOffset);
         this.healthComponent = target.getComponent(HealthComponent.class);
-        this.healthPerSegment = Math.max(1, healthPerSegment); // Evita divisão por zero
+        this.healthPerSegment = Math.max(1, healthPerSegment); // Avoid division by zero
 
-        // A barra só é visível se o alvo tiver um HealthComponent
+        // The bar is only visible if the target has a HealthComponent
         if (this.healthComponent == null) {
             this.visible = false;
-            System.err.println("Aviso: Tentativa de criar uma UIHealthBarSegmented para um objeto sem HealthComponent: " + target.name);
+            System.err.println("Warning: Attempted to create UIHealthBarSegmented for object without HealthComponent: " + target.name);
             this.maxSegments = 0;
         } else {
-            // Calcula quantos segmentos são necessários para representar a vida máxima
+            // Calculate how many segments are needed to represent max health
             this.maxSegments = (int) Math.ceil((double) this.healthComponent.maxHealth / this.healthPerSegment);
         }
 
-        // Carrega os sprites a partir do ThemeManager
+        // Load sprites from the ThemeManager
         this.fullSegmentSprite = ThemeManager.getInstance().get(UISpriteKey.HEART_FULL);
         this.halfSegmentSprite = ThemeManager.getInstance().get(UISpriteKey.HEART_HALF);
         this.emptySegmentSprite = ThemeManager.getInstance().get(UISpriteKey.HEART_EMPTY);
     }
     
-    /**Setar os Sprites
+    /**
+     * Sets the sprites to be used for the health bar segments.
      *
-     *@param fullSegmentSpr Sprite do coraçao cheio.
-     *@param halfSegmentSpr Sprite do coraçao pela metade.
-     *@param emptySegmentSpr Sprite do coraçao vazio.
+     * @param fullSegmentSpr  Sprite for a full heart/segment.
+     * @param halfSegmentSpr  Sprite for a half heart/segment.
+     * @param emptySegmentSpr Sprite for an empty heart/segment.
      */
-    
     public void setSprites(Sprite fullSegmentSpr, Sprite halfSegmentSpr, Sprite emptySegmentSpr) {
     	this.fullSegmentSprite = fullSegmentSpr;
     	this.halfSegmentSprite = halfSegmentSpr;
@@ -65,39 +69,46 @@ public class UIHealthBarSegmented extends UIWorldAttached {
     	
     }
     
+    /**
+     * Renders the segmented health bar.
+     * It iterates through each segment, determining whether to draw a full, half, or empty sprite
+     * based on the current health.
+     *
+     * @param g The Graphics context to draw on.
+     */
     @Override
     public void render(Graphics g) {
         if (!visible || healthComponent == null || fullSegmentSprite == null) return;
         
         int currentHealth = healthComponent.currentHealth;
         int segmentWidth = fullSegmentSprite.getWidth();
-        int segmentPadding = 2; // Espaçamento entre os segmentos
+        int segmentPadding = 2; // Spacing between segments
 
-        // Calcula a largura total de todos os segmentos para poder centralizar
+        // Calculate the total width of all segments to center the bar
         int totalBarWidth = (maxSegments * segmentWidth) + ((maxSegments - 1) * segmentPadding);
         
-        // A posição X inicial é calculada para que o conjunto de corações fique centrado sobre o alvo
+        // The initial X position is calculated so the set of hearts is centered above the target
         int startDrawX = (this.x - totalBarWidth / 2) - Engine.camera.getX();
         int drawY = this.y - Engine.camera.getY();
 
-        // Itera sobre cada segmento que a barra de vida pode ter
+        // Iterate over each segment the health bar can have
         for (int i = 0; i < maxSegments; i++) {
-            // Calcula o limiar de vida para este segmento estar "cheio"
+            // Calculate the health threshold for this segment to be "full"
             int healthThreshold = (i + 1) * healthPerSegment;
             Sprite spriteToDraw;
 
             if (currentHealth >= healthThreshold) {
-                // Se a vida atual for maior ou igual ao limiar, o coração está cheio
+                // If current health is greater than or equal to the threshold, the heart is full
                 spriteToDraw = fullSegmentSprite;
             } else if (currentHealth >= healthThreshold - (healthPerSegment / 2.0)) {
-                // Se a vida atual estiver na metade superior do segmento, o coração está meio cheio
+                // If current health is in the upper half of the segment, the heart is half full
                 spriteToDraw = halfSegmentSprite;
             } else {
-                // Caso contrário, o coração está vazio
+                // Otherwise, the heart is empty
                 spriteToDraw = emptySegmentSprite;
             }
 
-            // Calcula a posição X para este coração específico
+            // Calculate the X position for this specific heart
             int currentDrawX = startDrawX + i * (segmentWidth + segmentPadding);
             
             if (spriteToDraw != null) {

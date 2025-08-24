@@ -4,25 +4,75 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Um Singleton que gere o estado global do jogo através de "flags".
- * As flags são marcadores simples que indicam que um evento ocorreu (ex: uma quest foi aceite).
+ * A Singleton that manages the global state of the game through "flags".
+ * Flags are simple string markers that indicate an event has occurred or a condition has been met
+ * (e.g., a quest has been accepted, a door has been unlocked).
+ * This allows for a decoupled way to check for game-wide states.
+ * 
+ * @author JDStudio
  */
 public class GameStateManager {
     private static final GameStateManager instance = new GameStateManager();
     private Set<String> flags = new HashSet<>();
 
     private GameStateManager() {}
-    public static GameStateManager getInstance() { return instance; }
 
-    /** Adiciona uma flag ao estado do jogo. */
-    public void setFlag(String flag) { flags.add(flag); }
+    /**
+     * Gets the single instance of the GameStateManager.
+     * @return The singleton instance.
+     */
+    public static GameStateManager getInstance() { 
+        return instance; 
+    }
+
+    /**
+     * Adds a flag to the game state.
+     * @param flag The string identifier for the flag to add.
+     */
+    public void setFlag(String flag) { 
+        flags.add(flag); 
+    }
     
-    /** Remove uma flag do estado do jogo. */
-    public void removeFlag(String flag) { flags.remove(flag); }
+    /**
+     * Removes a flag from the game state.
+     * @param flag The string identifier for the flag to remove.
+     */
+    public void removeFlag(String flag) { 
+        flags.remove(flag); 
+    }
     
-    /** Verifica se uma flag específica está ativa. */
-    public boolean hasFlag(String flag) { return flags.contains(flag); }
+    /**
+     * Checks if a specific flag is currently active.
+     * @param flag The string identifier for the flag to check.
+     * @return true if the flag is set, false otherwise.
+     */
+    public boolean hasFlag(String flag) { 
+        return flags.contains(flag); 
+    }
     
-    /** Limpa todas as flags. Útil para iniciar um novo jogo. */
-    public void clearFlags() { flags.clear(); }
+    /**
+     * Clears all flags from the game state.
+     * Useful for starting a new game or loading from a save.
+     */
+    public void clearFlags() { 
+        flags.clear(); 
+    }
+
+    /**
+     * Gets the complete set of current flags.
+     * This is primarily used by the SaveManager to save the game state.
+     * @return A Set containing all current flags.
+     */
+    public Set<String> getFlags() {
+        return this.flags;
+    }
+
+    /**
+     * Sets the complete set of flags.
+     * This is primarily used by the SaveManager to load the game state.
+     * @param flags A Set of flags to load.
+     */
+    public void setFlags(Set<String> flags) {
+        this.flags = flags;
+    }
 }

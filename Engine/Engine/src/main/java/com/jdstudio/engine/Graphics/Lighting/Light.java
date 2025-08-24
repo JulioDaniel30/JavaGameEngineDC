@@ -2,18 +2,30 @@ package com.jdstudio.engine.Graphics.Lighting;
 
 import java.awt.Color;
 
+/**
+ * Represents a basic light source in the game world.
+ * It defines the position, radius, and color of the light.
+ * 
+ * @author JDStudio
+ */
 public class Light {
 
-    public double x, y;
+    /** The x-coordinate of the light source in world space. */
+    public double x;
+    /** The y-coordinate of the light source in world space. */
+    public double y;
+    /** The radius of the light in pixels. */
     public double radius;
+    /** The color of the light. The intensity can be controlled by the Alpha channel of the color. */
     public Color color;
 
     /**
-     * Cria uma nova fonte de luz.
-     * @param x Posição X no mundo.
-     * @param y Posição Y no mundo.
-     * @param radius O raio da luz em pixels.
-     * @param color A cor da luz. A intensidade pode ser controlada pelo canal Alfa da cor.
+     * Creates a new light source.
+     *
+     * @param x      The x-position in world coordinates.
+     * @param y      The y-position in world coordinates.
+     * @param radius The radius of the light in pixels.
+     * @param color  The color of the light. The alpha component controls intensity.
      */
     public Light(double x, double y, double radius, Color color) {
         this.x = x;
@@ -21,7 +33,4 @@ public class Light {
         this.radius = radius;
         this.color = color;
     }
-    
-    
-    
 }

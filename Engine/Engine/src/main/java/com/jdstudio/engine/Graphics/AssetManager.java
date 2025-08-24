@@ -1,4 +1,3 @@
-// Arquivo: AssetManager.java
 package com.jdstudio.engine.Graphics;
 
 import java.awt.image.BufferedImage;
@@ -17,38 +16,38 @@ import com.jdstudio.engine.Graphics.Sprite.Sprite;
 import com.jdstudio.engine.Graphics.Sprite.Spritesheet;
 
 /**
- * Gerencia o carregamento, armazenamento (cache) e acesso a todos os sprites do jogo.
+ * Manages the loading, caching, and access to all game sprites.
  * <p>
- * Esta classe utiliza o padrão de centralizar o gerenciamento de recursos para
- * evitar o carregamento duplicado de imagens, economizando memória e melhorando a performance.
- * Garante que cada recurso seja identificado por uma chave de texto única.
+ * This class centralizes resource management to prevent duplicate image loading,
+ * saving memory and improving performance. It ensures that each resource is
+ * identified by a unique text key.
  *
  * @author JDStudio
  * @since 1.0
  */
 public class AssetManager {
 
-    /** Cache para armazenar os sprites carregados, associando uma chave única a cada {@link Sprite}. */
+    /** Cache to store loaded sprites, associating a unique key with each {@link Sprite}. */
     private Map<String, Sprite> spriteCache;
 
     /**
-     * Construtor que inicializa o AssetManager.
-     * Instancia o cache de sprites interno.
+     * Constructs a new AssetManager.
+     * Initializes the internal sprite cache.
      */
     public AssetManager() {
         this.spriteCache = new HashMap<>();
     }
     
     /**
-     * Carrega vários sprites a partir de um arquivo JSON de configuração.
-     * O JSON deve conter um array "sprites" com objetos { "key", "path" }.
+     * Loads multiple sprites from a JSON configuration file.
+     * The JSON should contain a "sprites" array with objects like { "key": "player", "path": "/sprites/player.png" }.
      *
-     * @param jsonPath Caminho do arquivo JSON no classpath (ex: "/configs/sprites.json")
+     * @param jsonPath Path to the JSON file in the classpath (e.g., "/configs/sprites.json")
      */
     public void loadSpritesFromJson(String jsonPath) {
         try (InputStream is = getClass().getResourceAsStream(jsonPath)) {
             if (is == null) {
-                System.err.println("Falha ao encontrar o arquivo de configuração de sprites: " + jsonPath);
+                System.err.println("Failed to find sprite configuration file: " + jsonPath);
                 return;
             }
             String jsonText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -60,39 +59,53 @@ public class AssetManager {
                 String path = spriteData.getString("path");
                 loadSprite(key, path);
             }
-            System.out.println(spritesArray.length() + " sprites carregados com sucesso de: " + jsonPath);
+            System.out.println(spritesArray.length() + " sprites loaded successfully from: " + jsonPath);
         } catch (Exception e) {
-            System.err.println("Erro ao processar o arquivo de configuração de sprites '" + jsonPath + "'.");
+            System.err.println("Error processing sprite configuration file '" + jsonPath + "'.");
             e.printStackTrace();
         }
     }
     
     /**
-     * **NOVO MÉTODO**
-     * Carrega e recorta múltiplos sprites de uma única spritesheet, com base
-     * em definições de um arquivo de configuração JSON.
-     * Suporta definições baseadas em grelha (grid) e coordenadas manuais.
+     * Loads and crops multiple sprites from a single spritesheet, based on
+     * definitions from a JSON configuration file.
+     * Supports definitions based on grid, full grid, and manual coordinates.
+     * <p>
+     * JSON Structure Examples:
+     * <pre>
+     * {
+     *   "spritesheetPath": "/sprites/my_sheet.png",
+     *   "definitions": [
+     *     { "type": "grid", "prefix": "player_walk_", "spriteWidth": 32, "spriteHeight": 32, "startX": 0, "startY": 0, "numCols": 4, "numRows": 2, "startIndex": 1 },
+     *     { "type": "full_grid", "prefix": "tile_", "spriteWidth": 16, "spriteHeight": 16, "startIndex": 0 },
+     *     { "type": "manual", "sprites": [
+     *       { "key": "player_idle", "x": 0, "y": 0, "w": 32, "h": 32 },
+     *       { "key": "enemy_attack", "x": 32, "y": 0, "w": 64, "h": 64 }
+     *     ]}
+     *   ]
+     * }
+     * </pre>
      *
-     * @param jsonPath O caminho para o recurso do arquivo .json (ex: "/configs/player_sprites.json").
+     * @param jsonPath The path to the .json resource file (e.g., "/configs/player_sprites.json").
      */
     public void loadSpritesFromSpritesheetJson(String jsonPath) {
         try (InputStream is = getClass().getResourceAsStream(jsonPath)) {
             if (is == null) {
-                System.err.println("Falha ao encontrar o arquivo de definição de spritesheet: " + jsonPath);
+                System.err.println("Failed to find spritesheet definition file: " + jsonPath);
                 return;
             }
 
             String jsonText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             JSONObject config = new JSONObject(jsonText);
 
-            // 1. Carrega a spritesheet principal
+            // 1. Load the main spritesheet
             String sheetPath = config.getString("spritesheetPath");
             Spritesheet sheet = new Spritesheet(sheetPath);
 
             JSONArray definitions = config.getJSONArray("definitions");
             int spritesRegistered = 0;
 
-            // 2. Itera sobre cada bloco de definição (grid ou manual)
+            // 2. Iterate over each definition block (grid, full_grid, or manual)
             for (int i = 0; i < definitions.length(); i++) {
                 JSONObject def = definitions.getJSONObject(i);
                 String type = def.getString("type");
@@ -104,21 +117,16 @@ public class AssetManager {
                      int startX = def.optInt("startX", 0);
                      int startY = def.optInt("startY", 0);
 
-                     // --- LÓGICA ATUALIZADA ---
-
-                     // 1. Lê o 'startIndex' opcional. O padrão é 1 para manter a compatibilidade.
                      int startIndex = def.optInt("startIndex", 1);
 
-                     // Se tiver numCols e numRows, usa a nova lógica 2D
                      if (def.has("numCols") && def.has("numRows")) {
                          int numCols = def.getInt("numCols");
                          int numRows = def.getInt("numRows");
                          
-                         // 2. Inicia o contador com o startIndex
                          int counter = startIndex;
                          for (int row = 0; row < numRows; row++) {
                              for (int col = 0; col < numCols; col++) {
-                                 String key = prefix + counter; // Usa o contador
+                                 String key = prefix + counter;
                                  int x = startX + (col * spriteWidth);
                                  int y = startY + (row * spriteHeight);
                                  registerSprite(key, sheet.getSprite(x, y, spriteWidth, spriteHeight));
@@ -127,28 +135,21 @@ public class AssetManager {
                              }
                          }
                      } 
-                     // Se não, se tiver 'count', usa a lógica antiga 1D
                      else if (def.has("count")) {
                          int count = def.getInt("count");
                          for (int j = 0; j < count; j++) {
-                             // 3. Modifica a criação da chave para usar o startIndex
-                             // Se j=0, a chave será prefix + startIndex. Se j=1, será prefix + startIndex + 1, e assim por diante.
                              String key = prefix + (startIndex + j);
                              int x = startX + (j * spriteWidth);
                              registerSprite(key, sheet.getSprite(x, startY, spriteWidth, spriteHeight));
                              spritesRegistered++;
                          }
-                         System.out.println("tipo grid (1D): " + count + " sprites registrados.");
                      }
-                    System.out.println("tipo grid: " + spritesRegistered + " sprites registrados.");
                 } else if ("full_grid".equals(type)) {
-                    // --- A NOVA LÓGICA AUTOMÁTICA ESTÁ AQUI ---
                     String prefix = def.getString("prefix");
                     int spriteWidth = def.getInt("spriteWidth");
                     int spriteHeight = def.getInt("spriteHeight");
                     int startIndex = def.optInt("startIndex", 1);
                     
-                    // Calcula automaticamente o número de colunas e linhas
                     int numCols = sheet.getWidth() / spriteWidth;
                     int numRows = sheet.getHeight() / spriteHeight;
                     
@@ -165,10 +166,8 @@ public class AssetManager {
                             counter++;
                         }
                     }
-                    System.out.println("tipo full_grid: " + (numCols * numRows) + " sprites registrados.");
 
                 } else if ("manual".equals(type)) {
-                    // Lógica para extração manual
                     JSONArray manualSprites = def.getJSONArray("sprites");
                     for (int j = 0; j < manualSprites.length(); j++) {
                         JSONObject spriteData = manualSprites.getJSONObject(j);
@@ -180,74 +179,73 @@ public class AssetManager {
                         registerSprite(key, sheet.getSprite(x, y, w, h));
                         spritesRegistered++;
                     }
-                    System.out.println("tipo manual: " + manualSprites.length() + " sprites registrados.");
                 }
             }
-            System.out.println(spritesRegistered + " sprites recortados e registrados com sucesso de: " + sheetPath);
+            System.out.println(spritesRegistered + " sprites cropped and registered successfully from: " + sheetPath);
 
         } catch (Exception e) {
-            System.err.println("Erro ao processar o arquivo de definição de spritesheet '" + jsonPath + "'. Verifique o formato do JSON.");
+            System.err.println("Error processing spritesheet definition file '" + jsonPath + "'. Check JSON format.");
             e.printStackTrace();
         }
     }
 
     /**
-     * Carrega um sprite a partir de um arquivo de imagem e o armazena no cache.
+     * Loads a sprite from an image file and stores it in the cache.
      * <p>
-     * Se um sprite com a mesma chave já existir no cache, a operação é ignorada.
-     * Em caso de falha no carregamento, uma mensagem de erro é exibida no console,
-     * mas a aplicação não é interrompida.
+     * If a sprite with the same key already exists in the cache, the operation is ignored.
+     * In case of loading failure, an error message is displayed in the console,
+     * but the application is not interrupted.
      *
-     * @param key  O nome único (chave) para este sprite (ex: "player", "bullet").
-     * @param path O caminho para o recurso de imagem, acessível pelo Classpath (ex: "/sprites/player.png").
+     * @param key  The unique name (key) for this sprite (e.g., "player", "bullet").
+     * @param path The path to the image resource, accessible via the Classpath (e.g., "/sprites/player.png").
      */
     public void loadSprite(String key, String path) {
         if (spriteCache.containsKey(key)) {
-            return; // Otimização: não carrega se já existir.
+            return; // Optimization: do not load if already exists.
         }
         try {
             BufferedImage image = ImageIO.read(getClass().getResource(path));
             spriteCache.put(key, new Sprite(image));
         } catch (IOException | IllegalArgumentException | NullPointerException e) {
-            System.err.println("Falha ao carregar o sprite '" + key + "' do caminho: " + path);
-            e.printStackTrace(); // Útil para depuração detalhada
+            System.err.println("Failed to load sprite '" + key + "' from path: " + path);
+            e.printStackTrace(); // Useful for detailed debugging
         }
     }
 
     /**
-     * Registra um objeto {@link Sprite} pré-existente no cache.
+     * Registers an existing {@link Sprite} object in the cache.
      * <p>
-     * Este método é ideal para adicionar sprites que foram criados a partir de
-     * uma {@code Spritesheet}, onde uma única imagem é fatiada em vários sprites.
+     * This method is ideal for adding sprites that were created from a {@code Spritesheet},
+     * where a single image is sliced into multiple sprites.
      *
-     * @param key    O nome único (chave) para este sprite.
-     * @param sprite O objeto {@code Sprite} a ser adicionado ao cache.
+     * @param key    The unique name (key) for this sprite.
+     * @param sprite The {@code Sprite} object to be added to the cache.
      */
     public void registerSprite(String key, Sprite sprite) {
-        // A verificação de nulidade adiciona robustez
+        // Null check adds robustness
         if (sprite == null) {
-            System.err.println("Tentativa de registrar um sprite nulo com a chave: '" + key + "'");
+            System.err.println("Attempt to register a null sprite with key: '" + key + "'");
             return;
         }
         if (spriteCache.containsKey(key)) {
-            System.err.println("Aviso: A chave '" + key + "' já existe no cache. O sprite não será substituído.");
+            System.err.println("Warning: Key '" + key + "' already exists in cache. Sprite will not be replaced.");
             return;
         }
         spriteCache.put(key, sprite);
     }
 
     /**
-     * Recupera um sprite do cache usando sua chave.
+     * Retrieves a sprite from the cache using its key.
      * <p>
-     * Este é o método principal para obter acesso a um sprite após ele ter sido
-     * carregado ou registrado.
+     * This is the primary method to get access to a sprite after it has been
+     * loaded or registered.
      *
-     * @param key O nome único do sprite a ser recuperado.
-     * @return O objeto {@link Sprite} associado à chave, ou {@code null} se a chave não for encontrada.
+     * @param key The unique name of the sprite to retrieve.
+     * @return The {@link Sprite} object associated with the key, or {@code null} if the key is not found.
      */
     public Sprite getSprite(String key) {
         if (!spriteCache.containsKey(key)) {
-            System.err.println("Erro: O sprite com a chave '" + key + "' não foi encontrado no AssetManager.");
+            System.err.println("Error: Sprite with key '" + key + "' not found in AssetManager.");
             return null;
         }
         return spriteCache.get(key);

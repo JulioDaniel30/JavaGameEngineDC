@@ -7,16 +7,30 @@ import java.util.function.Consumer;
 import com.jdstudio.engine.Graphics.Sprite.Sprite;
 import com.jdstudio.engine.Input.InputManager;
 
-/**/
-
+/**
+ * A UI element representing a toggle button that switches between two states (on/off).
+ * It displays different sprites for each state and executes a defined action when its state changes.
+ * 
+ * @author JDStudio
+ */
 public class UIToggleButton extends UIElement {
 
     private Sprite offSprite, onSprite;
     private boolean isOn;
-    private Consumer<Boolean> onToggleAction; // Ação que recebe o novo estado (true/false)
+    private Consumer<Boolean> onToggleAction; // Action that receives the new state (true/false)
 
     private boolean isHovering = false;
 
+    /**
+     * Constructs a new UIToggleButton.
+     *
+     * @param x              The x-coordinate of the button's top-left corner.
+     * @param y              The y-coordinate of the button's top-left corner.
+     * @param offSprite      The sprite for the button's "off" state.
+     * @param onSprite       The sprite for the button's "on" state.
+     * @param initialState   The initial state of the toggle button (true for on, false for off).
+     * @param onToggleAction The action to run when the button is toggled. Receives the new state as a boolean.
+     */
     public UIToggleButton(int x, int y, Sprite offSprite, Sprite onSprite, boolean initialState, Consumer<Boolean> onToggleAction) {
         super(x, y);
         this.offSprite = offSprite;
@@ -30,6 +44,10 @@ public class UIToggleButton extends UIElement {
         }
     }
     
+    /**
+     * Updates the toggle button's state based on mouse input.
+     * It detects hover and click events, toggling the state and executing the onToggleAction.
+     */
     @Override
     public void tick() {
         if (!visible) {
@@ -44,13 +62,19 @@ public class UIToggleButton extends UIElement {
         isHovering = bounds.contains(mouseX, mouseY);
 
         if (isHovering && InputManager.isLeftMouseButtonJustPressed()) {
-            isOn = !isOn; // Inverte o estado
+            isOn = !isOn; // Invert the state
             if (onToggleAction != null) {
-                onToggleAction.accept(isOn); // Executa a ação, passando o novo estado
+                onToggleAction.accept(isOn); // Execute the action, passing the new state
             }
         }
     }
 
+    /**
+     * Renders the toggle button, drawing the appropriate sprite based on its current state (on/off).
+     * Also draws a simple outline when the mouse is hovering over it.
+     *
+     * @param g The Graphics context to draw on.
+     */
     @Override
     public void render(Graphics g) {
         if (!visible) return;
@@ -60,9 +84,9 @@ public class UIToggleButton extends UIElement {
             g.drawImage(currentSprite.getImage(), x, y, null);
         }
         
-        // Adiciona um contorno simples quando o mouse está em cima
+        // Add a simple outline when the mouse is hovering
         if(isHovering){
-            g.setColor(new java.awt.Color(255, 255, 0, 100)); // Amarelo semitransparente
+            g.setColor(new java.awt.Color(255, 255, 0, 100)); // Semi-transparent yellow
             g.drawRect(x, y, width, getHeight());
         }
     }

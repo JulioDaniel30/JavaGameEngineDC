@@ -1,26 +1,29 @@
 package com.jdstudio.engine.Graphics;
 
 /**
- * Representa um perfil de resolução, contendo a largura e altura base
- * e uma escala recomendada para a janela.
+ * Represents a resolution profile, containing the base width and height
+ * and a recommended scale for the game window.
+ * This allows the game to render internally at a lower resolution and then scale up
+ * for display, providing a pixel-art aesthetic or performance benefits.
  *
- * @param width A largura da resolução interna (em pixels).
- * @param height A altura da resolução interna (em pixels).
- * @param recommendedScale A escala de multiplicação sugerida para a janela final.
+ * @param width            The base internal resolution width (in pixels).
+ * @param height           The base internal resolution height (in pixels).
+ * @param recommendedScale The suggested multiplication scale for the final window size.
+ * @author JDStudio
  */
 public record ResolutionProfile(int width, int height, int recommendedScale) {
     
     /**
-     * Calcula a largura final da janela.
-     * @return A largura base multiplicada pela escala recomendada.
+     * Calculates the final width of the game window based on the base width and recommended scale.
+     * @return The base width multiplied by the recommended scale.
      */
     public int getFinalWidth() {
         return width * recommendedScale;
     }
 
     /**
-     * Calcula a altura final da janela.
-     * @return A altura base multiplicada pela escala recomendada.
+     * Calculates the final height of the game window based on the base height and recommended scale.
+     * @return The base height multiplied by the recommended scale.
      */
     public int getFinalHeight() {
         return height * recommendedScale;

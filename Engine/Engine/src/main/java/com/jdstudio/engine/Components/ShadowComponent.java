@@ -15,33 +15,40 @@ import com.jdstudio.engine.Graphics.Sprite.Sprite;
 import com.jdstudio.engine.Object.GameObject;
 
 /**
- * Um componente que renderiza uma sombra para um GameObject.
- * A sombra é desenhada na camada GAMEPLAY_BELOW, abaixo do personagem,
- * e sua profundidade Z é calculada para aparecer sempre sob o dono.
+ * A component that renders a shadow for a GameObject.
+ * The shadow is drawn on the GAMEPLAY_BELOW layer, beneath the character,
+ * and its Z-depth is calculated to always appear under its owner.
+ * This component implements IRenderable to hook into the engine's rendering system.
+ * 
+ * @author JDStudio
  */
 public class ShadowComponent extends Component implements IRenderable {
 
+    /**
+     * Defines the type of shadow to be rendered.
+     */
     public enum ShadowType {
-        /** Desenha uma sombra oval suave usando código. */
+        /** Draws a soft oval shadow using procedural generation. */
         PROCEDURAL_OVAL,
-        /** Desenha um sprite fornecido como sombra. */
+        /** Draws a provided sprite as the shadow. */
         SPRITE_BASED
     }
+
     private boolean isActive = true;
     private final ShadowType type;
     private Sprite shadowSprite;
     private int width;
     private int height;
     private float opacity;
-    private int yOffset; // Deslocamento vertical da sombra em relação à base do dono
+    private int yOffset; // Vertical offset of the shadow relative to the owner's base
 
-    // --- Construtor para Sombra Procedural ---
     /**
-     * Cria uma sombra procedural (oval e suave).
-     * @param width A largura da elipse da sombra.
-     * @param height A altura da elipse da sombra.
-     * @param opacity A opacidade da sombra (0.0f a 1.0f).
-     * @param yOffset O deslocamento vertical da sombra em relação à base do dono.
+     * Creates a procedural (soft oval) shadow.
+     *
+     * @param width   The width of the shadow ellipse.
+     * @param height  The height of the shadow ellipse.
+     * @param opacity The opacity of the shadow (0.0f to 1.0f).
+     * @param yOffset The vertical offset of the shadow from the owner's base.
      */
     public ShadowComponent(int width, int height, float opacity, int yOffset) {
         this.type = ShadowType.PROCEDURAL_OVAL;
@@ -51,11 +58,11 @@ public class ShadowComponent extends Component implements IRenderable {
         this.yOffset = yOffset;
     }
 
-    // --- Construtor para Sombra baseada em Sprite ---
     /**
-     * Cria uma sombra usando um sprite customizado.
-     * @param shadowSprite O sprite a ser usado como sombra.
-     * @param yOffset O deslocamento vertical da sombra em relação à base do dono.
+     * Creates a shadow using a custom sprite.
+     *
+     * @param shadowSprite The sprite to be used as the shadow.
+     * @param yOffset      The vertical offset of the shadow from the owner's base.
      */
     public ShadowComponent(Sprite shadowSprite, int yOffset) {
         this.type = ShadowType.SPRITE_BASED;
@@ -64,37 +71,38 @@ public class ShadowComponent extends Component implements IRenderable {
         if (shadowSprite != null) {
             this.width = shadowSprite.getWidth();
             this.height = shadowSprite.getHeight();
+            this.opacity = 1.0f; // Default to full opacity for sprites
         }
     }
 
     @Override
     public void initialize(GameObject owner) {
         super.initialize(owner);
-        // O componente de sombra se registra para ser renderizado
+        // The shadow component registers itself to be rendered.
         com.jdstudio.engine.Graphics.Layers.RenderManager.getInstance().register(this);
     }
     
-    // O método update() não é necessário, pois a sombra apenas segue o 'owner'.
+    // The update() method is not needed, as the shadow just follows the owner.
 
-    // --- Métodos da Interface IRenderable ---
+    // --- IRenderable Interface Methods ---
 
     @Override
     public void render(Graphics g) {
         if (owner == null || !isActive) return;
         
-        Graphics2D g2d = (Graphics2D) g.create(); // Cria uma cópia do contexto gráfico para não afetar outros desenhos
+        Graphics2D g2d = (Graphics2D) g.create(); // Create a copy of the graphics context to not affect other drawings
 
-        // Posição da sombra: centralizada no X do dono, na base do Y do dono + offset
+        // Shadow position: centered on the owner's X, at the base of the owner's Y + offset
         int shadowX = owner.getX() + (owner.getWidth() / 2) - (this.width / 2) - Engine.camera.getX();
         int shadowY = owner.getY() + owner.getHeight() - (this.height / 2) + this.yOffset - Engine.camera.getY();
 
         if (type == ShadowType.SPRITE_BASED && shadowSprite != null) {
-            // Define a opacidade para o sprite
+            // Set the opacity for the sprite
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
             g2d.drawImage(shadowSprite.getImage(), shadowX, shadowY, null);
             
         } else if (type == ShadowType.PROCEDURAL_OVAL) {
-            // Usa um gradiente radial para criar uma sombra suave
+            // Use a radial gradient to create a soft shadow
             Point2D center = new Point2D.Float(shadowX + width / 2f, shadowY + height / 2f);
             float radius = width / 2f;
             float[] dist = {0.0f, 1.0f};
@@ -107,23 +115,23 @@ public class ShadowComponent extends Component implements IRenderable {
             RadialGradientPaint p = new RadialGradientPaint(center, radius, dist, colors);
             g2d.setPaint(p);
             
-            // Desenha a elipse/oval
+            // Draw the ellipse/oval
             g2d.fillOval(shadowX, shadowY, width, height);
         }
 
-        g2d.dispose(); // Libera a cópia do contexto gráfico
+        g2d.dispose(); // Release the graphics context copy
     }
 
     @Override
     public RenderLayer getRenderLayer() {
-        // A sombra deve ser desenhada abaixo dos personagens, mas acima do chão.
+        // The shadow should be drawn below characters, but above the ground.
         return StandardLayers.GAMEPLAY_BELOW;
     }
 
     @Override
     public int getZOrder() {
-        // A sombra deve ter um Z-Order um pouco menor que o seu dono
-        // para garantir que seja desenhada estritamente abaixo dele.
+        // The shadow should have a Z-Order slightly less than its owner
+        // to ensure it is drawn strictly beneath it.
         return (owner != null) ? owner.getZOrder() - 1 : 0;
     }
 
@@ -131,9 +139,19 @@ public class ShadowComponent extends Component implements IRenderable {
     public boolean isVisible() {
         return (owner != null && owner.isVisible());
     }
+
+    /**
+     * Activates or deactivates the shadow's rendering.
+     * @param active true to show the shadow, false to hide it.
+     */
     public void setActive(boolean active) {
     	this.isActive = active;
     }
+
+    /**
+     * Checks if the shadow is currently active.
+     * @return true if the shadow is active, false otherwise.
+     */
     public boolean isActive() {
     	return this.isActive;
     }

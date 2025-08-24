@@ -6,18 +6,22 @@ import com.jdstudio.engine.Graphics.Sprite.Animations.Animation;
 import com.jdstudio.engine.Graphics.Sprite.Animations.Animator;
 
 /**
- * Um elemento de UI que executa uma animação.
- * Ele encapsula um Animator para gerir e desenhar o frame atual de uma Animação.
+ * A UI element that displays an animation.
+ * It encapsulates an {@link Animator} to manage and draw the current frame of an {@link Animation}.
+ * 
+ * @author JDStudio
  */
 public class UIAnimatedImage extends UIElement {
 
+    /** The Animator instance managing the animations for this UI element. */
     private Animator animator;
 
     /**
-     * Cria um novo elemento de UI animado a partir de uma única animação.
-     * @param x Posição X na tela.
-     * @param y Posição Y na tela.
-     * @param animation A animação a ser executada.
+     * Creates a new animated UI element from a single animation.
+     *
+     * @param x         The x-position on the screen.
+     * @param y         The y-position on the screen.
+     * @param animation The animation to be played.
      */
     public UIAnimatedImage(int x, int y, Animation animation) {
         super(x, y);
@@ -34,6 +38,10 @@ public class UIAnimatedImage extends UIElement {
         }
     }
 
+    /**
+     * Updates the internal animator, advancing the animation frames.
+     * This method should be called every game tick.
+     */
     @Override
     public void tick() {
         if (visible && animator != null) {
@@ -41,6 +49,11 @@ public class UIAnimatedImage extends UIElement {
         }
     }
 
+    /**
+     * Renders the current frame of the animation at the element's position.
+     *
+     * @param g The Graphics context to draw on.
+     */
     @Override
     public void render(Graphics g) {
         if (visible && animator != null) {
@@ -52,9 +65,9 @@ public class UIAnimatedImage extends UIElement {
     }
     
     /**
-     * Permite o acesso ao Animator interno para um controlo mais avançado
-     * (ex: adicionar e trocar entre múltiplas animações).
-     * @return O Animator deste elemento.
+     * Allows access to the internal Animator for more advanced control
+     * (e.g., adding and switching between multiple animations).
+     * @return The Animator instance for this element.
      */
     public Animator getAnimator() {
         return this.animator;

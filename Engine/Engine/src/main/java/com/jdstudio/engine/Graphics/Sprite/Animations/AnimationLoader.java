@@ -16,26 +16,50 @@ import com.jdstudio.engine.Graphics.Sprite.Sprite;
 import com.jdstudio.engine.Graphics.Sprite.Spritesheet;
 import com.jdstudio.engine.Utils.ImageUtils;
 
+/**
+ * A static utility class for loading animation data from JSON files.
+ * It supports loading animations exported from Aseprite and a more generic JSON format.
+ * 
+ * @author JDStudio
+ */
 public class AnimationLoader {
 
 	/**
-     * Carrega animações a partir de um arquivo JSON exportado do Aseprite.
-     * Este método lê os dados de frames e tags para construir as animações automaticamente.
-     * @param jsonPath O caminho para o recurso do arquivo .json do Aseprite.
-     * @param sheet A Spritesheet correspondente de onde os frames serão recortados.
-     * @param createFlippedVersions Se true, cria versões espelhadas para animações com sufixo "_right".
-     * @return Um Map contendo as animações carregadas, prontas para serem adicionadas a um Animator.
+     * Loads animations from a JSON file exported from Aseprite.
+     * This method reads frame data and tags to automatically construct animations.
+     * It can also create flipped versions of animations if specified.
+     * <p>
+     * Expected Aseprite JSON structure (simplified):
+     * <pre>
+     * {
+     *   "frames": [
+     *     { "filename": "frame_0.png", "frame": { "x": 0, "y": 0, "w": 32, "h": 32 }, "duration": 100 },
+     *     // ... more frames
+     *   ],
+     *   "meta": {
+     *     "frameTags": [
+     *       { "name": "idle", "from": 0, "to": 3, "direction": "forward" },
+     *       { "name": "walk_right", "from": 4, "to": 7, "direction": "forward" },
+     *       // ... more tags
+     *     ]
+     *   }
+     * }
+     * </pre>
+     *
+     * @param jsonPath           The path to the Aseprite .json resource file.
+     * @param sheet              The corresponding Spritesheet from which frames will be cropped.
+     * @param createFlippedVersions If true, creates flipped versions for animations with "_right" suffix.
+     * @return A Map containing the loaded animations, ready to be added to an Animator.
      */
     public static Map<String, Animation> loadFromAsepriteJson(String jsonPath, Spritesheet sheet, boolean createFlippedVersions) {
         Map<String, Animation> animations = new HashMap<>();
 
         try (InputStream is = AnimationLoader.class.getResourceAsStream(jsonPath)) {
-            if (is == null) throw new Exception("Arquivo JSON de animação não encontrado: " + jsonPath);
+            if (is == null) throw new Exception("Animation JSON file not found: " + jsonPath);
 
             String jsonText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             JSONObject json = new JSONObject(jsonText);
 
-            // --- 1ª MUDANÇA AQUI: Lê "frames" como um JSONArray ---
             JSONArray framesArray = json.getJSONArray("frames");
             
             JSONObject metaJson = json.getJSONObject("meta");
@@ -50,7 +74,6 @@ public class AnimationLoader {
 
                 List<Sprite> animFrames = new ArrayList<>();
                 for (int j = from; j <= to; j++) {
-                    // --- 2ª MUDANÇA AQUI: Pega o frame da lista pelo seu índice 'j' ---
                     JSONObject frameData = framesArray.getJSONObject(j);
                     
                     JSONObject rect = frameData.getJSONObject("frame");
@@ -69,16 +92,16 @@ public class AnimationLoader {
                 if (createFlippedVersions) {
                     String flippedName = null;
 
-                    // Primeiro, verifica se o nome termina com "_right"
+                    // First, check if the name ends with "_right"
                     if (animName.endsWith("_right")) {
                         flippedName = animName.replace("_right", "_left");
                     } 
-                    // Se não, verifica se termina apenas com "right"
+                    // If not, check if it just ends with "right"
                     else if (animName.endsWith("right")) {
                         flippedName = animName.replace("right", "left");
                     }
 
-                    // Se uma das condições acima for verdadeira, flippedName não será nulo
+                    // If one of the above conditions is true, flippedName will not be null
                     if (flippedName != null) {
                         List<Sprite> flippedFrames = new ArrayList<>();
                         for (Sprite frame : animFrames) {
@@ -90,28 +113,48 @@ public class AnimationLoader {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Falha ao carregar animações de: " + jsonPath, e);
+            throw new RuntimeException("Failed to load animations from: " + jsonPath, e);
         }
 
         return animations;
     }
+
     /**
-     * **NOVO MÉTODO**
-     * Carrega um lote de animações a partir de um arquivo de configuração JSON genérico.
-     * Este método é uma alternativa ao fluxo de trabalho do Aseprite e requer que os sprites
-     * individuais (frames) já tenham sido carregados no AssetManager.
+     * Loads a batch of animations from a generic JSON configuration file.
+     * This method is an alternative to the Aseprite workflow and requires that individual sprites
+     * (frames) have already been loaded into the AssetManager.
+     * <p>
+     * Expected JSON structure:
+     * <pre>
+     * {
+     *   "animations": [
+     *     {
+     *       "key": "player_idle",
+     *       "speed": 10,
+     *       "loop": true,
+     *       "frames": ["player_idle_0", "player_idle_1", "player_idle_2"]
+     *     },
+     *     {
+     *       "key": "player_walk",
+     *       "speed": 5,
+     *       "loop": true,
+     *       "frames": ["player_walk_0", "player_walk_1", "player_walk_2", "player_walk_3"]
+     *     }
+     *   ]
+     * }
+     * </pre>
      *
-     * @param jsonPath O caminho para o recurso do arquivo .json (ex: "/configs/animations.json").
-     * @param assets   O AssetManager que contém todos os sprites já carregados, que serão referenciados pelas 'keys' no JSON.
-     * @return Um Map contendo as animações carregadas, prontas para serem adicionadas a um Animator.
+     * @param jsonPath The path to the .json resource file (e.g., "/configs/animations.json").
+     * @param assets   The AssetManager containing all already loaded sprites, which will be referenced by 'keys' in the JSON.
+     * @return A Map containing the loaded animations, ready to be added to an Animator.
      */
     public static Map<String, Animation> loadFromJson(String jsonPath, AssetManager assets) {
         Map<String, Animation> animations = new HashMap<>();
 
         try (InputStream is = AnimationLoader.class.getResourceAsStream(jsonPath)) {
             if (is == null) {
-                System.err.println("Falha ao encontrar o arquivo de configuração de animações: " + jsonPath);
-                return animations; // Retorna o mapa vazio
+                System.err.println("Failed to find animation configuration file: " + jsonPath);
+                return animations; // Return empty map
             }
 
             String jsonText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -122,7 +165,7 @@ public class AnimationLoader {
                 JSONObject animData = animationsArray.getJSONObject(i);
                 String key = animData.getString("key");
                 int speed = animData.getInt("speed");
-                boolean loop = animData.optBoolean("loop", true); // Por padrão, a animação é em loop
+                boolean loop = animData.optBoolean("loop", true); // By default, animation loops
 
                 JSONArray framesArray = animData.getJSONArray("frames");
                 List<Sprite> animFrames = new ArrayList<>();
@@ -133,7 +176,7 @@ public class AnimationLoader {
                     if (frameSprite != null) {
                         animFrames.add(frameSprite);
                     } else {
-                        System.err.println("Aviso: Sprite com a chave '" + frameKey + "' não encontrado no AssetManager para a animação '" + key + "'. Frame ignorado.");
+                        System.err.println("Warning: Sprite with key '" + frameKey + "' not found in AssetManager for animation '" + key + "'. Frame ignored.");
                     }
                 }
 
@@ -141,13 +184,13 @@ public class AnimationLoader {
                     Animation newAnimation = new Animation(speed, loop, animFrames.toArray(new Sprite[0]));
                     animations.put(key, newAnimation);
                 } else {
-                    System.err.println("Aviso: Nenhuma frame válido encontrado para a animação '" + key + "'. A animação não foi criada.");
+                    System.err.println("Warning: No valid frames found for animation '" + key + "'. Animation not created.");
                 }
             }
-            System.out.println(animations.size() + " animações carregadas com sucesso de: " + jsonPath);
+            System.out.println(animations.size() + " animations loaded successfully from: " + jsonPath);
 
         } catch (Exception e) {
-            System.err.println("Erro ao processar o arquivo de configuração de animações '" + jsonPath + "'. Verifique o formato do JSON.");
+            System.err.println("Error processing animation configuration file '" + jsonPath + "'. Check JSON format.");
             e.printStackTrace();
         }
 

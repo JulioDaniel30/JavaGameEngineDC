@@ -1,14 +1,20 @@
 package com.jdstudio.engine.Dialogue;
 import com.jdstudio.engine.Object.GameObject;
+
 /**
- * Interface para ações que podem ser acionadas por escolhas de diálogo.
+ * A functional interface for actions that can be triggered by dialogue choices or nodes.
+ * This allows for creating custom, game-specific logic (like starting a quest or giving an item)
+ * that can be executed during a conversation.
+ * 
+ * @author JDStudio
  */
 @FunctionalInterface
 public interface DialogueAction {
     /**
-     * Executa a lógica da ação.
-     * @param interactor O GameObject que iniciou a interação (geralmente o Player).
-     * @param source     O GameObject que é a fonte do diálogo (geralmente o NPC).
+     * Executes the logic of the action.
+     * 
+     * @param interactor The GameObject that initiated the interaction (usually the Player).
+     * @param source     The GameObject that is the source of the dialogue (usually the NPC).
      */
     void execute(GameObject interactor, GameObject source);
 }

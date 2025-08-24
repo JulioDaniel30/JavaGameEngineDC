@@ -10,9 +10,12 @@ import com.jdstudio.engine.Object.GameObject;
 import com.jdstudio.engine.Utils.PropertiesReader;
 
 /**
- * Uma classe base "engine-side" para qualquer tipo de portal/teletransporte.
- * Contém toda a lógica de teletransporte, animação e condições de ativação.
- * A subclasse do jogo é responsável por fornecer as animações específicas e definir o destino.
+ * An abstract base class for any type of portal or teleporter in the game.
+ * It contains all the logic for teleportation, animation, and activation conditions.
+ * Game-specific subclasses are responsible for providing the specific animations and defining the destination.
+ * This class also implements {@link ISavable} to allow its state to be persisted.
+ * 
+ * @author JDStudio
  */
 public abstract class EnginePortal extends GameObject implements ISavable {
 
@@ -29,14 +32,43 @@ public abstract class EnginePortal extends GameObject implements ISavable {
     protected boolean requiresQuest = false;
     protected String requiredQuestId;
     protected boolean autoTeleport = false;
-    protected int cooldownTime = 0; // Em ticks
+    protected int cooldownTime = 0; // In ticks
     protected int currentCooldown = 0;
     protected boolean oneTimeUse = false;
 
+    /**
+     * Constructs a new EnginePortal with the given properties.
+     * 
+     * @param properties A JSONObject containing the initial properties of the portal.
+     */
     public EnginePortal(JSONObject properties) {
         super(properties);
     }
 
+    /**
+     * Initializes the EnginePortal's properties from a JSONObject.
+     * It sets up activation state, destination, key/quest requirements, and auto-teleport behavior.
+     * <p>
+     * The following properties can be defined in the JSON object:
+     * <ul>
+     *   <li><b>Key:</b> "isActive"<br/><b>Type:</b> boolean<br/><b>Description:</b> If true, the portal is initially active and usable. Default is true.</li>
+     *   <li><b>Key:</b> "portalId"<br/><b>Type:</b> String<br/><b>Description:</b> A unique identifier for this portal, used for linking with other portals. Default is empty string.</li>
+     *   <li><b>Key:</b> "destinationLevel"<br/><b>Type:</b> String<br/><b>Description:</b> The name of the level to teleport to. Default is empty string.</li>
+     *   <li><b>Key:</b> "destinationX"<br/><b>Type:</b> int<br/><b>Description:</b> The X coordinate in the destination level to teleport to. Default is 0.</li>
+     *   <li><b>Key:</b> "destinationY"<br/><b>Type:</b> int<br/><b>Description:</b> The Y coordinate in the destination level to teleport to. Default is 0.</li>
+     *   <li><b>Key:</b> "destinationPortalId"<br/><b>Type:</b> String<br/><b>Description:</b> The ID of a specific portal in the destination level to teleport to. If set, destinationX/Y might be ignored. Default is empty string.</li>
+     *   <li><b>Key:</b> "requiresKey"<br/><b>Type:</b> boolean<br/><b>Description:</b> If true, the portal requires a specific key to be used. Default is false.</li>
+     *   <li><b>Key:</b> "requiredKeyId"<br/><b>Type:</b> String<br/><b>Description:</b> The ID of the key required to use the portal, if "requiresKey" is true. Default is empty string.</li>
+     *   <li><b>Key:</b> "requiresQuest"<br/><b>Type:</b> boolean<br/><b>Description:</b> If true, the portal requires a specific quest to be completed. Default is false.</li>
+     *   <li><b>Key:</b> "requiredQuestId"<br/><b>Type:</b> String<br/><b>Description:</b> The ID of the quest required to use the portal, if "requiresQuest" is true. Default is empty string.</li>
+     *   <li><b>Key:</b> "autoTeleport"<br/><b>Type:</b> boolean<br/><b>Description:</b> If true, the portal teleports the player automatically on collision. If false, it requires interaction. Default is false.</li>
+     *   <li><b>Key:</b> "cooldownTime"<br/><b>Type:</b> int<br/><b>Description:</b> The cooldown time in ticks after the portal is used before it can be used again. Default is 60 ticks (1 second).</li>
+     *   <li><b>Key:</b> "oneTimeUse"<br/><b>Type:</b> boolean<br/><b>Description:</b> If true, the portal can only be used once. Default is false.</li>
+     *   <li><b>Key:</b> "isUsed"<br/><b>Type:</b> boolean<br/><b>Description:</b> Internal state: If true, the one-time use portal has already been used. Default is false.</li>
+     * </ul>
+     *
+     * @param properties A JSONObject containing the properties to initialize.
+     */
     @Override
     public void initialize(JSONObject properties) {
         super.initialize(properties);
@@ -53,17 +85,17 @@ public abstract class EnginePortal extends GameObject implements ISavable {
         this.requiresQuest = reader.getBoolean("requiresQuest", false);
         this.requiredQuestId = reader.getString("requiredQuestId", "");
         this.autoTeleport = reader.getBoolean("autoTeleport", false);
-        this.cooldownTime = reader.getInt("cooldownTime", 60); // 1 segundo a 60 FPS
+        this.cooldownTime = reader.getInt("cooldownTime", 60); // 1 second at 60 FPS
         this.oneTimeUse = reader.getBoolean("oneTimeUse", false);
         this.isUsed = reader.getBoolean("isUsed", false);
 
         this.animator = new Animator();
         this.addComponent(animator);
         
-        // Chama o método abstrato que a classe do JOGO irá implementar
+        // Call the abstract method that the GAME class will implement
         setupAnimations(this.animator);
 
-        // Se não é auto teleport, adiciona zona de interação
+        // If not auto teleport, add interaction zone
         if (!autoTeleport) {
             InteractionComponent interaction = new InteractionComponent();
             interaction.addZone(new InteractionZone(this, InteractionZone.TYPE_DIALOGUE, 24.0));
@@ -75,14 +107,15 @@ public abstract class EnginePortal extends GameObject implements ISavable {
     }
     
     /**
-     * Método principal de interação com o portal (para teleporte manual)
+     * Main interaction method with the portal (for manual teleport).
+     * It checks conditions and initiates teleportation if allowed.
      */
     public void interact() {
         if (!isActive || currentCooldown > 0) return;
         if (oneTimeUse && isUsed) return;
         if (!animator.getCurrentAnimationKey().startsWith("idle")) return;
 
-        // Verifica condições de uso
+        // Check usage conditions
         if (!canUsePortal()) {
             return;
         }
@@ -91,15 +124,18 @@ public abstract class EnginePortal extends GameObject implements ISavable {
     }
 
     /**
-     * Método para teleporte automático (chamado por colisão)
+     * Method for automatic teleportation (called by collision).
+     * 
+     * @param other The GameObject that collided with this portal.
      */
+    @Override
     public void onCollision(GameObject other) {
         if (!autoTeleport || !isActive || currentCooldown > 0) return;
         if (oneTimeUse && isUsed) return;
         
-        // Verifica se é o jogador colidindo
+        // Check if it's the player colliding
         if (isPlayer(other)) {
-            // Verifica condições de uso
+            // Check usage conditions
             if (!canUsePortal()) {
                 return;
             }
@@ -109,16 +145,18 @@ public abstract class EnginePortal extends GameObject implements ISavable {
     }
 
     /**
-     * Verifica se o portal pode ser usado
+     * Checks if the portal can currently be used based on its active state, cooldown, and requirements.
+     * 
+     * @return true if the portal can be used, false otherwise.
      */
     protected boolean canUsePortal() {
-        // Verifica se precisa de chave
+        // Check if key is required
         if (requiresKey && !hasRequiredKey()) {
             onKeyRequired();
             return false;
         }
         
-        // Verifica se precisa de quest
+        // Check if quest is required
         if (requiresQuest && !hasRequiredQuest()) {
             onQuestRequired();
             return false;
@@ -128,7 +166,9 @@ public abstract class EnginePortal extends GameObject implements ISavable {
     }
 
     /**
-     * Executa o teletransporte
+     * Executes the teleportation process.
+     * It plays the activation animation, sets cooldown, marks as used (if one-time use),
+     * and calls the game-specific teleportation method.
      */
     protected void teleportPlayer() {
         if (!isActive) return;
@@ -141,15 +181,15 @@ public abstract class EnginePortal extends GameObject implements ISavable {
             isActive = false;
         }
         
-        // Chama o método abstrato para executar o teletransporte específico do jogo
+        // Call the abstract method to perform game-specific teleportation
         performTeleport(destinationLevel, destinationX, destinationY, destinationPortalId);
         
-        // Notifica que o portal foi usado
+        // Notify that the portal was used
         onPortalUsed();
     }
 
     /**
-     * Ativa o portal
+     * Activates the portal, making it usable.
      */
     public void activate() {
         if (oneTimeUse && isUsed) return;
@@ -160,7 +200,7 @@ public abstract class EnginePortal extends GameObject implements ISavable {
     }
 
     /**
-     * Desativa o portal
+     * Deactivates the portal, making it unusable.
      */
     public void deactivate() {
         isActive = false;
@@ -168,16 +208,19 @@ public abstract class EnginePortal extends GameObject implements ISavable {
         onPortalDeactivated();
     }
 
+    /**
+     * Updates the portal's logic, primarily managing cooldown timers and animation state transitions.
+     */
     @Override
     public void tick() {
         super.tick();
         
-        // Gerencia o cooldown
+        // Manage cooldown
         if (currentCooldown > 0) {
             currentCooldown--;
         }
         
-        // Gerencia as animações
+        // Manage animations
         if (animator.getCurrentAnimation() != null && animator.getCurrentAnimation().hasFinished()) {
             String currentKey = animator.getCurrentAnimationKey();
             
@@ -188,7 +231,8 @@ public abstract class EnginePortal extends GameObject implements ISavable {
     }
     
     /**
-     * Atualiza os visuais baseado no estado atual
+     * Updates the visual state of the portal based on its active state, cooldown, and usage.
+     * It plays different idle animations (e.g., idleActive, idleInactive, idleCooldown).
      */
     private void updateStateVisuals() {
         if (!isActive || (oneTimeUse && isUsed)) {
@@ -200,6 +244,11 @@ public abstract class EnginePortal extends GameObject implements ISavable {
         }
     }
 
+    /**
+     * Saves the current state of the portal to a JSONObject.
+     * 
+     * @return A JSONObject containing the portal's savable state.
+     */
     @Override
     public JSONObject saveState() {
         JSONObject state = new JSONObject();
@@ -210,6 +259,11 @@ public abstract class EnginePortal extends GameObject implements ISavable {
         return state;
     }
 
+    /**
+     * Loads the state of the portal from a JSONObject.
+     * 
+     * @param state The JSONObject containing the saved data.
+     */
     @Override
     public void loadState(JSONObject state) {
         this.isActive = state.getBoolean("isActive");
@@ -237,79 +291,84 @@ public abstract class EnginePortal extends GameObject implements ISavable {
     public boolean isOneTimeUse() { return oneTimeUse; }
     
     /**
-     * MÉTODOS ABSTRATOS: A classe do jogo DEVE implementar estes métodos
+     * ABSTRACT METHODS: The game class MUST implement these methods
      */
     
     /**
-     * Configura as animações específicas do portal
-     * @param animator O componente Animator a ser configurado
+     * Configures the specific animations for the portal.
+     * 
+     * @param animator The Animator component to be configured.
      */
     protected abstract void setupAnimations(Animator animator);
     
     /**
-     * Verifica se o jogador possui a chave necessária
-     * @return true se possui a chave ou se não é necessária
+     * Checks if the player possesses the required key to use this portal.
+     * 
+     * @return true if the key is held or if no key is needed.
      */
     protected abstract boolean hasRequiredKey();
     
     /**
-     * Verifica se o jogador completou a quest necessária
-     * @return true se completou a quest ou se não é necessária
+     * Checks if the player has completed the required quest to use this portal.
+     * 
+     * @return true if the quest is completed or if no quest is needed.
      */
     protected abstract boolean hasRequiredQuest();
     
     /**
-     * Verifica se o GameObject é o jogador
-     * @param gameObject O GameObject a ser verificado
-     * @return true se for o jogador
+     * Checks if the given GameObject is the player.
+     * 
+     * @param gameObject The GameObject to check.
+     * @return true if it is the player, false otherwise.
      */
     protected abstract boolean isPlayer(GameObject gameObject);
     
     /**
-     * Executa o teletransporte específico do jogo
-     * @param level O nível de destino
-     * @param x A coordenada X de destino
-     * @param y A coordenada Y de destino
-     * @param portalId O ID do portal de destino (opcional)
+     * Executes the game-specific teleportation logic.
+     * 
+     * @param level The destination level name.
+     * @param x The destination X coordinate.
+     * @param y The destination Y coordinate.
+     * @param portalId The ID of the destination portal (optional, for linking).
      */
     protected abstract void performTeleport(String level, int x, int y, String portalId);
     
     /**
-     * MÉTODOS OPCIONAIS: A classe do jogo pode sobrescrever para comportamento customizado
+     * OPTIONAL METHODS: The game class can override these for custom behavior
      */
     
     /**
-     * Chamado quando o portal é usado
+     * Called when the portal is used.
      */
     protected void onPortalUsed() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando o portal é ativado
+     * Called when the portal is activated.
      */
     protected void onPortalActivated() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando o portal é desativado
+     * Called when the portal is deactivated.
      */
     protected void onPortalDeactivated() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando o jogador tenta usar um portal que requer chave
+     * Called when the player attempts to use a portal that requires a key without having it.
      */
     protected void onKeyRequired() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando o jogador tenta usar um portal que requer quest
+     * Called when the player attempts to use a portal that requires a quest without having completed it.
      */
     protected void onQuestRequired() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
 }

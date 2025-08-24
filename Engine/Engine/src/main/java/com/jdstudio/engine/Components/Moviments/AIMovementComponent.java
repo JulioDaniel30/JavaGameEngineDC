@@ -1,4 +1,3 @@
-// engine
 package com.jdstudio.engine.Components.Moviments;
 
 import java.awt.Point;
@@ -11,67 +10,106 @@ import com.jdstudio.engine.Object.GameObject;
 import com.jdstudio.engine.Object.GameObject.CollisionType;
 import com.jdstudio.engine.Pathfinding.Pathfinder;
 
+/**
+ * An AI-driven movement component that enables a GameObject to move towards a target.
+ * It supports both direct movement and A* pathfinding.
+ * The component can target a specific GameObject or a fixed point.
+ * It also includes options for avoiding other actors and targeting specific anchor points on the target.
+ * 
+ * @author JDStudio
+ */
 public class AIMovementComponent extends BaseMovementComponent {
 
-    // --- NOVO ENUM PARA A ÂNCORA ---
     /**
-     * Define o ponto específico no alvo que a IA irá perseguir.
+     * Defines the specific point on the target that the AI will pursue.
      */
     public enum TargetAnchor {
-        TOP_LEFT,      // O ponto (x, y) original.
-        CENTER,        // O centro do sprite do alvo.
-        BOTTOM_CENTER  // A base do sprite do alvo (os "pés").
+        /** The original (x, y) point of the target. */
+        TOP_LEFT,
+        /** The center of the target's sprite. */
+        CENTER,
+        /** The base of the target's sprite (the "feet"). */
+        BOTTOM_CENTER
     }
 
+    /** The GameObject to be pursued. */
     private GameObject target;
+    
+    /** A fixed point to move towards if no target GameObject is set. */
     private Point targetPoint;
 
+    /** If true, the component will use the A* algorithm for pathfinding. */
     public boolean useAStarPathfinding = false;
+    
+    /** If true, the component will attempt to avoid other non-solid characters. */
     public boolean avoidOtherActors = false;
     
-    // --- NOVA PROPRIEDADE CONFIGURÁVEL ---
     /**
-     * Define qual âncora usar ao perseguir um alvo. O padrão é o centro.
+     * Defines which anchor to use when pursuing a target. Defaults to CENTER.
      */
     public TargetAnchor targetAnchor = TargetAnchor.CENTER;
 
     private List<Point> currentPath;
     private int currentPathIndex;
     private int pathRecalculateCooldown = 0;
-    private final int pathRecalculateSpeed = 30;
-    private final double arrivalThreshold = 2.0;
+    private final int pathRecalculateSpeed = 30; // Recalculate path every 30 frames
+    private final double arrivalThreshold = 2.0; // Distance to consider as arrived at a waypoint
 
+    /**
+     * Constructs a new AIMovementComponent.
+     *
+     * @param speed The movement speed of the GameObject.
+     */
     public AIMovementComponent(double speed) {
         super(speed);
         this.currentPath = new ArrayList<>();
     }
-    
-    // ... (métodos setTarget, getTarget, etc. permanecem iguais) ...
 
+    /**
+     * Sets the target for the AI to move towards.
+     *
+     * @param target The GameObject to target.
+     */
     public void setTarget(GameObject target) {
         if (this.target != target) {
             this.target = target;
-            this.pathRecalculateCooldown = 0;
+            this.targetPoint = null; // Clear fixed point target
+            this.pathRecalculateCooldown = 0; // Force path recalculation
             this.currentPath.clear();
         }
     }
     
+    /**
+     * Gets the current GameObject target.
+     *
+     * @return The current target, or null if none is set.
+     */
     public GameObject getTarget() {
         return this.target;
     }
 
+    /**
+     * Sets a fixed point for the AI to move towards.
+     *
+     * @param x The target x-coordinate.
+     * @param y The target y-coordinate.
+     */
     public void setTarget(int x, int y) {
-        this.target = null;
+        this.target = null; // Clear GameObject target
         this.targetPoint = new Point(x, y);
+        this.pathRecalculateCooldown = 0; // Force path recalculation
+        this.currentPath.clear();
     }
     
+    /**
+     * Updates the AI's movement logic for the current frame.
+     * It determines the target position and moves the owner GameObject accordingly.
+     */
     @Override
     public void update() {
-    	
-    	    
         if (target == null && targetPoint == null) {
-            xRemainder = 0;
-            yRemainder = 0;
+            dx = 0;
+            dy = 0;
             return;
         }
 
@@ -81,15 +119,21 @@ public class AIMovementComponent extends BaseMovementComponent {
         smartMoveTowards(finalTarget.x, finalTarget.y);
     }
 
+    /**
+     * Determines the final target point for the current frame.
+     * If A* pathfinding is enabled, it calculates and follows the path.
+     * Otherwise, it returns the direct position of the target based on the anchor.
+     *
+     * @return The Point to move towards, or null if no path is available.
+     */
     private Point getFinalTarget() {
-        if (useAStarPathfinding && target != null) {
+        if (useAStarPathfinding && (target != null || targetPoint != null)) {
             pathRecalculateCooldown--;
             if (pathRecalculateCooldown <= 0 || currentPath == null || currentPath.isEmpty()) {
                 pathRecalculateCooldown = pathRecalculateSpeed;
                 Point startPoint = new Point(owner.getX(), owner.getY());
-                
-                // --- MUDANÇA AQUI: Usa o método auxiliar para pegar o ponto da âncora ---
-                Point endPoint = getAnchorPoint(target);
+                Point endPoint = (target != null) ? getAnchorPoint(target) : targetPoint;
+
                 if (endPoint == null) return null;
                 
                 this.currentPath = Pathfinder.findPath(world, startPoint, endPoint);
@@ -100,30 +144,30 @@ public class AIMovementComponent extends BaseMovementComponent {
 
             Point nextWaypoint = currentPath.get(currentPathIndex);
             
+            // Check if we have arrived at the current waypoint
             double dxToWaypoint = nextWaypoint.x - (owner.getX() + owner.getWidth() / 2.0);
             double dyToWaypoint = nextWaypoint.y - (owner.getY() + owner.getHeight() / 2.0);
             if (Math.sqrt(dxToWaypoint * dxToWaypoint + dyToWaypoint * dyToWaypoint) < arrivalThreshold) {
                 currentPathIndex++;
                 if (currentPathIndex >= currentPath.size()) {
-                    currentPath.clear();
+                    currentPath.clear(); // Path completed
                     return null; 
                 }
             }
             return currentPath.get(currentPathIndex);
 
         } else if (target != null) {
-            // --- MUDANÇA AQUI: Também usa a âncora para movimento direto ---
             return getAnchorPoint(target);
         } else {
             return targetPoint;
         }
     }
     
-    // --- NOVO MÉTODO AUXILIAR ---
     /**
-     * Calcula a coordenada exata do alvo com base na âncora selecionada.
-     * @param targetObject O GameObject alvo.
-     * @return Um Point com a coordenada do alvo.
+     * Calculates the exact target coordinate based on the selected anchor.
+     *
+     * @param targetObject The target GameObject.
+     * @return A Point with the calculated target coordinates.
      */
     private Point getAnchorPoint(GameObject targetObject) {
         if (targetObject == null) {
@@ -140,9 +184,6 @@ public class AIMovementComponent extends BaseMovementComponent {
             
             case BOTTOM_CENTER:
                 targetX = targetObject.getX() + targetObject.getWidth() / 2;
-                // --- CORREÇÃO AQUI ---
-                // Usamos getHeight() - 1 para garantir que o ponto esteja na ÚLTIMA
-                // linha de pixels do sprite, e não fora dele.
                 targetY = targetObject.getY() + targetObject.getHeight() - 1;
                 break;
 
@@ -155,26 +196,39 @@ public class AIMovementComponent extends BaseMovementComponent {
         return new Point(targetX, targetY);
     }
 
-    // ... (O resto da classe: smartMoveTowards, applyIntelligentMovement, isPathClear, etc. permanece o mesmo) ...
+    /**
+     * Calculates the movement vector towards the target and applies it.
+     *
+     * @param targetX The final target x-coordinate.
+     * @param targetY The final target y-coordinate.
+     */
     private void smartMoveTowards(double targetX, double targetY) {
-        // --- CORREÇÃO FINAL AQUI ---
-        // O ponto de partida do movimento AGORA é o CENTRO do inimigo, para ser consistente.
         double startX = owner.getX() + owner.getWidth() / 2.0;
         double startY = owner.getY() + owner.getHeight() / 2.0;
 
-        // O resto do cálculo agora usa o ponto de partida correto
         double dx = targetX - startX;
         double dy = targetY - startY;
         double length = Math.sqrt(dx * dx + dy * dy);
 
-        if (length < arrivalThreshold) return;
+        if (length < arrivalThreshold) {
+            this.dx = 0;
+            this.dy = 0;
+            return;
+        }
 
-        double moveX = (dx / length) * speed;
-        double moveY = (dy / length) * speed;
+        this.dx = (dx / length) * speed;
+        this.dy = (dy / length) * speed;
         
-        applyIntelligentMovement(moveX, moveY);
+        applyIntelligentMovement(this.dx, this.dy);
     }
 
+    /**
+     * Applies the calculated movement to the owner, handling sub-pixel movement
+     * and basic collision avoidance to prevent getting stuck.
+     *
+     * @param moveX The calculated movement on the X axis.
+     * @param moveY The calculated movement on the Y axis.
+     */
     private void applyIntelligentMovement(double moveX, double moveY) {
         xRemainder += moveX;
         yRemainder += moveY;
@@ -188,6 +242,7 @@ public class AIMovementComponent extends BaseMovementComponent {
         int signX = Integer.signum(xToMove);
         int signY = Integer.signum(yToMove);
 
+        // Simple sliding logic: if diagonal movement is blocked, try moving on one axis.
         if (xToMove != 0 && yToMove != 0) {
             if (!isPathClear(owner.getX() + signX, owner.getY()) || 
                 !isPathClear(owner.getX(), owner.getY() + signY)) 
@@ -200,6 +255,7 @@ public class AIMovementComponent extends BaseMovementComponent {
             }
         }
 
+        // Move on X axis
         if (xToMove != 0) {
             for (int i = 0; i < Math.abs(xToMove); i++) {
                 if (isPathClear(owner.getX() + signX, owner.getY())) {
@@ -211,6 +267,7 @@ public class AIMovementComponent extends BaseMovementComponent {
             }
         }
 
+        // Move on Y axis
         if (yToMove != 0) {
             for (int i = 0; i < Math.abs(yToMove); i++) {
                 if (isPathClear(owner.getX(), owner.getY() + signY)) {
@@ -223,6 +280,14 @@ public class AIMovementComponent extends BaseMovementComponent {
         }
     }
     
+    /**
+     * Extends the base collision check to optionally avoid other non-solid actors.
+     * This is useful for preventing AI characters from clumping together.
+     *
+     * @param nextX The next X coordinate to check.
+     * @param nextY The next Y coordinate to check.
+     * @return false if the path is blocked, true otherwise.
+     */
     @Override
     protected boolean isPathClear(int nextX, int nextY) {
         if (!super.isPathClear(nextX, nextY)) {
@@ -240,6 +305,7 @@ public class AIMovementComponent extends BaseMovementComponent {
             for (GameObject other : allGameObjects) {
                 if (other == owner || other == target) continue;
 
+                // Check against other non-solid characters
                 if (other instanceof Character && other.getCollisionType() != CollisionType.SOLID) {
                     Rectangle otherBounds = new Rectangle(
                         other.getX() + other.getMaskX(),
@@ -248,7 +314,7 @@ public class AIMovementComponent extends BaseMovementComponent {
                         other.getMaskHeight()
                     );
                     if (futureBounds.intersects(otherBounds)) {
-                        return false;
+                        return false; // Path is blocked by another actor
                     }
                 }
             }

@@ -7,36 +7,37 @@ import com.jdstudio.engine.Components.Component;
 import com.jdstudio.engine.Graphics.Sprite.Sprite;
 
 /**
- * Um componente que gerencia um conjunto de animações para um GameObject.
- * Atua como uma máquina de estados para as animações, controlando qual delas
- * está ativa e atualizando sua lógica.
+ * A component that manages a set of animations for a GameObject.
+ * It acts as a state machine for animations, controlling which one is active
+ * and updating its logic.
+ * 
+ * @author JDStudio
  */
 public class Animator extends Component{
 
-    /** Mapa que armazena todas as animações disponíveis, associadas a uma chave de texto. */
+    /** Map storing all available animations, associated with a text key. */
     private Map<String, Animation> animations;
     
-    /** A chave de texto da animação que está atualmente em execução. */
+    /** The text key of the animation that is currently playing. */
     private String currentAnimationKey;
     
-    /** Referência direta à instância da animação ativa para acesso rápido. */
+    /** Direct reference to the active animation instance for quick access. */
     private Animation currentAnimation;
 
     /**
-     * Cria uma nova instância de Animator, inicializando o mapa de animações.
+     * Creates a new Animator instance, initializing the animations map.
      */
     public Animator() {
         this.animations = new HashMap<>();
     }
 
     /**
-     * Adiciona uma nova animação ao gerenciador.
+     * Adds a new animation to the manager.
      * <p>
-     * Se esta for a primeira animação adicionada, ela será definida
-     * como a animação ativa por padrão.
+     * If this is the first animation added, it will be set as the active animation by default.
      *
-     * @param key       O nome da animação (ex: "walk_right", "idle").
-     * @param animation O objeto {@link Animation}.
+     * @param key       The name of the animation (e.g., "walk_right", "idle").
+     * @param animation The {@link Animation} object.
      */
     public void addAnimation(String key, Animation animation) {
         animations.put(key, animation);
@@ -46,15 +47,15 @@ public class Animator extends Component{
     }
 
     /**
-     * Define e inicia uma animação com base na sua chave.
+     * Sets and starts an animation based on its key.
      * <p>
-     * A animação é reiniciada a partir do primeiro quadro. Se a animação solicitada
-     * já estiver em execução, nada acontece para evitar reinícios desnecessários.
+     * The animation is reset to the first frame. If the requested animation
+     * is already playing, nothing happens to avoid unnecessary restarts.
      *
-     * @param key O nome da animação a ser executada.
+     * @param key The name of the animation to play.
      */
     public void play(String key) {
-        // Otimização: Evita reiniciar a animação se ela já estiver tocando.
+        // Optimization: Avoid restarting the animation if it's already playing.
         if (key.equals(currentAnimationKey)) {
             return;
         }
@@ -64,14 +65,15 @@ public class Animator extends Component{
             this.currentAnimation = animations.get(key);
             this.currentAnimation.reset();
         } else {
-            System.err.println("Erro: A animação '" + key + "' não foi encontrada no Animator.");
+            System.err.println("Error: Animation '" + key + "' not found in Animator.");
         }
     }
 
     /**
-     * Atualiza a lógica da animação ativa, avançando seu quadro se necessário.
-     * Deve ser chamado a cada tick do jogo.
+     * Updates the active animation's logic, advancing its frame if necessary.
+     * Should be called every game tick.
      */
+    @Override
     public void update() {
         if (currentAnimation != null) {
             currentAnimation.tick();
@@ -79,9 +81,9 @@ public class Animator extends Component{
     }
 
     /**
-     * Obtém o sprite (frame) atual da animação ativa.
+     * Gets the current sprite (frame) of the active animation.
      *
-     * @return O {@link Sprite} a ser renderizado, ou {@code null} se nenhuma animação estiver ativa.
+     * @return The {@link Sprite} to be rendered, or {@code null} if no animation is active.
      */
     public Sprite getCurrentSprite() {
         if (currentAnimation != null) {
@@ -91,14 +93,19 @@ public class Animator extends Component{
     }
     
     /**
-     * Retorna a chave da animação que está atualmente em execução.
-     * Útil para verificar o estado atual do Animator.
+     * Returns the key of the animation that is currently playing.
+     * Useful for checking the current state of the Animator.
      *
-     * @return A chave da animação ativa, ou {@code null} se nenhuma estiver ativa.
+     * @return The key of the active animation, or {@code null} if none is active.
      */
     public String getCurrentAnimationKey() {
         return this.currentAnimationKey;
     }
+
+    /**
+     * Returns the current Animation object that is playing.
+     * @return The active Animation object, or {@code null} if none is active.
+     */
     public Animation getCurrentAnimation() {
         return this.currentAnimation;
     }

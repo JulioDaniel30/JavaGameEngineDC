@@ -11,6 +11,13 @@ import com.jdstudio.engine.Items.Inventory;
 import com.jdstudio.engine.Items.ItemStack;
 import com.jdstudio.engine.Object.GameObject;
 
+/**
+ * A UI element that displays a grid-based inventory.
+ * It manages individual inventory slots, updates their content based on the linked {@link Inventory},
+ * and handles user input for navigation and item usage.
+ * 
+ * @author JDStudio
+ */
 public class UIInventoryView extends UIElement {
 
 	private final Inventory inventory;
@@ -19,8 +26,22 @@ public class UIInventoryView extends UIElement {
     private Sprite backgroundSprite;
     private int rows, columns;
     private int slotSize, padding;
-    private int selectedIndex = 0; // Começa com o primeiro slot selecionado
+    private int selectedIndex = 0; // Starts with the first slot selected
 
+    /**
+     * Constructs a new UIInventoryView.
+     *
+     * @param x              The x-coordinate of the view's top-left corner.
+     * @param y              The y-coordinate of the view's top-left corner.
+     * @param background     The sprite for the background of the inventory view.
+     * @param slotBackground The sprite for the background of individual inventory slots.
+     * @param owner          The GameObject that owns this inventory.
+     * @param inventory      The Inventory instance to display.
+     * @param rows           The number of rows in the inventory grid.
+     * @param columns        The number of columns in the inventory grid.
+     * @param slotSize       The size (width and height) of each individual slot.
+     * @param padding        The padding between slots and from the edges of the view.
+     */
     public UIInventoryView(int x, int y, Sprite background, Sprite slotBackground, GameObject owner, Inventory inventory, int rows, int columns, int slotSize, int padding) {
         super(x, y);
         this.inventoryOwner = owner;
@@ -36,6 +57,10 @@ public class UIInventoryView extends UIElement {
         createSlots(slotBackground);
     }
 
+    /**
+     * Creates the individual {@link UIInventorySlot} elements and positions them within the view.
+     * @param slotBackground The sprite to use for the background of each slot.
+     */
     private void createSlots(Sprite slotBackground) {
         int totalSlotsToCreate = Math.min(inventory.getCapacity(), rows * columns);
         for (int i = 0; i < totalSlotsToCreate; i++) {
@@ -47,6 +72,9 @@ public class UIInventoryView extends UIElement {
         }
     }
 
+    /**
+     * Updates the content of each {@link UIInventorySlot} based on the current state of the linked {@link Inventory}.
+     */
     private void updateSlots() {
         List<ItemStack> items = inventory.getItems();
         for (int i = 0; i < slots.size(); i++) {
@@ -58,6 +86,9 @@ public class UIInventoryView extends UIElement {
         }
     }
 
+    /**
+     * Updates the inventory view logic, including slot content, keyboard navigation, and mouse interaction.
+     */
     @Override
     public void tick() {
         if (!visible) return;
@@ -65,18 +96,17 @@ public class UIInventoryView extends UIElement {
         updateSlots();
         handleKeyboardInput();
         
-        // Atualiza cada slot individual E verifica cliques do rato
+        // Update each individual slot and check for mouse clicks
         for (int i = 0; i < slots.size(); i++) {
             UIInventorySlot slot = slots.get(i);
             slot.setSelected(i == selectedIndex);
             slot.tick();
             
-            // --- NOVA LÓGICA DE CLIQUE DO RATO ---
-            // Se este slot foi clicado, usa o item nele
+            // If this slot was clicked, use the item in it
             if (slot.wasClicked()) {
                 useItemInSlot(i);
             }
-            // Se o rato está sobre este slot, atualiza o índice selecionado
+            // If the mouse is hovering over this slot, update the selected index
             if (slot.isHovering()) {
                 selectedIndex = i;
             }
@@ -84,7 +114,8 @@ public class UIInventoryView extends UIElement {
     }
 
     /**
-     * Tenta usar o item no índice especificado.
+     * Attempts to use the item in the specified slot index.
+     * @param index The index of the slot whose item should be used.
      */
     private void useItemInSlot(int index) {
         if (index >= 0 && index < slots.size()) {
@@ -95,44 +126,52 @@ public class UIInventoryView extends UIElement {
         }
     }
     
+    /**
+     * Handles keyboard input for navigating through inventory slots and using items.
+     */
     private void handleKeyboardInput() {
-    	if (selectedIndex == -1) { // Se nada estiver selecionado, seleciona o primeiro slot
+    	if (selectedIndex == -1) { // If nothing is selected, select the first slot
             selectedIndex = 0;
         }
 
         if (InputManager.isActionJustPressed("UI_DOWN")) {
-            selectedIndex += columns; // Move para a linha de baixo
+            selectedIndex += columns; // Move to the row below
         }
         if (InputManager.isActionJustPressed("UI_UP")) {
-            selectedIndex -= columns; // Move para a linha de cima
+            selectedIndex -= columns; // Move to the row above
         }
         if (InputManager.isActionJustPressed("UI_RIGHT")) {
-            selectedIndex++; // Move para a direita
+            selectedIndex++; // Move right
         }
         if (InputManager.isActionJustPressed("UI_LEFT")) {
-            selectedIndex--; // Move para a esquerda
+            selectedIndex--; // Move left
         }
 
-        // Garante que o índice não saia dos limites
-        if (selectedIndex >= slots.size()) selectedIndex = selectedIndex % columns; // Volta para a primeira linha
-        if (selectedIndex < 0) selectedIndex = slots.size() - 1; // Vai para o último slot
+        // Ensure the index stays within bounds
+        if (selectedIndex >= slots.size()) selectedIndex = selectedIndex % columns; // Wrap to the first row
+        if (selectedIndex < 0) selectedIndex = slots.size() - 1; // Go to the last slot
 
-        // Lógica para USAR o item selecionado
+        // Logic to USE the selected item
         if (InputManager.isActionJustPressed("INTERACT")) {
             useItemInSlot(selectedIndex);
         }
     }
 
+    /**
+     * Renders the inventory view, including its background and all individual inventory slots.
+     *
+     * @param g The Graphics context to draw on.
+     */
     @Override
     public void render(Graphics g) {
         if (!visible) return;
 
-        // Desenha o fundo da janela do inventário
+        // Draw the inventory window background
         if (backgroundSprite != null) {
             g.drawImage(backgroundSprite.getImage(), x, y, null);
         }
         
-        // Desenha cada slot
+        // Draw each slot
         for (UIInventorySlot slot : slots) {
             slot.render(g);
         }

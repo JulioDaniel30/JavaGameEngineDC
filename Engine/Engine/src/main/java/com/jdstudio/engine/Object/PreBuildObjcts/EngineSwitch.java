@@ -10,9 +10,12 @@ import com.jdstudio.engine.Object.GameObject;
 import com.jdstudio.engine.Utils.PropertiesReader;
 
 /**
- * Uma classe base "engine-side" para qualquer tipo de interruptor/alavanca.
- * Contém toda a lógica de estado (ligado/desligado), animação e sistema de eventos.
- * A subclasse do jogo é responsável por fornecer as animações específicas e definir as ações.
+ * An abstract base class for any type of switch or lever in the game.
+ * It contains all the logic for state (on/off), animation, and event system.
+ * Game-specific subclasses are responsible for providing the specific animations and defining the actions.
+ * This class also implements {@link ISavable} to allow its state to be persisted.
+ * 
+ * @author JDStudio
  */
 public abstract class EngineSwitch extends GameObject implements ISavable {
 
@@ -22,13 +25,24 @@ public abstract class EngineSwitch extends GameObject implements ISavable {
     protected boolean isToggleable = true;
     protected boolean requiresKey = false;
     protected String requiredKeyId;
-    protected int cooldownTime = 0; // Em ticks
+    protected int cooldownTime = 0; // In ticks
     protected int currentCooldown = 0;
 
+    /**
+     * Constructs a new EngineSwitch with the given properties.
+     * 
+     * @param properties A JSONObject containing the initial properties of the switch.
+     */
     public EngineSwitch(JSONObject properties) {
         super(properties);
     }
 
+    /**
+     * Initializes the EngineSwitch's properties from a JSONObject.
+     * It sets up the initial state, ID, toggleability, key requirements, and cooldown.
+     *
+     * @param properties A JSONObject containing the properties to initialize.
+     */
     @Override
     public void initialize(JSONObject properties) {
         super.initialize(properties);
@@ -44,10 +58,10 @@ public abstract class EngineSwitch extends GameObject implements ISavable {
         this.animator = new Animator();
         this.addComponent(animator);
         
-        // Chama o método abstrato que a classe do JOGO irá implementar
+        // Call the abstract method that the GAME class will implement
         setupAnimations(this.animator);
 
-        // Adiciona a zona de interação manual
+        // Add manual interaction zone
         InteractionComponent interaction = new InteractionComponent();
         interaction.addZone(new InteractionZone(this, InteractionZone.TYPE_DIALOGUE, 24.0));
         this.addComponent(interaction);
@@ -57,19 +71,20 @@ public abstract class EngineSwitch extends GameObject implements ISavable {
     }
     
     /**
-     * Método principal de interação com o interruptor
+     * Main interaction method with the switch.
+     * It checks for cooldown and key requirements, then toggles the switch state or activates it.
      */
     public void interact() {
         if (!animator.getCurrentAnimationKey().startsWith("idle")) return;
         if (currentCooldown > 0) return;
 
-        // Verifica se precisa de chave
+        // Check if key is required
         if (requiresKey && !hasRequiredKey()) {
             onKeyRequired();
             return;
         }
 
-        // Se é toggleável, alterna o estado
+        // If toggleable, switch the state
         if (isToggleable) {
             if (isOn) {
                 turnOff();
@@ -77,7 +92,7 @@ public abstract class EngineSwitch extends GameObject implements ISavable {
                 turnOn();
             }
         } else {
-            // Se não é toggleável, apenas ativa temporariamente
+            // If not toggleable, just activate temporarily
             if (!isOn) {
                 turnOn();
             }
@@ -85,7 +100,8 @@ public abstract class EngineSwitch extends GameObject implements ISavable {
     }
 
     /**
-     * Liga o interruptor
+     * Turns the switch to the "on" state.
+     * It plays the turningOn animation, sets cooldown, and triggers game-specific activation actions.
      */
     public void turnOn() {
         if (isOn) return;
@@ -94,15 +110,16 @@ public abstract class EngineSwitch extends GameObject implements ISavable {
         animator.play("turningOn");
         currentCooldown = cooldownTime;
         
-        // Chama o método abstrato para executar a ação específica do jogo
+        // Call the abstract method to execute the game-specific action
         onSwitchActivated();
         
-        // Notifica que o interruptor foi ligado
+        // Notify that the switch was turned on
         onSwitchTurnedOn();
     }
 
     /**
-     * Desliga o interruptor
+     * Turns the switch to the "off" state.
+     * It plays the turningOff animation, sets cooldown, and triggers game-specific deactivation actions.
      */
     public void turnOff() {
         if (!isOn) return;
@@ -111,23 +128,26 @@ public abstract class EngineSwitch extends GameObject implements ISavable {
         animator.play("turningOff");
         currentCooldown = cooldownTime;
         
-        // Chama o método abstrato para executar a ação específica do jogo
+        // Call the abstract method to execute the game-specific action
         onSwitchDeactivated();
         
-        // Notifica que o interruptor foi desligado
+        // Notify that the switch was turned off
         onSwitchTurnedOff();
     }
 
+    /**
+     * Updates the switch's logic, primarily managing cooldown timers and animation state transitions.
+     */
     @Override
     public void tick() {
         super.tick();
         
-        // Gerencia o cooldown
+        // Manage cooldown
         if (currentCooldown > 0) {
             currentCooldown--;
         }
         
-        // Gerencia as animações
+        // Manage animations
         if (animator.getCurrentAnimation() != null && animator.getCurrentAnimation().hasFinished()) {
             String currentKey = animator.getCurrentAnimationKey();
             
@@ -140,7 +160,8 @@ public abstract class EngineSwitch extends GameObject implements ISavable {
     }
     
     /**
-     * Atualiza os visuais baseado no estado atual
+     * Updates the visual state of the switch based on its current on/off status.
+     * It plays different idle animations (e.g., idleOn, idleOff).
      */
     private void updateStateVisuals() {
         if (isOn) {
@@ -150,6 +171,11 @@ public abstract class EngineSwitch extends GameObject implements ISavable {
         }
     }
 
+    /**
+     * Saves the current state of the switch to a JSONObject.
+     * 
+     * @return A JSONObject containing the switch's savable state.
+     */
     @Override
     public JSONObject saveState() {
         JSONObject state = new JSONObject();
@@ -159,6 +185,11 @@ public abstract class EngineSwitch extends GameObject implements ISavable {
         return state;
     }
 
+    /**
+     * Loads the state of the switch from a JSONObject.
+     * 
+     * @param state The JSONObject containing the saved data.
+     */
     @Override
     public void loadState(JSONObject state) {
         this.isOn = state.getBoolean("isOn");
@@ -177,53 +208,55 @@ public abstract class EngineSwitch extends GameObject implements ISavable {
     public boolean isOnCooldown() { return currentCooldown > 0; }
     
     /**
-     * MÉTODOS ABSTRATOS: A classe do jogo DEVE implementar estes métodos
+     * ABSTRACT METHODS: The game class MUST implement these methods
      */
     
     /**
-     * Configura as animações específicas do interruptor
-     * @param animator O componente Animator a ser configurado
+     * Configures the specific animations for the switch.
+     * 
+     * @param animator The Animator component to be configured.
      */
     protected abstract void setupAnimations(Animator animator);
     
     /**
-     * Verifica se o jogador possui a chave necessária
-     * @return true se possui a chave ou se não é necessária
+     * Checks if the player possesses the required key to operate this switch.
+     * 
+     * @return true if the key is held or if no key is needed.
      */
     protected abstract boolean hasRequiredKey();
     
     /**
-     * Executado quando o interruptor é ativado (ligado)
+     * Executed when the switch is activated (turned on).
      */
     protected abstract void onSwitchActivated();
     
     /**
-     * Executado quando o interruptor é desativado (desligado)
+     * Executed when the switch is deactivated (turned off).
      */
     protected abstract void onSwitchDeactivated();
     
     /**
-     * MÉTODOS OPCIONAIS: A classe do jogo pode sobrescrever para comportamento customizado
+     * OPTIONAL METHODS: The game class can override these for custom behavior
      */
     
     /**
-     * Chamado quando o interruptor é ligado
+     * Called when the switch is turned on.
      */
     protected void onSwitchTurnedOn() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando o interruptor é desligado
+     * Called when the switch is turned off.
      */
     protected void onSwitchTurnedOff() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
     
     /**
-     * Chamado quando o jogador tenta usar um interruptor que requer chave
+     * Called when the player attempts to use a switch that requires a key without having it.
      */
     protected void onKeyRequired() {
-        // Implementação padrão vazia - pode ser sobrescrita
+        // Default empty implementation - can be overridden
     }
 }

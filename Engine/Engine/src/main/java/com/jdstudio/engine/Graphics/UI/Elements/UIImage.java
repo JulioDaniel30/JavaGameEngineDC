@@ -4,38 +4,48 @@ import java.awt.Graphics;
 import com.jdstudio.engine.Graphics.Sprite.Sprite;
 
 /**
- * Um elemento de UI que simplesmente renderiza um Sprite na tela.
- * Ideal para ícones, imagens de fundo de menus, avatares, etc.
+ * A UI element that simply renders a static {@link Sprite} on the screen.
+ * Ideal for icons, menu background images, avatars, etc.
+ * 
+ * @author JDStudio
  */
 public class UIImage extends UIElement {
 
     private Sprite sprite;
 
     /**
-     * Cria um novo elemento de UI de imagem.
-     * @param x Posição X na tela.
-     * @param y Posição Y na tela.
-     * @param sprite O Sprite a ser desenhado.
+     * Constructs a new image UI element.
+     *
+     * @param x      The x-position on the screen.
+     * @param y      The y-position on the screen.
+     * @param sprite The Sprite to be drawn.
      */
     public UIImage(int x, int y, Sprite sprite) {
         super(x, y);
-        setSprite(sprite); // Usa o setter para definir o sprite e as dimensões
+        setSprite(sprite); // Use the setter to set the sprite and dimensions
     }
 
-    // tick() é herdado de UIElement e pode ser usado no futuro para animações (ex: piscar).
-    // Por enquanto, não precisa de lógica.
+    // tick() is inherited from UIElement and could be used in the future for animations (e.g., blinking).
+    // For now, it doesn't need logic.
 
+    /**
+     * Renders the image at the element's position.
+     *
+     * @param g The Graphics context to draw on.
+     */
     @Override
     public void render(Graphics g) {
         if (visible && sprite != null) {
-            // Desenha o sprite na posição x, y da tela (sem offset de câmera)
+            // Draw the sprite at the x, y position on the screen (no camera offset)
             g.drawImage(sprite.getImage(), x, y, null);
         }
     }
 
     /**
-     * Permite alterar a imagem do elemento dinamicamente durante o jogo.
-     * @param newSprite O novo Sprite a ser exibido.
+     * Allows changing the image of the element dynamically during the game.
+     * Updates the element's width and height to match the new sprite.
+     *
+     * @param newSprite The new Sprite to be displayed.
      */
     public void setSprite(Sprite newSprite) {
         this.sprite = newSprite;

@@ -1,112 +1,111 @@
-// Arquivo: Spritesheet.java
 package com.jdstudio.engine.Graphics.Sprite;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.InputStream; // Importe InputStream
+import java.io.InputStream;
 import java.util.Objects;
 import javax.imageio.ImageIO;
 
 /**
- * Representa uma folha de sprites (spritesheet) carregada de um arquivo de imagem.
+ * Represents a spritesheet loaded from an image file.
  * <p>
- * Esta classe serve como uma ferramenta para carregar uma única imagem grande
- * que contém múltiplos sprites e extrair sub-imagens individuais dela.
+ * This class serves as a tool to load a single large image that contains multiple sprites
+ * and extract individual sub-images (sprites) from it.
  *
  * @author JD Studio
  * @since 1.0
  */
 public class Spritesheet {
 
-    /** A imagem completa da folha de sprites. */
+    /** The complete image of the spritesheet. */
     private final BufferedImage sheet;
 
     /**
-     * Carrega uma spritesheet a partir de um caminho no classpath.
-     * Tenta carregar o recurso usando diferentes métodos para maior robustez.
+     * Loads a spritesheet from a path in the classpath.
+     * It attempts to load the resource using different methods for increased robustness.
      *
-     * @param path O caminho para o arquivo de imagem (ex: "/textures/sheet.png"). Não pode ser nulo.
-     * @throws RuntimeException se o caminho for nulo ou se houver um erro ao carregar a imagem.
+     * @param path The path to the image file (e.g., "/textures/sheet.png"). Cannot be null.
+     * @throws RuntimeException if the path is null or if there is an error loading the image.
      */
     public Spritesheet(String path) {
-        Objects.requireNonNull(path, "O caminho para a spritesheet não pode ser nulo.");
+        Objects.requireNonNull(path, "Spritesheet path cannot be null.");
         InputStream is = null;
         try {
-            // Tenta obter o recurso usando o ClassLoader da própria classe Spritesheet
+            // Attempt to get the resource using the ClassLoader of the Spritesheet class itself
             is = getClass().getResourceAsStream(path);
 
-            // Se a primeira tentativa falhar, tenta com o ClassLoader do sistema
+            // If the first attempt fails, try with the system ClassLoader
             if (is == null) {
-                System.out.println("DEBUG: Tentando carregar recurso via ClassLoader do sistema: " + path);
+                System.out.println("DEBUG: Attempting to load resource via system ClassLoader: " + path);
                 is = ClassLoader.getSystemResourceAsStream(path);
             }
 
-            // Se ainda falhar, tenta com o ClassLoader do Thread atual (pode ser útil em alguns frameworks)
+            // If still fails, try with the current Thread's ClassLoader (can be useful in some frameworks)
             if (is == null) {
-                 System.out.println("DEBUG: Tentando carregar recurso via Thread Context ClassLoader: " + path);
+                 System.out.println("DEBUG: Attempting to load resource via Thread Context ClassLoader: " + path);
                  is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
             }
 
-            // Se todas as tentativas falharem, o InputStream ainda será null
+            // If all attempts fail, the InputStream will still be null
             if (is == null) {
-                // Lança IOException para ser capturada pelo bloco catch abaixo
-                throw new IOException("Arquivo de imagem não encontrado no classpath, mesmo após múltiplas tentativas: " + path);
+                // Throw IOException to be caught by the catch block below
+                throw new IOException("Image file not found in classpath, even after multiple attempts: " + path);
             }
 
-            sheet = ImageIO.read(is); // Usa o InputStream obtido
+            sheet = ImageIO.read(is); // Use the obtained InputStream
 
         } catch (IOException e) {
-            // Lança uma exceção não verificada para sinalizar uma falha crítica de inicialização.
-            throw new RuntimeException("Falha ao carregar a spritesheet de: " + path, e);
+            // Throws an unchecked exception to signal a critical initialization failure.
+            throw new RuntimeException("Failed to load spritesheet from: " + path, e);
         } finally {
             if (is != null) {
                 try {
-                    is.close(); // Garante que o InputStream seja fechado
+                    is.close(); // Ensures the InputStream is closed
                 } catch (IOException e) {
-                    System.err.println("Erro ao fechar InputStream para: " + path + " - " + e.getMessage());
+                    System.err.println("Error closing InputStream for: " + path + " - " + e.getMessage());
                 }
             }
         }
     }
 
     /**
-     * Extrai um sprite individual da folha de sprites com base em coordenadas de pixel.
+     * Extracts an individual sprite from the spritesheet based on pixel coordinates.
      *
-     * @param x      A coordenada X do canto superior esquerdo do sprite na folha.
-     * @param y      A coordenada Y do canto superior esquerdo do sprite na folha.
-     * @param width  A largura em pixels do sprite a ser extraído.
-     * @param height A altura em pixels do sprite a ser extraído.
-     * @return Um novo objeto {@link Sprite} contendo a imagem recortada.
+     * @param x      The X coordinate of the top-left corner of the sprite on the sheet.
+     * @param y      The Y coordinate of the top-left corner of the sprite on the sheet.
+     * @param width  The width in pixels of the sprite to be extracted.
+     * @param height The height in pixels of the sprite to be extracted.
+     * @return A new {@link Sprite} object containing the cropped image.
      */
     public Sprite getSprite(int x, int y, int width, int height) {
-        // Certifique-se de que 'sheet' não é nulo antes de tentar subimage
+        // Ensure 'sheet' is not null before attempting subimage
         if (sheet == null) {
-            throw new IllegalStateException("Spritesheet não foi carregada com sucesso.");
+            throw new IllegalStateException("Spritesheet has not been successfully loaded.");
         }
         BufferedImage subImage = sheet.getSubimage(x, y, width, height);
         return new Sprite(subImage);
     }
 
     /**
-     * Retorna a largura total da folha de sprites em pixels.
+     * Returns the total width of the spritesheet in pixels.
      *
-     * @return A largura da imagem.
+     * @return The width of the image.
      */
     public int getWidth() {
         if (sheet == null) {
-            return 0; // Ou lançar uma exceção, dependendo do comportamento desejado
+            return 0; // Or throw an exception, depending on desired behavior
         }
         return sheet.getWidth();
     }
 
     /**
-     * Retorna a altura total da folha de sprites em pixels.
+     * Returns the total height of the spritesheet in pixels.
      *
-     * @return A altura da imagem.
+     * @return The height of the image.
      */
     public int getHeight() {
         if (sheet == null) {
-            return 0; // Ou lançar uma exceção
+            return 0; // Or throw an exception
         }
         return sheet.getHeight();
     }

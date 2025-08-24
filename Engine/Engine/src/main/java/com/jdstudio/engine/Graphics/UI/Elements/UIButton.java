@@ -9,11 +9,14 @@ import com.jdstudio.engine.Graphics.UI.UISpriteKey;
 import com.jdstudio.engine.Graphics.UI.Managers.ThemeManager;
 import com.jdstudio.engine.Input.InputManager;
 
-
-
-
+/**
+ * A UI element representing a clickable button.
+ * It supports different visual states (normal, hover, pressed) and executes a defined action when clicked.
+ * Buttons can be created with custom sprites or by using sprites from the current UI theme.
+ * 
+ * @author JDStudio
+ */
 public class UIButton extends UIElement {
-
     private Sprite normalSprite, hoverSprite, pressedSprite;
     private String text;
     private Font font;
@@ -22,6 +25,18 @@ public class UIButton extends UIElement {
     private boolean isHovering = false;
     private boolean isPressed = false;
 
+    /**
+     * Constructs a UIButton with custom sprites for its states.
+     *
+     * @param x             The x-coordinate of the button's top-left corner.
+     * @param y             The y-coordinate of the button's top-left corner.
+     * @param normalSprite  The sprite for the button's normal state.
+     * @param hoverSprite   The sprite for the button's hover state.
+     * @param pressedSprite The sprite for the button's pressed state.
+     * @param text          The text to display on the button.
+     * @param font          The font for the button's text.
+     * @param onClickAction The action to run when the button is clicked.
+     */
     public UIButton(int x, int y, Sprite normalSprite, Sprite hoverSprite, Sprite pressedSprite, String text, Font font, Runnable onClickAction) {
         super(x, y);
         this.normalSprite = normalSprite;
@@ -37,6 +52,16 @@ public class UIButton extends UIElement {
         }
     }
     
+    /**
+     * Constructs a UIButton using sprites from the currently active {@link com.jdstudio.engine.Graphics.UI.UITheme}.
+     * This constructor is convenient for creating themed buttons without manually providing sprites.
+     *
+     * @param x             The x-coordinate of the button's top-left corner.
+     * @param y             The y-coordinate of the button's top-left corner.
+     * @param text          The text to display on the button.
+     * @param font          The font for the button's text.
+     * @param onClickAction The action to run when the button is clicked.
+     */
     public UIButton(int x, int y, String text, Font font, Runnable onClickAction) {
         super(x, y);
         this.normalSprite = ThemeManager.getInstance().get(UISpriteKey.BUTTON_NORMAL);
@@ -52,6 +77,10 @@ public class UIButton extends UIElement {
         }
     }
     
+    /**
+     * Updates the button's state based on mouse input.
+     * It detects hover and pressed states and triggers the onClickAction when clicked.
+     */
     @Override
     public void tick() {
         if (!visible) {
@@ -60,7 +89,8 @@ public class UIButton extends UIElement {
             return;
         }
 
-        int mouseX = InputManager.getMouseX()/ com.jdstudio.engine.Engine.getSCALE();
+        // Adjust mouse coordinates by engine scale
+        int mouseX = InputManager.getMouseX() / com.jdstudio.engine.Engine.getSCALE();
         int mouseY = InputManager.getMouseY() / com.jdstudio.engine.Engine.getSCALE();
 
         Rectangle bounds = new Rectangle(this.x, this.y, this.width, this.getHeight());
@@ -69,7 +99,7 @@ public class UIButton extends UIElement {
         if (isHovering) {
             if (InputManager.isLeftMouseButtonJustPressed()) {
                 if (onClickAction != null) {
-                    onClickAction.run(); // Executa a ação!
+                    onClickAction.run(); // Execute the action!
                 }
             }
             isPressed = InputManager.isLeftMouseButtonPressed();
@@ -78,6 +108,12 @@ public class UIButton extends UIElement {
         }
     }
 
+    /**
+     * Renders the button, drawing the appropriate sprite based on its state (normal, hover, pressed)
+     * and centering the text on top of it.
+     *
+     * @param g The Graphics context to draw on.
+     */
     @Override
     public void render(Graphics g) {
         if (!visible) return;
@@ -93,7 +129,7 @@ public class UIButton extends UIElement {
             g.drawImage(currentSprite.getImage(), x, y, null);
         }
 
-        // Desenha o texto centralizado no botão
+        // Draw text centered on the button
         if (text != null && font != null) {
             g.setFont(font);
             int textWidth = g.getFontMetrics().stringWidth(text);

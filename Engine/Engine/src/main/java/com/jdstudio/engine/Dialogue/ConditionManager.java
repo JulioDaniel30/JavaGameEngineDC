@@ -4,37 +4,48 @@ import java.util.Map;
 import com.jdstudio.engine.Object.GameObject;
 
 /**
- * Um Singleton que regista e verifica as condições de diálogo customizadas do jogo.
+ * A singleton manager that registers and checks custom dialogue conditions.
+ * This allows the game to define specific conditions (e.g., player has a certain item, a quest is active)
+ * that can be used to control the flow of a conversation.
+ * 
+ * @author JDStudio
  */
 public class ConditionManager {
     private static final ConditionManager instance = new ConditionManager();
     private final Map<String, DialogueCondition> registeredConditions = new HashMap<>();
 
     private ConditionManager() {}
-    public static ConditionManager getInstance() { return instance; }
 
     /**
-     * O Jogo usa este método para registar as suas lógicas de condição.
-     * @param key A chave da condição (ex: "TEM_PELE_DE_LOBO").
-     * @param checker A implementação da lógica de verificação.
+     * Gets the single instance of the ConditionManager.
+     * @return The singleton instance.
+     */
+    public static ConditionManager getInstance() { 
+        return instance; 
+    }
+
+    /**
+     * The Game uses this method to register its custom condition logic.
+     * @param key     The key for the condition (e.g., "HAS_WOLF_PELT").
+     * @param checker The implementation of the checking logic.
      */
     public void registerCondition(String key, DialogueCondition checker) {
         registeredConditions.put(key, checker);
     }
 
     /**
-     * A Engine (diálogo) usa este método para verificar se uma condição foi satisfeita.
-     * @param key A chave da condição a ser verificada.
-     * @param interactor O GameObject que está a interagir (o jogador).
-     * @return true se a condição for satisfeita, false caso contrário.
+     * The Engine (dialogue system) uses this method to check if a condition is met.
+     * @param key        The key of the condition to check.
+     * @param interactor The GameObject that is interacting (e.g., the player).
+     * @return true if the condition is met, false otherwise.
      */
     public boolean checkCondition(String key, GameObject interactor) {
         if (registeredConditions.containsKey(key)) {
-            // Executa a lógica de verificação que foi registada pelo jogo
+            // Execute the checking logic that was registered by the game
             return registeredConditions.get(key).check(interactor);
         }
-        // Se a condição não foi registada, assume-se que não pode ser satisfeita.
-        System.err.println("Aviso: Condição de diálogo não registada: '" + key + "'");
+        // If the condition was not registered, assume it cannot be met.
+        System.err.println("Warning: Unregistered dialogue condition: '" + key + "'");
         return false;
     }
 }

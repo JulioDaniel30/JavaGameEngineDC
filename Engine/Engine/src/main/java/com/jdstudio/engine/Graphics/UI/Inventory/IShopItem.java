@@ -3,14 +3,27 @@ package com.jdstudio.engine.Graphics.UI.Inventory;
 import com.jdstudio.engine.Graphics.Sprite.Sprite;
 
 /**
- * Uma interface que define o contrato para um item que pode ser exibido na UIShopView.
- * As classes de item do seu JOGO devem implementar esta interface.
+ * An interface that defines the contract for an item that can be displayed in the {@link UIShopView}.
+ * Game-specific item classes should implement this interface to be compatible with the shop UI.
+ * 
+ * @author JDStudio
  */
 public interface IShopItem {
-    /** Retorna o nome do item a ser exibido. */
+    /** 
+     * Returns the name of the item to be displayed.
+     * @return The item's name.
+     */
     String getName();
-    /** Retorna o preço do item a ser exibido. */
+    
+    /** 
+     * Returns the price of the item to be displayed.
+     * @return The item's price.
+     */
     int getPrice();
-    /** Retorna o sprite do ícone do item. */
+    
+    /** 
+     * Returns the sprite of the item's icon.
+     * @return The item's icon sprite.
+     */
     Sprite getSprite();
 }

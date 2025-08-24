@@ -7,23 +7,25 @@ import com.jdstudio.engine.Graphics.WSUI.UIWorldAttached;
 import com.jdstudio.engine.Object.GameObject;
 
 /**
- * Um balão de emoção que exibe um ícone (Sprite) sobre um GameObject
- * por um período de tempo definido.
- * Ideal para reações de NPCs (alerta, ideia, etc.).
+ * An emotion bubble that displays an icon (Sprite) above a {@link GameObject}
+ * for a defined period of time. Ideal for NPC reactions (alert, idea, etc.).
+ * 
+ * @author JDStudio
  */
 public class UIEmotionBubble extends UIWorldAttached {
 
     private Sprite emotionSprite;
-    private int lifeTime; // Duração em ticks (frames)
+    private int lifeTime; // Duration in ticks (frames)
 
     /**
-     * Cria um novo balão de emoção.
-     * @param target O GameObject sobre o qual o balão irá aparecer.
-     * @param emotionSprite O Sprite (ícone) a ser exibido.
-     * @param lifeTime A duração em ticks que o balão permanecerá visível.
+     * Constructs a new UIEmotionBubble.
+     *
+     * @param target        The GameObject above which the bubble will appear.
+     * @param emotionSprite The Sprite (icon) to be displayed.
+     * @param lifeTime      The duration in ticks that the bubble will remain visible.
      */
     public UIEmotionBubble(GameObject target, Sprite emotionSprite, int lifeTime) {
-        // O offset Y padrão pode ser ajustado para aparecer acima da cabeça do personagem
+        // The default Y offset can be adjusted to appear above the character's head
         super(target, -16); 
         this.emotionSprite = emotionSprite;
         this.lifeTime = lifeTime;
@@ -34,28 +36,38 @@ public class UIEmotionBubble extends UIWorldAttached {
         }
     }
 
+    /**
+     * Updates the emotion bubble's logic each frame.
+     * It decrements the lifetime, and when it reaches zero, the bubble becomes invisible
+     * and is automatically removed from the rendering system.
+     */
     @Override
     public void tick() {
-        super.tick(); // A classe pai (UIWorldAttached) já trata de seguir o alvo.
+        super.tick(); // The parent class (UIWorldAttached) already handles following the target.
         if (!visible) return;
 
-        // Decrementa o tempo de vida
+        // Decrement lifetime
         lifeTime--;
         if (lifeTime <= 0) {
-            // Quando o tempo acaba, o balão torna-se invisível e será eventualmente removido
+            // When time runs out, the bubble becomes invisible and will eventually be removed
             this.visible = false; 
-            this.destroy(); // Usa o método destroy() para se remover do RenderManager
+            this.destroy(); // Use the destroy() method to remove itself from the RenderManager
         }
     }
 
+    /**
+     * Renders the emotion bubble's sprite.
+     *
+     * @param g The Graphics context to draw on.
+     */
     @Override
     public void render(Graphics g) {
         if (!visible || target == null || emotionSprite == null) return;
 
-        // As coordenadas 'this.x' e 'this.y' já são atualizadas pelo tick() da classe pai.
-        // O cálculo centraliza o sprite sobre o alvo.
+        // The 'this.x' and 'this.y' coordinates are already updated by the parent's tick().
+        // The calculation centers the sprite above the target.
         int drawX = (this.x - (this.width / 2)) - Engine.camera.getX();
-        int drawY = this.y - this.getHeight() - Engine.camera.getY(); // Desenha acima do ponto de offset
+        int drawY = this.y - this.getHeight() - Engine.camera.getY(); // Draw above the offset point
 
         g.drawImage(emotionSprite.getImage(), drawX, drawY, null);
     }

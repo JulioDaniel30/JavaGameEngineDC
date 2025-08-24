@@ -1,11 +1,16 @@
 package com.jdstudio.engine.Graphics.UI;
 
 /**
- * Define os temas de UI disponíveis na engine.
+ * Defines the available UI themes in the engine.
+ * Each theme can correspond to a different set of sprites and styles for UI elements.
  */
 public enum UITheme {
+    /** A medieval-themed UI. */
     MEDIEVAL,
+    /** A science-fiction-themed UI. */
     SCI_FI,
+    /** A fantasy-themed UI. */
     FANTASY,
-    MODERN; // Adicione quantos temas quiser
+    /** A modern-themed UI. */
+    MODERN;
 }

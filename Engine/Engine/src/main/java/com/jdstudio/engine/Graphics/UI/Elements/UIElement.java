@@ -8,105 +8,153 @@ import com.jdstudio.engine.Graphics.Layers.RenderManager;
 import com.jdstudio.engine.Graphics.Layers.StandardLayers;
 
 /**
- * Representa a base abstrata para todos os elementos de interface de usuário (UI).
+ * Represents the abstract base for all User Interface (UI) elements.
  * <p>
- * Esta classe estabelece a estrutura fundamental que todo elemento de UI deve ter,
- * como posição, dimensões e visibilidade. Ela também define o contrato de que
- * todo elemento deve ser capaz de se renderizar na tela.
+ * This class establishes the fundamental structure that every UI element should have,
+ * such as position, dimensions, and visibility. It also defines the contract that
+ * every element must be able to render itself on the screen.
  *
  * @author JDStudio
  * @since 1.0
  */
 public abstract class UIElement implements IRenderable{
 
-    /** A coordenada horizontal do elemento (eixo X). */
+    /** The horizontal coordinate of the element (X-axis). */
     protected int x;
 
-    /** A coordenada vertical do elemento (eixo Y). */
+    /** The vertical coordinate of the element (Y-axis). */
     protected int y;
 
-    /** A largura do elemento em pixels. */
+    /** The width of the element in pixels. */
     protected int width;
 
-    /** A altura do elemento em pixels. */
+    /** The height of the element in pixels. */
     protected int height;
 
-    /** Controla se o elemento será renderizado. */
+    /** Controls whether the element will be rendered. */
     protected boolean visible = true;
 
     /**
-     * Construtor base para um elemento de UI.
+     * Base constructor for a UI element.
      *
-     * @param x A posição horizontal inicial.
-     * @param y A posição vertical inicial.
+     * @param x The initial horizontal position.
+     * @param y The initial vertical position.
      */
     public UIElement(int x, int y) {
         this.x = x;
         this.y = y;
     }
     
+    /**
+     * Returns the rendering layer for UI elements, which is {@link StandardLayers#UI}.
+     * @return The UI render layer.
+     */
     @Override
     public RenderLayer getRenderLayer() { return StandardLayers.UI; }
     
- // Em UIElement.java
+    /**
+     * Destroys the UI element, making it invisible and unregistering it from the RenderManager.
+     * This should be called when the UI element is no longer needed.
+     */
     public void destroy() {
         this.visible = false;
         RenderManager.getInstance().unregister(this);
     }
     
     /**
-     * Atualiza a lógica do elemento de UI.
-     * Chamado a cada quadro para elementos que precisam reagir ao tempo ou input.
-     * As subclasses (como botões) devem sobrescrever este método.
+     * Updates the logic of the UI element.
+     * Called every frame for elements that need to react to time or input.
+     * Subclasses (like buttons) should override this method.
      */
     public void tick() {
-        // Deixado em branco na classe base, pois nem todo elemento tem lógica de atualização.
+        // Left blank in the base class, as not every element has update logic.
     }
 
     /**
-     * Método abstrato que as subclasses devem implementar para desenhar o elemento.
+     * Abstract method that subclasses must implement to draw the element.
      * <p>
-     * Este método é chamado pelo motor gráfico a cada quadro (frame) para
-     * que o elemento se desenhe na tela.
+     * This method is called by the graphics engine every frame
+     * for the element to draw itself on the screen.
      *
-     * @param g O contexto {@link Graphics} usado para as operações de desenho.
+     * @param g The {@link Graphics} context used for drawing operations.
      */
     public abstract void render(Graphics g);
 
     /**
-     * Define se o elemento deve ser visível e renderizado.
+     * Sets whether the element should be visible and rendered.
      *
-     * @param visible {@code true} para tornar visível, {@code false} para ocultar.
+     * @param visible {@code true} to make visible, {@code false} to hide.
      */
     public void setVisible(boolean visible) {
         this.visible = visible;
     }
 
     /**
-     * Verifica se o elemento está atualmente visível.
+     * Checks if the element is currently visible.
      *
-     * @return {@code true} se o elemento estiver visível, {@code false} caso contrário.
+     * @return {@code true} if the element is visible, {@code false} otherwise.
      */
+    @Override
     public boolean isVisible() {
         return this.visible;
     }
 
     /**
-     * Atualiza a posição do elemento na tela.
+     * Updates the position of the element on the screen.
      *
-     * @param x A nova coordenada horizontal (eixo X).
-     * @param y A nova coordenada vertical (eixo Y).
+     * @param x The new horizontal coordinate (X-axis).
+     * @param y The new vertical coordinate (Y-axis).
      */
     public void setPosition(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
+	/**
+	 * Gets the height of the UI element.
+	 * @return The height in pixels.
+	 */
 	public int getHeight() {
 		return height;
 	}
 
+	/**
+	 * Sets the height of the UI element.
+	 * @param height The new height in pixels.
+	 */
 	public void setHeight(int height) {
 		this.height = height;
+	}
+
+	/**
+	 * Gets the X coordinate of the UI element.
+	 * @return The X coordinate.
+	 */
+	public int getX() {
+		return x;
+	}
+
+	/**
+	 * Gets the Y coordinate of the UI element.
+	 * @return The Y coordinate.
+	 */
+	public int getY() {
+		return y;
+	}
+
+	/**
+	 * Gets the width of the UI element.
+	 * @return The width in pixels.
+	 */
+	public int getWidth() {
+		return width;
+	}
+
+	/**
+	 * Sets the width of the UI element.
+	 * @param width The new width in pixels.
+	 */
+	public void setWidth(int width) {
+		this.width = width;
 	}
 }
