@@ -1,5 +1,5 @@
-// engine
-package com.jdstudio.engine.Utils; // Ou com.jdstudio.engine.Pathfinding
+
+package com.jdstudio.engine.Utils;
 
 import java.util.Objects;
 

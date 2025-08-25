@@ -9,31 +9,39 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import com.jdstudio.engine.Utils.Node;
-import com.jdstudio.engine.World.Tile.TileType;
 import com.jdstudio.engine.World.World;
+import com.jdstudio.engine.World.Tile.TileType;
 
+/**
+ * A static utility class that finds the shortest path between two points in a given world
+ * using the A* (A-star) pathfinding algorithm. It navigates a grid representation
+ * of the world, avoiding solid obstacles.
+ */
 public class Pathfinder {
 
     private static final double MOVE_STRAIGHT_COST = 10.0;
     private static final double MOVE_DIAGONAL_COST = 14.14;
-    
-    // --- NOVO PARÂMETRO AJUSTÁVEL ---
+
     /**
-     * Penalidade adicionada ao custo de um nó se ele for adjacente a uma parede.
-     * Aumentar este valor fará com que a IA evite paredes de forma mais agressiva.
+     * Finds a path between a start and end point in the world using the A* algorithm.
+     *
+     * @param world The game world, containing the tile map information.
+     * @param start The starting point of the path in world coordinates (pixels).
+     * @param end   The target point of the path in world coordinates (pixels).
+     * @return A List of Points representing the path from start to end in world coordinates.
+     *         The list will be empty if no path is found.
      */
-    private static final double WALL_PROXIMITY_PENALTY = 10.0;
-
     public static List<Point> findPath(World world, Point start, Point end) {
-        int startX = start.x / world.tileWidth;
-        int startY = start.y / world.tileHeight;
-        int endX = end.x / world.tileWidth;
-        int endY = end.y / world.tileHeight;
+        Grid grid = new Grid(world);
+        Point startPoint = grid.worldToGrid(start);
+        Point endPoint = grid.worldToGrid(end);
 
-        Node startNode = new Node(startX, startY);
-        Node endNode = new Node(endX, endY);
+        Node startNode = grid.getNode(startPoint.x, startPoint.y);
+        Node endNode = grid.getNode(endPoint.x, endPoint.y);
 
+        // The set of nodes to be evaluated
         PriorityQueue<Node> openList = new PriorityQueue<>();
+        // The set of nodes already evaluated
         Set<Node> closedList = new HashSet<>();
 
         startNode.gCost = 0;
@@ -43,72 +51,81 @@ public class Pathfinder {
 
         while (!openList.isEmpty()) {
             Node currentNode = openList.poll();
-            
+
             if (currentNode.equals(endNode)) {
-                return reconstructPath(currentNode, world);
+                return reconstructPath(currentNode, grid);
             }
-            
+
             closedList.add(currentNode);
 
-            for (int xOffset = -1; xOffset <= 1; xOffset++) {
-                for (int yOffset = -1; yOffset <= 1; yOffset++) {
-                    if (xOffset == 0 && yOffset == 0) continue;
+            for (Node neighbourNode : grid.getNeighbours(currentNode)) {
+                if (closedList.contains(neighbourNode) || world.getTile(neighbourNode.x, neighbourNode.y).getTileType() == TileType.SOLID) {
+                    continue;
+                }
 
-                    Node neighbourNode = new Node(currentNode.x + xOffset, currentNode.y + yOffset);
+                double tentativeGCost = currentNode.gCost + calculateDistanceCost(currentNode, neighbourNode) + grid.getMovementPenalty(neighbourNode);
 
-                    if (closedList.contains(neighbourNode) || world.getTile(neighbourNode.x, neighbourNode.y).getTileType() == TileType.SOLID) {
-                        continue;
-                    }
-                    
-                    double tentativeGCost = currentNode.gCost + ((xOffset != 0 && yOffset != 0) ? MOVE_DIAGONAL_COST : MOVE_STRAIGHT_COST);
+                if (tentativeGCost < neighbourNode.gCost || !openList.contains(neighbourNode)) {
+                    neighbourNode.parent = currentNode;
+                    neighbourNode.gCost = tentativeGCost;
+                    neighbourNode.hCost = calculateHeuristic(neighbourNode, endNode);
+                    neighbourNode.calculateFCost();
 
-                    // --- INÍCIO DA LÓGICA DE PENALIDADE ---
-                    boolean isNearWall = false;
-                    for (int nx = -1; nx <= 1 && !isNearWall; nx++) {
-                        for (int ny = -1; ny <= 1; ny++) {
-                            if (nx == 0 && ny == 0) continue;
-                            if (world.getTile(neighbourNode.x + nx, neighbourNode.y + ny).getTileType() == TileType.SOLID) {
-                                isNearWall = true;
-                                break; 
-                            }
-                        }
-                    }
-                    if (isNearWall) {
-                        tentativeGCost += WALL_PROXIMITY_PENALTY;
-                    }
-                    // --- FIM DA LÓGICA DE PENALIDADE ---
-
-                    if (tentativeGCost < neighbourNode.gCost || !openList.contains(neighbourNode)) {
-                        neighbourNode.parent = currentNode;
-                        neighbourNode.gCost = tentativeGCost;
-                        neighbourNode.hCost = calculateHeuristic(neighbourNode, endNode);
-                        neighbourNode.calculateFCost();
-                        
+                    if (!openList.contains(neighbourNode)) {
                         openList.add(neighbourNode);
                     }
                 }
             }
         }
-        
-        return new ArrayList<>(); // Nenhum caminho encontrado
+
+        return new ArrayList<>(); // No path found
     }
-    
-    private static List<Point> reconstructPath(Node endNode, World world) {
+
+    /**
+     * Reconstructs the path from the end node back to the start node.
+     *
+     * @param endNode The final node in the path.
+     * @param grid    The grid used for pathfinding, to convert grid coordinates back to world coordinates.
+     * @return The complete path as a list of points in world coordinates.
+     */
+    private static List<Point> reconstructPath(Node endNode, Grid grid) {
         List<Point> path = new ArrayList<>();
         Node currentNode = endNode;
         while (currentNode != null) {
-            int pixelX = currentNode.x * world.tileWidth + world.tileWidth / 2;
-            int pixelY = currentNode.y * world.tileHeight + world.tileHeight / 2;
-            path.add(new Point(pixelX, pixelY));
+            path.add(grid.gridToWorld(new Point(currentNode.x, currentNode.y)));
             currentNode = currentNode.parent;
         }
         Collections.reverse(path);
         return path;
     }
 
+    /**
+     * Calculates the heuristic (estimated cost) between two nodes using the Diagonal Distance method.
+     *
+     * @param a The starting node.
+     * @param b The ending node.
+     * @return The estimated heuristic cost.
+     */
     private static double calculateHeuristic(Node a, Node b) {
         int dstX = Math.abs(a.x - b.x);
         int dstY = Math.abs(a.y - b.y);
         return MOVE_STRAIGHT_COST * (Math.max(dstX, dstY) - Math.min(dstX, dstY)) + MOVE_DIAGONAL_COST * Math.min(dstX, dstY);
+    }
+
+    /**
+     * Calculates the actual cost of moving from one node to an adjacent one.
+     *
+     * @param a The first node.
+     * @param b The second, adjacent node.
+     * @return The cost for moving (10 for straight, 14.14 for diagonal).
+     */
+    private static double calculateDistanceCost(Node a, Node b) {
+        int dstX = Math.abs(a.x - b.x);
+        int dstY = Math.abs(a.y - b.y);
+
+        if (dstX > 0 && dstY > 0) {
+            return MOVE_DIAGONAL_COST;
+        }
+        return MOVE_STRAIGHT_COST;
     }
 }

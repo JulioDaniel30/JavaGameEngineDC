@@ -35,7 +35,7 @@ public abstract class BaseProjectile extends GameObject {
      */
     protected BaseProjectile() {
         super(new org.json.JSONObject()); // Pass an empty JSON to the parent
-        setCollisionType(CollisionType.TRIGGER);
+        setCollisionType(CollisionType.DAMAGE_SOURCE);
     }
 
     /**

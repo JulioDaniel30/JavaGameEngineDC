@@ -1,4 +1,3 @@
-// engine
 package com.jdstudio.engine.World;
 
 import java.awt.Graphics;
@@ -16,18 +15,39 @@ import com.jdstudio.engine.Engine;
 import com.jdstudio.engine.Object.GameObject;
 import com.jdstudio.engine.World.Tile.TileType;
 
+/**
+ * Represents the game world, loaded from a Tiled JSON map file.
+ * <p>
+ * This class manages the grid of tiles, handles map loading, and provides
+ * core functionalities like rendering the visible portion of the map and
+ * performing collision checks. It uses a listener-based approach to delegate
+ * the creation of tiles and game objects, making it highly extensible.
+ */
 public class World {
 
+    /** The width of the world in tiles. */
     public final int WIDTH;
+    /** The height of the world in tiles. */
     public final int HEIGHT;
+    /** The width of a single tile in pixels. */
     public final int tileWidth;
+    /** The height of a single tile in pixels. */
     public final int tileHeight;
+    /** The array holding all the tiles in the world, stored in a 1D array. */
     protected final Tile[] tiles;
 
+    /**
+     * Constructs a new World by loading and parsing a map file from the specified path.
+     *
+     * @param mapPath  The resource path to the Tiled JSON map file.
+     * @param listener An {@link IMapLoaderListener} that will handle the creation of
+     *                 tiles, objects, and paths found in the map file.
+     * @throws RuntimeException if the map file cannot be found or read.
+     */
     public World(String mapPath, IMapLoaderListener listener) {
         try (InputStream is = getClass().getResourceAsStream(mapPath)) {
             if (is == null) {
-                throw new IOException("ERRO CRÍTICO: Não foi possível encontrar o arquivo de mapa: " + mapPath);
+                throw new IOException("CRITICAL ERROR: Map file not found: " + mapPath);
             }
             String jsonText = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             JSONObject json = new JSONObject(jsonText);
@@ -44,7 +64,7 @@ public class World {
             List<JSONObject> pathObjects = new ArrayList<>();
             List<JSONObject> regularObjects = new ArrayList<>();
 
-            // 1. PRIMEIRA PASSAGEM: Separa os dados por tipo
+            // First pass: Separate layers by type to process them in a specific order.
             for (int i = 0; i < layers.length(); i++) {
                 JSONObject layer = layers.getJSONObject(i);
                 if (layer.getString("type").equals("tilelayer")) {
@@ -62,7 +82,7 @@ public class World {
                 }
             }
 
-            // 2. SEGUNDA PASSAGEM: Processa os dados na ordem correta
+            // Second pass: Process the data in the correct order (tiles, then paths, then objects).
             for (JSONObject layer : tileLayers) {
                 processTileLayer(layer, listener);
             }
@@ -74,10 +94,15 @@ public class World {
             }
 
         } catch (IOException e) {
-            throw new RuntimeException("Falha ao criar o mundo a partir de: " + mapPath, e);
+            throw new RuntimeException("Failed to create world from: " + mapPath, e);
         }
     }
     
+    /**
+     * Processes a Tiled "polyline" object, converting it into a path for the listener.
+     * @param object The JSON object representing the polyline.
+     * @param listener The listener to notify when the path is found.
+     */
     private void processPathObject(JSONObject object, IMapLoaderListener listener) {
         String pathName = object.getString("name");
         List<Point> pathPoints = new ArrayList<>();
@@ -91,22 +116,32 @@ public class World {
         listener.onPathFound(pathName, pathPoints);
     }
     
+    /**
+     * Processes a regular Tiled "object", notifying the listener to create a game object.
+     * @param object The JSON object to process.
+     * @param listener The listener to notify.
+     */
     private void processRegularObject(JSONObject object, IMapLoaderListener listener) {
         int x = object.getInt("x");
         int width = object.getInt("width");
         int height = object.getInt("height");
-        int y = object.getInt("y") - height;
+        int y = object.getInt("y") - height; // Tiled's y-origin is top-left, adjust for bottom-left
         String type = object.has("class") ? object.getString("class") : 
                       (object.has("type") ? object.getString("type") : "");
         listener.onObjectFound(type, x, y, width, height, object);
     }
 
+    /**
+     * Processes a "tilelayer" from the Tiled map, creating tiles via the listener.
+     * @param layer The JSON layer object.
+     * @param listener The listener to notify for each tile found.
+     */
     private void processTileLayer(JSONObject layer, IMapLoaderListener listener) {
         JSONArray data = layer.getJSONArray("data");
         String layerName = layer.getString("name");
         for (int i = 0; i < data.length(); i++) {
             int tileId = data.getInt(i);
-            if (tileId == 0) continue;
+            if (tileId == 0) continue; // 0 is an empty tile
             int x = (i % WIDTH) * this.tileWidth;
             int y = (i / WIDTH) * this.tileHeight;
             Tile createdTile = listener.onTileFound(layerName, tileId, x, y);
@@ -116,6 +151,13 @@ public class World {
         }
     }
     
+    /**
+     * Renders the visible portion of the world.
+     * It calculates the camera's view and only renders the tiles within that boundary,
+     * which is highly efficient for large maps.
+     *
+     * @param g The Graphics context to draw on.
+     */
     public void render(Graphics g) {
         int xstart = Engine.camera.getX() / this.tileWidth;
         int ystart = Engine.camera.getY() / this.tileHeight;
@@ -130,19 +172,46 @@ public class World {
         }
     }
     
+    /**
+     * Sets or replaces a tile at a specific grid location.
+     *
+     * @param x    The x-coordinate in the tile grid.
+     * @param y    The y-coordinate in the tile grid.
+     * @param tile The new Tile to place at the location.
+     */
     public void setTile(int x, int y, Tile tile) {
         if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
             tiles[x + y * WIDTH] = tile;
         }
     }
 
+    /**
+     * Retrieves a tile from a specific grid location.
+     *
+     * @param x The x-coordinate in the tile grid.
+     * @param y The y-coordinate in the tile grid.
+     * @return The {@link Tile} at the location. If the coordinates are out of bounds,
+     *         a non-solid, empty tile is returned to prevent null pointer exceptions.
+     */
     public Tile getTile(int x, int y) {
         if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
+            // Return a default, non-solid tile for out-of-bounds requests.
             return new Tile(x * this.tileWidth, y * this.tileHeight, this.tileWidth, this.tileHeight, null);
         }
         return tiles[x + (y * WIDTH)];
     }
 
+    /**
+     * Checks if a rectangular area, defined by a collision mask, is free of solid tiles.
+     *
+     * @param x          The world x-coordinate of the object.
+     * @param y          The world y-coordinate of the object.
+     * @param maskX      The x-offset of the collision mask relative to the object's position.
+     * @param maskY      The y-offset of the collision mask relative to the object's position.
+     * @param maskWidth  The width of the collision mask.
+     * @param maskHeight The height of the collision mask.
+     * @return {@code true} if the area is free of solid tiles, {@code false} otherwise.
+     */
     public boolean isFree(int x, int y, int maskX, int maskY, int maskWidth, int maskHeight) {
         int startX = x + maskX;
         int startY = y + maskY;
@@ -159,11 +228,13 @@ public class World {
         }
         return true;
     }
+    
     /**
-     * Verifica se uma área retangular no mundo está livre de tiles sólidos.
-     * Agora inclui a lógica para plataformas "pula-através".
-     * @param movingObject O GameObject que está a tentar mover-se.
-     * @return true se a área estiver livre, false caso contrário.
+     * Checks if the area occupied by a GameObject's collision mask is free.
+     * This version includes special handling for one-way (platform) tiles.
+     *
+     * @param movingObject The {@link GameObject} to check for collision.
+     * @return {@code true} if the area is free of solid tiles, {@code false} otherwise.
      */
     public boolean isFree(GameObject movingObject) {
         int startX = movingObject.getX() + movingObject.getMaskX();
@@ -181,20 +252,18 @@ public class World {
                 Tile tile = getTile(ix, iy);
                 if (tile != null) {
                     if (tile.tileType == Tile.TileType.SOLID) {
-                        return false; // Colisão com parede sólida
+                        return false; // Solid wall collision
                     }
                     if (tile.tileType == Tile.TileType.ONE_WAY) {
-                        // LÓGICA DA PLATAFORMA "PULA-ATRAVÉS"
-                        // Verifica se o pé do personagem está acima do topo do tile
-                        // e se o personagem está a mover-se para baixo.
+                        // ONE-WAY PLATFORM LOGIC
+                        // Check if the object's bottom is above the platform's top
+                        // and if the object is moving downwards.
                         if ((startY + maskHeight) <= tile.getY() + 4 && movingObject.velocityY >= 0) {
                             
-                            // Ajusta a posição Y do jogador para o topo do tile e para a sua velocidade
+                            // Snap the object's Y position to the top of the tile and stop vertical movement.
                             movingObject.setY(tile.getY() - maskHeight);
                             movingObject.velocityY = 0;
-                            movingObject.onGround = true; // Informa ao componente de física que está no chão
-
-                            // Continua a verificar outros tiles, mas a colisão vertical foi resolvida.
+                            movingObject.onGround = true; // Notify physics component it is on the ground.
                         }
                     }
                 }

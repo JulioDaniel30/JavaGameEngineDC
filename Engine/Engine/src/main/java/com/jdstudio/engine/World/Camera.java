@@ -4,8 +4,6 @@ package com.jdstudio.engine.World;
 import java.util.Random;
 import com.jdstudio.engine.Engine;
 import com.jdstudio.engine.Object.GameObject;
-import com.jdstudio.engine.World.Camera.CameraProfile;
-import com.jdstudio.engine.World.Camera.FollowStyle;
 
 public class Camera {
 

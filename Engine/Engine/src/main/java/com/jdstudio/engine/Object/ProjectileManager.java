@@ -17,7 +17,7 @@ import com.jdstudio.engine.World.World;
  */
 public class ProjectileManager {
 
-    private static final ProjectileManager instance = new ProjectileManager();
+    private static ProjectileManager instance;
     
     /** The pool of reusable BaseProjectile objects. */
     private final List<BaseProjectile> projectilePool = new ArrayList<>();
@@ -38,6 +38,15 @@ public class ProjectileManager {
      * @return The singleton instance.
      */
     public static ProjectileManager getInstance() {
+        if (instance == null) {
+            synchronized (ProjectileManager.class) {
+                if (instance == null) {
+                    instance = new ProjectileManager();
+                }
+            }
+        }
+
+
         return instance;
     }
 

@@ -6,7 +6,6 @@ import java.awt.Rectangle;
 
 import org.json.JSONObject;
 
-import com.jdstudio.engine.Engine;
 import com.jdstudio.engine.Components.InteractionComponent;
 import com.jdstudio.engine.Components.InteractionZone;
 import com.jdstudio.engine.Core.ISavable;
@@ -194,35 +193,32 @@ public abstract class EngineDoor extends GameObject implements ISavable {
      * 
      * @return true if the door is obstructed, false otherwise.
      */
-    public boolean isObstructed() {
-        
-        if (allGameObjects == null){ 
-            if(Engine.isDebug) System.out.println("allGameObjects is null");
-            return false;}
-        
-        Rectangle bounds = new Rectangle(
-            this.getX() + this.getMaskX(), 
+    private boolean isObstructed() {
+        // Este método precisa da lista de GameObjects. Vamos garantir que ele a tenha.
+        if (allGameObjects == null) return false;
+
+        Rectangle doorBounds = new Rectangle(
+            this.getX() + this.getMaskX(),
             this.getY() + this.getMaskY(),
-            this.getWidth() + this.getMaskWidth(), 
-            this.getHeight() + this.getMaskHeight()
+            this.getMaskWidth(),
+            this.getMaskHeight()
         );
 
-        for (GameObject obj : allGameObjects) {
-            if (obj == this) continue; // Ignore self
-            
+        for (GameObject other : allGameObjects) {
+            if (other == this) continue;
+
+            // Verifica colisão com qualquer outro objeto, não apenas o jogador
             Rectangle otherBounds = new Rectangle(
-                obj.getX() + obj.getMaskX(),
-                obj.getY() + obj.getMaskY(),
-                obj.getWidth() + obj.getMaskWidth(),
-                obj.getHeight() + obj.getMaskHeight()
+                other.getX() + other.getMaskX(),
+                other.getY() + other.getMaskY(),
+                other.getMaskWidth(),
+                other.getMaskHeight()
             );
-            
-            if (bounds.intersects(otherBounds)) {
-                if (Engine.isDebug) System.out.println("obstruçao detectda!");                return true;
-                
+
+            if (doorBounds.intersects(otherBounds)) {
+                return true; // Encontrou um objeto no caminho!
             }
         }
-        System.out.println("porta nao obstruida!");
         return false;
     }
 

@@ -92,7 +92,10 @@ public abstract class GameObject implements IRenderable  {
         /** Solid for other characters, but passable by projectiles. */
         CHARACTER_SOLID,
         /** Passable, but can trigger events for characters. */
-        CHARACTER_TRIGGER
+        CHARACTER_TRIGGER,
+        /** A trigger that specifically represents a source of damage (e.g., projectiles, attack areas). */
+        DAMAGE_SOURCE,
+
     }
     
     /** The collision type of this GameObject. */
