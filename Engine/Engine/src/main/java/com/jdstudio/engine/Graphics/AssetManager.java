@@ -1,5 +1,8 @@
 package com.jdstudio.engine.Graphics;
 
+import java.awt.Font;
+import java.awt.FontFormatException;
+import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +32,7 @@ public class AssetManager {
 
     /** Cache to store loaded sprites, associating a unique key with each {@link Sprite}. */
     private Map<String, Sprite> spriteCache;
+    private Map<String, Font> fontCache;
 
     /**
      * Constructs a new AssetManager.
@@ -36,6 +40,7 @@ public class AssetManager {
      */
     public AssetManager() {
         this.spriteCache = new HashMap<>();
+        this.fontCache = new HashMap<>();
     }
     
     /**
@@ -250,4 +255,30 @@ public class AssetManager {
         }
         return spriteCache.get(key);
     }
+
+    public void loadFont(String key, String path, float size) {
+        if (fontCache.containsKey(key)) {
+            return; // Optimization: do not load if already exists.
+        }
+        try (InputStream is = getClass().getResourceAsStream(path)) {
+            if (is == null) {
+                System.err.println("Failed to find font file: " + path);
+                return;
+            }
+            Font font = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(size);
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            ge.registerFont(font);
+            fontCache.put(key, font);
+        } catch (IOException | FontFormatException e) {
+            System.err.println("Failed to load font '" + key + "' from path: " + path);
+            e.printStackTrace(); // Useful for detailed debugging
+        }    }
+
+    public Font getFont(String key) {
+        if (!fontCache.containsKey(key)) {
+            System.err.println("Error: Font with key '" + key + "' not found in AssetManager.");
+            return null;        }
+        return fontCache.get(key);
+    }
+
 }
